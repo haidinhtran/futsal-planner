@@ -6,8 +6,23 @@ import { PlayerManagement } from './components/PlayerManagement';
 import { TacticsBoard } from './components/TacticsBoard';
 import { TacticalDiagram } from './components/TacticalDiagram';
 
+type TabType = 'tactics' | 'players' | 'presentation';
+
+const getTabFromLocation = (): TabType => {
+  const path = window.location.pathname.toLowerCase();
+  if (path === '/players') return 'players';
+  if (path === '/present') return 'presentation';
+  return 'tactics'; // default ./ or /plan
+};
+
+const getPathFromTab = (tab: TabType): string => {
+  if (tab === 'players') return '/players';
+  if (tab === 'presentation') return '/present';
+  return '/plan';
+};
+
 export const App = () => {
-  const [activeTab, setActiveTab] = useState<'players' | 'tactics' | 'presentation'>('players');
+  const [activeTab, setActiveTab] = useState<TabType>(() => getTabFromLocation());
 
   // Synchronous initial state load from LocalStorage
   const [players, setPlayers] = useState<Player[]>(() => storageService.getPlayers());
@@ -19,10 +34,25 @@ export const App = () => {
     setSquad(storageService.getSquad());
   };
 
-  // Extra safety sync on mount
+  // Sync route and handle browser Back/Forward (popstate)
   useEffect(() => {
     refreshData();
+
+    const handlePopState = () => {
+      setActiveTab(getTabFromLocation());
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const handleTabChange = (newTab: TabType) => {
+    setActiveTab(newTab);
+    const targetPath = getPathFromTab(newTab);
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({}, '', targetPath);
+    }
+  };
 
   const handleSavePlayer = (updatedPlayer: Player) => {
     const existingIndex = players.findIndex((p) => p.id === updatedPlayer.id);
@@ -63,20 +93,12 @@ export const App = () => {
       {/* Top Header Navbar */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         onDataRefresh={refreshData}
       />
 
       {/* Main Tab View Content */}
       <main className="flex-1 pb-12">
-        {activeTab === 'players' && (
-          <PlayerManagement
-            players={players}
-            onSavePlayer={handleSavePlayer}
-            onDeletePlayer={handleDeletePlayer}
-          />
-        )}
-
         {activeTab === 'tactics' && (
           <TacticsBoard
             players={players}
@@ -85,11 +107,19 @@ export const App = () => {
           />
         )}
 
+        {activeTab === 'players' && (
+          <PlayerManagement
+            players={players}
+            onSavePlayer={handleSavePlayer}
+            onDeletePlayer={handleDeletePlayer}
+          />
+        )}
+
         {activeTab === 'presentation' && <TacticalDiagram />}
       </main>
 
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs font-semibold text-slate-500">
-        Một sản phẩm của AI với sự từ chối mọi trách nhiệm của Hải Trần
+        Một sản phẩm của AI với sự từ chối mọi trách nhiệm từ tuiii - Hải Trần
       </footer>
     </div>
   );

@@ -52,25 +52,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 leading-none tracking-tight">FTSP</h1>
+              <h1 className="text-xl font-black text-blue-600 leading-none tracking-tight">FTSP</h1>
               <p className="text-xs text-slate-500 font-bold mt-1">Futsal Tactics & Squad Planner</p>
             </div>
           </div>
 
           {/* Navigation Tabs */}
           <nav className="flex space-x-1.5 bg-slate-100 p-1.5 rounded-xl">
-            <button
-              onClick={() => setActiveTab('players')}
-              className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                activeTab === 'players'
-                  ? 'bg-white text-blue-600 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              <span>Quản Lý Cầu Thủ</span>
-            </button>
-
             <button
               onClick={() => setActiveTab('tactics')}
               className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
@@ -81,6 +69,18 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
             >
               <Layout className="w-4 h-4" />
               <span>Thiết Kế Thế Trận</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('players')}
+              className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                activeTab === 'players'
+                  ? 'bg-white text-blue-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Quản Lý Cầu Thủ</span>
             </button>
 
             <button

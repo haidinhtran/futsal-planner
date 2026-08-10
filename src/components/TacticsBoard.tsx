@@ -216,7 +216,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               onClick={() => handleSelectFormation(preset.id)}
               className={`px-5 py-2.5 rounded-xl text-center transition-all cursor-pointer ${
                 currentFormationId === preset.id
-                  ? 'bg-slate-900 text-white shadow-md font-bold ring-2 ring-slate-900 ring-offset-1'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold ring-2 ring-blue-500 ring-offset-1'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold'
               }`}
             >

@@ -232,8 +232,8 @@ export const TacticalDiagram: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-2 rounded-2xl">
           <button
             onClick={() => setActiveTool('pointer')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTool === 'pointer' ? 'bg-red-500 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'pointer' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
             title="Laser Con Trỏ Thuyết Trình"
           >
@@ -243,8 +243,8 @@ export const TacticalDiagram: React.FC = () => {
 
           <button
             onClick={() => setActiveTool('arrow')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTool === 'arrow' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'arrow' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
             title="Mũi tên di chuyển"
           >
@@ -254,8 +254,8 @@ export const TacticalDiagram: React.FC = () => {
 
           <button
             onClick={() => setActiveTool('dashed-arrow')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTool === 'dashed-arrow' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'dashed-arrow' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
             title="Mũi tên đường chuyền"
           >
@@ -263,45 +263,45 @@ export const TacticalDiagram: React.FC = () => {
             <span>Chuyền bóng</span>
           </button>
 
-          {/* Cầu Thủ Ta (Màu Xanh Lá Cây) */}
+          {/* Cầu Thủ Ta */}
           <button
             onClick={() => setActiveTool('player-home')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              activeTool === 'player-home' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'player-home' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
-            title="Cầu Thủ Ta (Đội mình - Xanh lá cây)"
+            title="Đặt vị trí Cầu Thủ Ta (Đội mình)"
           >
-            <UserCheck className="w-4 h-4 text-emerald-600 fill-emerald-100" />
-            <span>Cầu Thủ Ta (Xanh Lá)</span>
+            <UserCheck className={`w-4 h-4 ${activeTool === 'player-home' ? 'text-white' : 'text-emerald-600'}`} />
+            <span>Cầu Thủ Ta</span>
           </button>
 
-          {/* Cầu Thủ Địch (Màu Đỏ) */}
+          {/* Cầu Thủ Địch */}
           <button
             onClick={() => setActiveTool('player-away')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-              activeTool === 'player-away' ? 'bg-red-600 text-white shadow-md' : 'text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/80'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'player-away' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
-            title="Cầu Thủ Địch (Đội đối thủ - Đỏ)"
+            title="Đặt vị trí Cầu Thủ Địch (Đối thủ)"
           >
-            <UserX className="w-4 h-4 text-red-600 fill-red-100" />
-            <span>Cầu Thủ Địch (Đỏ)</span>
+            <UserX className={`w-4 h-4 ${activeTool === 'player-away' ? 'text-white' : 'text-red-500'}`} />
+            <span>Cầu Thủ Địch</span>
           </button>
 
           <button
             onClick={() => setActiveTool('cross-red')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTool === 'cross-red' ? 'bg-red-700 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'cross-red' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
             title="Dấu gạch chéo đỏ"
           >
-            <XCircle className="w-4 h-4 text-red-500" />
+            <XCircle className={`w-4 h-4 ${activeTool === 'cross-red' ? 'text-white' : 'text-red-500'}`} />
             <span>Dấu X Đỏ</span>
           </button>
 
           <button
             onClick={() => setActiveTool('ball')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTool === 'ball' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'ball' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
             title="Đặt Bóng Futsal"
           >
@@ -311,10 +311,10 @@ export const TacticalDiagram: React.FC = () => {
 
           <button
             onClick={() => setActiveTool('text')}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeTool === 'text' ? 'bg-slate-900 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-200'
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              activeTool === 'text' ? 'bg-blue-600 text-white shadow-sm font-extrabold' : 'text-slate-700 hover:bg-slate-200/80 font-semibold'
             }`}
-            title="Văn bản ghi chú"
+            title="Ghi chú văn bản"
           >
             <Type className="w-4 h-4" />
             <span>Văn bản</span>
