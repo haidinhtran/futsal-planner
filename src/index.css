@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-tl: #16a34a;
+  --color-tc: #ea580c;
+  --color-pt: #2563eb;
+  --bg-app: #f1f5f9;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: #1e293b;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Futsal Pitch Visual Styling */
+.futsal-pitch-container {
+  background: linear-gradient(135deg, #c49a6c 0%, #a67c52 100%);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.12);
+  position: relative;
+  user-select: none;
+}
+
+.futsal-pitch-floor {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.9 / 1;
+  border-radius: 4px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.25);
+}
+
+/* White Court Lines */
+.pitch-line {
+  position: absolute;
+  border-color: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+
+.pitch-center-line {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateX(-50%);
+}
+
+.pitch-center-circle {
+  top: 50%;
+  left: 50%;
+  width: 18%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pitch-center-spot {
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Penalty Arcs (D-Box) Left & Right */
+.pitch-penalty-left {
+  top: 50%;
+  left: 0;
+  width: 16%;
+  height: 60%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-left: none;
+  border-radius: 0 100px 100px 0;
+  transform: translateY(-50%);
+}
+
+.pitch-penalty-right {
+  top: 50%;
+  right: 0;
+  width: 16%;
+  height: 60%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-right: none;
+  border-radius: 100px 0 0 100px;
+  transform: translateY(-50%);
+}
+
+/* Goals */
+.pitch-goal-left {
+  position: absolute;
+  left: -12px;
+  top: 35%;
+  height: 30%;
+  width: 12px;
+  border: 2px solid white;
+  border-right: none;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 3px, transparent 3px, transparent 6px);
+}
+
+.pitch-goal-right {
+  position: absolute;
+  right: -12px;
+  top: 35%;
+  height: 30%;
+  width: 12px;
+  border: 2px solid white;
+  border-left: none;
+  background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 3px, transparent 3px, transparent 6px);
+}
+
+/* Position Role Badges */
+.badge-gk { background-color: #16a34a; color: white; }
+.badge-fixo { background-color: #7e22ce; color: white; }
+.badge-ala { background-color: #0284c7; color: white; }
+.badge-pivot { background-color: #ea580c; color: white; }
+
+/* Pitch Player Card Placement */
+.pitch-player-card {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+}
+
+.pitch-player-card:hover {
+  z-index: 20;
+  transform: translate(-50%, -52%) scale(1.03);
+}
+
+/* Stat bar fill animation */
+.stat-bar-fill {
+  transition: width 0.3s ease-in-out;
+}
