@@ -5,9 +5,9 @@ export const POSITION_TAG_CONFIG: Record<
   { shortLabel: PositionTag; fullLabel: string; bgClass: string; textClass: string; borderClass: string }
 > = {
   GK: { shortLabel: 'GK', fullLabel: 'Thủ môn', bgClass: 'bg-emerald-100', textClass: 'text-emerald-800', borderClass: 'border-emerald-200' },
-  FI: { shortLabel: 'FI', fullLabel: 'Fixo', bgClass: 'bg-purple-100', textClass: 'text-purple-800', borderClass: 'border-purple-200' },
-  AL: { shortLabel: 'AL', fullLabel: 'Ala', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
-  PI: { shortLabel: 'PI', fullLabel: 'Pivot', bgClass: 'bg-amber-100', textClass: 'text-amber-800', borderClass: 'border-amber-200' },
+  FI: { shortLabel: 'FI', fullLabel: 'Hậu vệ', bgClass: 'bg-purple-100', textClass: 'text-purple-800', borderClass: 'border-purple-200' },
+  AL: { shortLabel: 'AL', fullLabel: 'Tiền vệ cánh', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
+  PI: { shortLabel: 'PI', fullLabel: 'Tiền đạo', bgClass: 'bg-amber-100', textClass: 'text-amber-800', borderClass: 'border-amber-200' },
 };
 
 export interface Player {
@@ -19,6 +19,7 @@ export interface Player {
   attack: number | null;  // Tấn công (0-10)
   defense: number | null; // Phòng thủ (0-10)
   positions?: PositionTag[]; // Tag vị trí thi đấu (GK, FI, AL, PI)
+  notes?: string; // Ghi chú đặc điểm riêng cho từng cầu thủ
 }
 
 export type PositionRole = 'GOALKEEPER' | 'FIXO' | 'ALA_LEFT' | 'ALA_RIGHT' | 'PIVOT';

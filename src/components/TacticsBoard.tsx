@@ -11,11 +11,30 @@ interface TacticsBoardProps {
   onSaveSquad: (squad: TacticalSquad) => void;
 }
 
+const getVietnameseShortName = (fullName: string): string => {
+  if (!fullName) return '';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 2) return fullName;
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+};
+
 export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSaveSquad }) => {
   const [currentFormationId, setCurrentFormationId] = useState<string>(squad.formationId || '3-1');
   const [slots, setSlots] = useState<PositionSlot[]>(squad.slots);
   const [notes, setNotes] = useState<string>(squad.notes || '');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
+  // Filter 5 starting players with notes
+  const startingPlayersWithNotes = useMemo(() => {
+    return slots
+      .map((slot) => {
+        if (!slot.playerId) return null;
+        const p = players.find((pl) => pl.id === slot.playerId);
+        if (!p || !p.notes || p.notes.trim() === '') return null;
+        return { slot, player: p };
+      })
+      .filter(Boolean) as Array<{ slot: PositionSlot; player: Player }>;
+  }, [slots, players]);
 
   // Sync squad state when props update (e.g. initial load, reset, or import)
   useEffect(() => {
@@ -492,11 +511,35 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               </div>
             </div>
 
-            {/* Notes */}
-            <div className="md:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide mb-3">GHI CHÚ</h4>
+            {/* Notes Section */}
+            <div className="md:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-3">
+              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide">
+                GHI CHÚ ĐỘI HÌNH & 5 CẦU THỦ RA SÂN
+              </h4>
+
+              {/* Starting Players Notes List */}
+              {startingPlayersWithNotes.length > 0 ? (
+                <div className="space-y-1.5 bg-amber-50/70 p-3 rounded-xl border border-amber-200/90">
+                  <span className="text-[11px] font-extrabold text-amber-900 uppercase tracking-wider block mb-1">
+                    📋 Đặc điểm cầu thủ ra sân ({startingPlayersWithNotes.length}):
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {startingPlayersWithNotes.map(({ slot, player }) => (
+                      <div key={slot.id} className="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs flex items-start space-x-1.5">
+                        <span className="font-black text-slate-900 shrink-0">#{player.number} {getVietnameseShortName(player.name)}:</span>
+                        <span className="text-amber-900 font-semibold truncate" title={player.notes}>{player.notes}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 font-medium italic bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                  Chưa có cầu thủ ra sân nào có ghi chú cá nhân riêng.
+                </div>
+              )}
+
               <textarea
-                placeholder="Nhập ghi chú cho đội hình này..."
+                placeholder="Nhập thêm ghi chú bài đánh chung cho đội hình này..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full flex-1 p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none font-medium text-slate-800"

@@ -239,6 +239,8 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       stamina: editingPlayer.stamina !== null && editingPlayer.stamina !== undefined && editingPlayer.stamina !== ('' as any) ? Number(editingPlayer.stamina) : null,
       attack: editingPlayer.attack !== null && editingPlayer.attack !== undefined && editingPlayer.attack !== ('' as any) ? Number(editingPlayer.attack) : null,
       defense: editingPlayer.defense !== null && editingPlayer.defense !== undefined && editingPlayer.defense !== ('' as any) ? Number(editingPlayer.defense) : null,
+      positions: editingPlayer.positions || [],
+      notes: editingPlayer.notes || '',
     });
 
     setIsModalOpen(false);
@@ -302,9 +304,9 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             >
               <option value="all">Tất cả vị trí</option>
               <option value="GK">🧤 Thủ môn (GK)</option>
-              <option value="FI">🟣 Fixo (FI)</option>
-              <option value="AL">🔵 Ala (AL)</option>
-              <option value="PI">🟠 Pivot (PI)</option>
+              <option value="FI">🟣 Hậu vệ (FI)</option>
+              <option value="AL">🔵 Tiền vệ cánh (AL)</option>
+              <option value="PI">🟠 Tiền đạo (PI)</option>
             </select>
           </div>
 
@@ -546,6 +548,54 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     }}
                     className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-semibold"
                   />
+                </div>
+              </div>
+
+              {/* Individual Player Notes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  📝 Ghi Chú Đặc Điểm (Ví dụ: Dễ bị tâm lý, Tỷ lệ phản lưới nhà cao...)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Nhập ghi chú đặc điểm cá nhân, tâm lý hoặc điểm mạnh/yếu..."
+                  value={editingPlayer.notes || ''}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, notes: e.target.value })}
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800"
+                />
+              </div>
+
+              {/* Position Tag Selector */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Vị Trí Thi Đấu Có Thể Đảm Nhận
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(['GK', 'FI', 'AL', 'PI'] as PositionTag[]).map((pos) => {
+                    const cfg = POSITION_TAG_CONFIG[pos];
+                    const isSelected = editingPlayer.positions?.includes(pos);
+                    return (
+                      <button
+                        key={pos}
+                        type="button"
+                        onClick={() => {
+                          const currentPos = editingPlayer.positions || [];
+                          const updated = isSelected
+                            ? currentPos.filter((p) => p !== pos)
+                            : [...currentPos, pos];
+                          setEditingPlayer({ ...editingPlayer, positions: updated });
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs font-black border flex items-center justify-between transition-all cursor-pointer ${
+                          isSelected
+                            ? `${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} ring-2 ring-blue-500/30`
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span>{cfg.fullLabel} ({cfg.shortLabel})</span>
+                        {isSelected && <Check className="w-3.5 h-3.5" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

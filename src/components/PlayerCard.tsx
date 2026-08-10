@@ -78,6 +78,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
             <span className="text-[11px] font-semibold text-slate-400">Chưa xếp vị trí</span>
           )}
         </div>
+
+        {/* Individual Player Notes Badge */}
+        {player.notes && player.notes.trim() !== '' && (
+          <div className="mt-2 w-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold px-2.5 py-1.5 rounded-xl flex items-start space-x-1.5 text-left">
+            <span className="shrink-0 text-amber-600 font-bold">📝</span>
+            <span className="line-clamp-2 leading-tight">{player.notes}</span>
+          </div>
+        )}
       </div>
 
       {/* Stat Sliders / Bars */}

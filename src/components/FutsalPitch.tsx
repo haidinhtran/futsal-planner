@@ -102,15 +102,15 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
               }`}
             >
               {/* Position Card Container */}
-              <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-40 p-3 overflow-hidden flex flex-col transition-all">
+              <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-[168px] p-2.5 overflow-hidden flex flex-col transition-all">
                 {/* Role Header Badge */}
                 <div
-                  className={`text-xs font-extrabold uppercase py-1 px-2.5 rounded-lg flex items-center justify-between mb-2.5 shadow-xs ${getRoleBadgeClass(
+                  className={`text-[10px] sm:text-[11px] font-black uppercase py-1 px-2 rounded-lg flex items-center justify-between mb-2 shadow-xs leading-none ${getRoleBadgeClass(
                     slot.role
                   )}`}
                 >
-                  <span className="truncate">{slot.label}</span>
-                  <GripVertical className="w-3.5 h-3.5 opacity-80 cursor-grab" />
+                  <span className="whitespace-nowrap tracking-tight" title={slot.label}>{slot.label}</span>
+                  <GripVertical className="w-3 h-3 opacity-80 cursor-grab shrink-0 ml-1" />
                 </div>
 
                 {player ? (
@@ -127,18 +127,17 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                       <X className="w-3.5 h-3.5" />
                     </button>
 
-                    {/* Top Row: Shirt Number & Centered Avatar */}
-                    <div className="flex items-center justify-center space-x-2.5 mb-1.5 w-full">
-                      <span className="text-xl font-black text-slate-900 leading-none">
-                        {player.number}
-                      </span>
-                      <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
-                        {player.avatar ? (
+                    {/* Top Row: Shirt Number & Avatar (Only if custom image present) */}
+                    <div className="flex items-center justify-center space-x-2 mb-1 w-full">
+                      {player.avatar ? (
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
                           <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="w-5 h-5 text-slate-400" />
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <span className="text-2xl font-black text-blue-600 leading-none">
+                          #{player.number}
+                        </span>
+                      )}
                     </div>
 
                     {/* Big Prominent Vietnamese Name on New Dedicated Row */}
@@ -150,7 +149,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
 
                     {/* Quick Position Tags (GK, FI, AL, PI) */}
                     {player.positions && player.positions.length > 0 && (
-                      <div className="flex flex-wrap items-center justify-center gap-1 mb-2">
+                      <div className="flex flex-wrap items-center justify-center gap-1 mb-1.5">
                         {player.positions.map((pos) => {
                           const cfg = POSITION_TAG_CONFIG[pos];
                           return (
@@ -163,6 +162,16 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                             </span>
                           );
                         })}
+                      </div>
+                    )}
+
+                    {/* Individual Player Notes Tag on Pitch Card */}
+                    {player.notes && player.notes.trim() !== '' && (
+                      <div
+                        className="w-full mb-1.5 px-1.5 py-1 bg-amber-50 border border-amber-200/90 text-amber-900 rounded-lg text-[11px] font-bold leading-tight truncate text-left"
+                        title={player.notes}
+                      >
+                        📝 {player.notes}
                       </div>
                     )}
 
