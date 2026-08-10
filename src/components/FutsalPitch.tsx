@@ -105,11 +105,13 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-[168px] p-2.5 overflow-hidden flex flex-col transition-all">
                 {/* Role Header Badge */}
                 <div
-                  className={`text-[10px] sm:text-[11px] font-black uppercase py-1 px-2 rounded-lg flex items-center justify-between mb-2 shadow-xs leading-none ${getRoleBadgeClass(
+                  className={`text-[9.5px] sm:text-[10.5px] font-black uppercase py-1 px-1.5 rounded-lg flex items-center justify-between mb-2 shadow-xs leading-tight ${getRoleBadgeClass(
                     slot.role
                   )}`}
                 >
-                  <span className="whitespace-nowrap tracking-tight" title={slot.label}>{slot.label}</span>
+                  <span className="whitespace-normal break-words text-center flex-1 tracking-tighter" title={slot.label}>
+                    {slot.label}
+                  </span>
                   <GripVertical className="w-3 h-3 opacity-80 cursor-grab shrink-0 ml-1" />
                 </div>
 

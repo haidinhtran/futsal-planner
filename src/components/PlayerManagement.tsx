@@ -1,18 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import type { Player, PositionTag } from '../types/futsal';
-import { POSITION_TAG_CONFIG } from '../types/futsal';
+import { POSITION_TAG_CONFIG, getPositionConfig } from '../types/futsal';
 import { PlayerCard } from './PlayerCard';
 import { Plus, Search, ArrowUpDown, LayoutGrid, List, X, Check, AlertCircle, Filter, Download, FileText } from 'lucide-react';
 
 const getFullPositionLabel = (positions?: PositionTag[]): string => {
   if (!positions || positions.length === 0) return 'Chưa phân vị trí';
-  const labelMap: Record<PositionTag, string> = {
-    GK: 'Thủ Môn',
-    FI: 'Hậu Vệ (Fixo)',
-    AL: 'Tiền Vệ Cánh (Ala)',
-    PI: 'Tiền Đạo (Pivot)',
-  };
-  return positions.map((p) => labelMap[p] || p).join(', ');
+  return positions.map((p) => getPositionConfig(p).fullLabel).join(', ');
 };
 
 const getFormattedDateCode = (): string => {
@@ -303,10 +297,11 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
               className="bg-transparent font-bold focus:outline-none cursor-pointer text-slate-900"
             >
               <option value="all">Tất cả vị trí</option>
-              <option value="GK">🧤 Thủ môn (GK)</option>
-              <option value="FI">🟣 Hậu vệ (FI)</option>
-              <option value="AL">🔵 Tiền vệ cánh (AL)</option>
-              <option value="PI">🟠 Tiền đạo (PI)</option>
+              <option value="GK">🧤 Thủ Môn</option>
+              <option value="FI">🟣 Hậu Vệ</option>
+              <option value="AL_L">🔵 Tiền Vệ Cánh Trái</option>
+              <option value="AL_R">🟣 Tiền Vệ Cánh Phải</option>
+              <option value="PI">🟠 Tiền Đạo</option>
             </select>
           </div>
 
@@ -445,7 +440,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                       {p.positions && p.positions.length > 0 ? (
                         <div className="flex flex-wrap items-center gap-1">
                           {p.positions.map((pos) => {
-                            const cfg = POSITION_TAG_CONFIG[pos];
+                            const cfg = getPositionConfig(pos);
                             return (
                               <span
                                 key={pos}
@@ -570,8 +565,8 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Vị Trí Thi Đấu Có Thể Đảm Nhận
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {(['GK', 'FI', 'AL', 'PI'] as PositionTag[]).map((pos) => {
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                  {(['GK', 'FI', 'AL_L', 'AL_R', 'PI'] as PositionTag[]).map((pos) => {
                     const cfg = POSITION_TAG_CONFIG[pos];
                     const isSelected = editingPlayer.positions?.includes(pos);
                     return (
@@ -591,7 +586,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                             : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                         }`}
                       >
-                        <span>{cfg.fullLabel} ({cfg.shortLabel})</span>
+                        <span>{cfg.fullLabel}</span>
                         {isSelected && <Check className="w-3.5 h-3.5" />}
                       </button>
                     );

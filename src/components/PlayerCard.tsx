@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Player } from '../types/futsal';
-import { POSITION_TAG_CONFIG } from '../types/futsal';
+import { getPositionConfig } from '../types/futsal';
 import { User, Edit2, Trash2 } from 'lucide-react';
 
 interface PlayerCardProps {
@@ -64,7 +64,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
         <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
           {player.positions && player.positions.length > 0 ? (
             player.positions.map((pos) => {
-              const cfg = POSITION_TAG_CONFIG[pos];
+              const cfg = getPositionConfig(pos);
               return (
                 <span
                   key={pos}

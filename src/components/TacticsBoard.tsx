@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Player, TacticalSquad, PositionSlot } from '../types/futsal';
-import { POSITION_TAG_CONFIG } from '../types/futsal';
+import { POSITION_TAG_CONFIG, getPositionConfig } from '../types/futsal';
 import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
 import { RefreshCw, Save, Trash2, ArrowLeftRight, Info } from 'lucide-react';
@@ -324,15 +324,18 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                         {/* Quick Position Badges */}
                         {p.positions && p.positions.length > 0 && (
                           <div className="flex items-center space-x-0.5 shrink-0">
-                            {p.positions.map((pos) => (
-                              <span
-                                key={pos}
-                                className={`text-[9px] font-black px-1 rounded border ${POSITION_TAG_CONFIG[pos].bgClass} ${POSITION_TAG_CONFIG[pos].textClass} ${POSITION_TAG_CONFIG[pos].borderClass}`}
-                                title={POSITION_TAG_CONFIG[pos].fullLabel}
-                              >
-                                {POSITION_TAG_CONFIG[pos].shortLabel}
-                              </span>
-                            ))}
+                            {p.positions.map((pos) => {
+                              const cfg = getPositionConfig(pos);
+                              return (
+                                <span
+                                  key={pos}
+                                  className={`text-[9px] font-black px-1 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
+                                  title={cfg.fullLabel}
+                                >
+                                  {cfg.shortLabel}
+                                </span>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
