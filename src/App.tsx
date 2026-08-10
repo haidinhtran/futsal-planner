@@ -10,8 +10,8 @@ type TabType = 'tactics' | 'players' | 'presentation';
 
 const getTabFromLocation = (): TabType => {
   const path = window.location.pathname.toLowerCase();
-  if (path === '/players') return 'players';
-  if (path === '/present') return 'presentation';
+  if (path.includes('/players')) return 'players';
+  if (path.includes('/present')) return 'presentation';
   return 'tactics'; // default ./ or /plan
 };
 
