@@ -222,7 +222,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
       <div className="bg-white px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
         {/* Preset Formations Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-0.5 max-w-full no-scrollbar">
-          <span className="text-xs font-black text-slate-500 uppercase tracking-wider mr-1 shrink-0">
+          <span className="text-xs sm:text-sm font-black text-slate-500 uppercase tracking-wider mr-1 shrink-0">
             ĐỘI HÌNH:
           </span>
           {FORMATION_PRESETS.map((preset) => (
@@ -236,7 +236,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               }`}
             >
               <div className="text-xs sm:text-sm font-black leading-none mb-0.5">{preset.name}</div>
-              <div className="text-[10px] opacity-80 font-medium leading-none">{preset.subName}</div>
+              <div className="text-[11px] sm:text-xs opacity-90 font-semibold leading-none">{preset.subName}</div>
             </button>
           ))}
         </div>
@@ -245,14 +245,14 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
         <div className="flex items-center justify-end space-x-2 shrink-0">
           <button
             onClick={handleResetPreset}
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Đặt lại</span>
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-xs sm:text-sm font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
           >
             <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Lưu đội hình</span>
@@ -370,7 +370,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
 
         {/* Center: Interactive Futsal Court (8 Cols) */}
         <div className="order-1 lg:order-2 lg:col-span-8 xl:col-span-8 space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-1.5 sm:p-5 space-y-3 sm:space-y-4">
             <FutsalPitch
               slots={slots}
               playersMap={playersMap}

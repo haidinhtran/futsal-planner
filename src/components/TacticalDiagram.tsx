@@ -438,7 +438,7 @@ export const TacticalDiagram: React.FC = () => {
       </div>
 
       {/* Main Interactive Pitch Drawing Board */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+      <div className="bg-white p-1.5 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
         <div className="flex items-center justify-between text-xs font-bold text-slate-700">
           <div className="flex items-center space-x-2">
             <Sparkles className="w-4 h-4 text-amber-500" />

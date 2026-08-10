@@ -9,13 +9,12 @@ export const storageService = {
     try {
       const data = localStorage.getItem(PLAYERS_KEY);
       if (!data) {
-        this.savePlayers(INITIAL_PLAYERS);
-        return INITIAL_PLAYERS;
+        return [];
       }
       return JSON.parse(data);
     } catch (e) {
       console.error('Error reading players from localStorage', e);
-      return INITIAL_PLAYERS;
+      return [];
     }
   },
 
