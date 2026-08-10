@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Player, TacticalSquad, PositionSlot } from '../types/futsal';
 import { POSITION_TAG_CONFIG } from '../types/futsal';
-import { FORMATION_PRESETS } from '../services/initialData';
+import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
 import { RefreshCw, Save, Trash2, ArrowLeftRight, Info } from 'lucide-react';
 
@@ -181,7 +181,22 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   };
 
   const handleResetPreset = () => {
-    handleSelectFormation(currentFormationId);
+    const preset = FORMATION_PRESETS.find((f) => f.id === currentFormationId);
+    if (!preset) return;
+
+    if (currentFormationId === INITIAL_TACTICAL_SQUAD.formationId) {
+      setSlots(INITIAL_TACTICAL_SQUAD.slots.map((s) => ({ ...s })));
+    } else {
+      const resetSlots: PositionSlot[] = preset.positions.map((pos, idx) => ({
+        id: `slot-${idx}`,
+        role: pos.role,
+        label: pos.label,
+        x: pos.x,
+        y: pos.y,
+        playerId: null,
+      }));
+      setSlots(resetSlots);
+    }
   };
 
   const handleSidebarPlayerClick = (playerId: string) => {
@@ -202,44 +217,44 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   };
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Top Bar: Formation Selector & Main Actions */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-4">
+      <div className="bg-white px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
         {/* Preset Formations Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-xs font-black text-slate-500 uppercase tracking-wider mr-2">
-            CHỌN ĐỘI HÌNH:
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-0.5 max-w-full no-scrollbar">
+          <span className="text-xs font-black text-slate-500 uppercase tracking-wider mr-1 shrink-0">
+            ĐỘI HÌNH:
           </span>
           {FORMATION_PRESETS.map((preset) => (
             <button
               key={preset.id}
               onClick={() => handleSelectFormation(preset.id)}
-              className={`px-5 py-2.5 rounded-xl text-center transition-all cursor-pointer ${
+              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-center transition-all cursor-pointer shrink-0 ${
                 currentFormationId === preset.id
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold ring-2 ring-blue-500 ring-offset-1'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold'
               }`}
             >
-              <div className="text-sm leading-tight">{preset.name}</div>
-              <div className="text-[11px] opacity-75 font-normal">{preset.subName}</div>
+              <div className="text-xs sm:text-sm font-black leading-none mb-0.5">{preset.name}</div>
+              <div className="text-[10px] opacity-80 font-medium leading-none">{preset.subName}</div>
             </button>
           ))}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-3 shrink-0">
+        <div className="flex items-center justify-end space-x-2 shrink-0">
           <button
             onClick={handleResetPreset}
-            className="flex items-center space-x-2 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Đặt lại</span>
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center space-x-2 px-5 py-2.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Lưu đội hình</span>
           </button>
         </div>
@@ -248,7 +263,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
       {/* Main Grid Layout: Left Sidebar (4 Cols) + Center Pitch (8 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Sidebar: Player List (4 Cols) */}
-        <div className="lg:col-span-4 xl:col-span-4 space-y-4">
+        <div className="order-2 lg:order-1 lg:col-span-4 xl:col-span-4 space-y-4">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col h-full justify-between space-y-4">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
@@ -354,7 +369,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
         </div>
 
         {/* Center: Interactive Futsal Court (8 Cols) */}
-        <div className="lg:col-span-8 xl:col-span-8 space-y-5">
+        <div className="order-1 lg:order-2 lg:col-span-8 xl:col-span-8 space-y-5">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
             <FutsalPitch
               slots={slots}

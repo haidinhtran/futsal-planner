@@ -322,8 +322,8 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
       {/* Edit / Add Modal */}
       {isModalOpen && editingPlayer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-safe sm:pb-0">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
               <h3 className="text-lg font-bold text-slate-900">
                 {players.some((p) => p.id === editingPlayer.id) ? 'Chỉnh Sửa Cầu Thủ' : 'Thêm Cầu Thủ Mới'}

@@ -165,3 +165,45 @@ body {
 .stat-bar-fill {
   transition: width 0.3s ease-in-out;
 }
+
+/* Mobile Responsiveness & Safe Area Insets */
+@media (max-width: 768px) {
+  .futsal-pitch-container {
+    padding: 8px;
+    border-radius: 8px;
+  }
+  .futsal-pitch-floor {
+    aspect-ratio: 1.6 / 1;
+  }
+  .pitch-player-card {
+    transform: translate(-50%, -50%) scale(0.82);
+  }
+  .pitch-player-card:hover {
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
+@media (max-width: 480px) {
+  .futsal-pitch-container {
+    padding: 6px;
+  }
+  .futsal-pitch-floor {
+    aspect-ratio: 1.42 / 1;
+  }
+  .pitch-player-card {
+    transform: translate(-50%, -50%) scale(0.70);
+  }
+  .pitch-player-card:hover {
+    transform: translate(-50%, -50%) scale(0.73);
+  }
+}
+
+/* Safe area padding for Bottom Navigation Bar */
+.pb-safe {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Prevent touchscreen pull-to-refresh / scrolling while drawing */
+.touch-none-canvas {
+  touch-action: none;
+}

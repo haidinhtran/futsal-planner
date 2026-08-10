@@ -216,6 +216,79 @@ export const TacticalDiagram: React.FC = () => {
     setCurrentPoints([]);
   };
 
+  const getTouchCoords = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (!containerRef.current || e.touches.length === 0) return { x: 0, y: 0 };
+    const touch = e.touches[0];
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    return { x, y };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    const pt = getTouchCoords(e);
+
+    if (activeTool === 'pointer') {
+      setLaserPos(pt);
+      return;
+    }
+
+    if (
+      activeTool === 'player-home' ||
+      activeTool === 'player-away' ||
+      activeTool === 'circle-red' ||
+      activeTool === 'circle-blue' ||
+      activeTool === 'cross-red' ||
+      activeTool === 'ball'
+    ) {
+      const toolType = activeTool === 'circle-blue' ? 'player-home' : activeTool === 'circle-red' ? 'player-away' : activeTool;
+      const newShape: DrawShape = {
+        id: Date.now().toString(),
+        tool: toolType,
+        points: [pt],
+        color: toolType === 'player-home' ? '#16a34a' : toolType === 'player-away' || toolType === 'cross-red' ? '#dc2626' : '#ffffff',
+      };
+      setShapes((prev) => [...prev, newShape]);
+      return;
+    }
+
+    if (activeTool === 'text') {
+      const text = prompt('Nhập văn bản ghi chú chiến thuật:', textInput || 'Chạy biên');
+      if (text) {
+        const newShape: DrawShape = {
+          id: Date.now().toString(),
+          tool: 'text',
+          points: [pt],
+          color: '#ffffff',
+          text,
+        };
+        setShapes((prev) => [...prev, newShape]);
+      }
+      return;
+    }
+
+    setIsDrawing(true);
+    setCurrentPoints([pt]);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    const pt = getTouchCoords(e);
+
+    if (activeTool === 'pointer') {
+      setLaserPos(pt);
+      return;
+    } else {
+      setLaserPos(null);
+    }
+
+    if (!isDrawing) return;
+    setCurrentPoints((prev) => [...prev, pt]);
+  };
+
+  const handleTouchEnd = () => {
+    handleMouseUp();
+  };
+
   const handleUndo = () => {
     setShapes((prev) => prev.slice(0, -1));
   };
@@ -391,10 +464,13 @@ export const TacticalDiagram: React.FC = () => {
 
             {/* SVG Drawing Canvas Overlay */}
             <svg
-              className="absolute inset-0 w-full h-full cursor-crosshair z-20"
+              className="absolute inset-0 w-full h-full cursor-crosshair z-20 touch-none-canvas"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               <defs>
                 <marker

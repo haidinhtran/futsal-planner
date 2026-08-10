@@ -98,7 +98,7 @@ export const App = () => {
       />
 
       {/* Main Tab View Content */}
-      <main className="flex-1 pb-12">
+      <main className="flex-1 pb-16 md:pb-12 pb-safe">
         {activeTab === 'tactics' && (
           <TacticsBoard
             players={players}
@@ -118,7 +118,7 @@ export const App = () => {
         {activeTab === 'presentation' && <TacticalDiagram />}
       </main>
 
-      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs font-semibold text-slate-500">
+      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs font-semibold text-slate-500 mb-16 md:mb-0">
         Một sản phẩm của AI với sự từ chối mọi trách nhiệm từ tuiii - Hải Trần
       </footer>
     </div>
