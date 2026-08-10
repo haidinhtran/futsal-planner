@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import type { Player } from '../types/futsal';
+import type { Player, PositionTag } from '../types/futsal';
 import { PlayerCard } from './PlayerCard';
-import { Plus, Search, ArrowUpDown, LayoutGrid, List, X, Check, AlertCircle } from 'lucide-react';
+import { Plus, Search, ArrowUpDown, LayoutGrid, List, X, Check, AlertCircle, Filter } from 'lucide-react';
 
 interface PlayerManagementProps {
   players: Player[];
@@ -16,6 +16,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRated, setFilterRated] = useState<'all' | 'rated' | 'unrated'>('all');
+  const [filterPosition, setFilterPosition] = useState<'all' | PositionTag>('all');
   const [sortBy, setSortBy] = useState<'number' | 'name' | 'total' | 'stamina' | 'attack' | 'defense'>('number');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -41,8 +42,15 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
         if (!matchesSearch) return false;
 
         const isRated = p.stamina !== null || p.attack !== null || p.defense !== null;
-        if (filterRated === 'rated') return isRated;
-        if (filterRated === 'unrated') return !isRated;
+        if (filterRated === 'rated' && !isRated) return false;
+        if (filterRated === 'unrated' && isRated) return false;
+
+        if (filterPosition !== 'all') {
+          if (!p.positions || !p.positions.includes(filterPosition)) {
+            return false;
+          }
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -61,7 +69,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
         if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
         return 0;
       });
-  }, [players, searchTerm, filterRated, sortBy, sortOrder]);
+  }, [players, searchTerm, filterRated, filterPosition, sortBy, sortOrder]);
 
   const handleOpenAddModal = () => {
     const usedNumbers = new Set(players.map((p) => p.number));
@@ -166,6 +174,23 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             >
               Chưa đánh giá
             </button>
+          </div>
+
+          {/* Position Filter */}
+          <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700">
+            <Filter className="w-4 h-4 text-slate-400" />
+            <span>Vị trí:</span>
+            <select
+              value={filterPosition}
+              onChange={(e) => setFilterPosition(e.target.value as any)}
+              className="bg-transparent font-bold focus:outline-none cursor-pointer text-slate-900"
+            >
+              <option value="all">Tất cả vị trí</option>
+              <option value="GK">🧤 Thủ môn (GK)</option>
+              <option value="FI">🟣 Fixo (FI)</option>
+              <option value="AL">🔵 Ala (AL)</option>
+              <option value="PI">🟠 Pivot (PI)</option>
+            </select>
           </div>
 
           {/* Sort Dropdown */}
