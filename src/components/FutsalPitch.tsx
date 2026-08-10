@@ -1,12 +1,13 @@
 import React from 'react';
-import type { PositionSlot, Player } from '../types/futsal';
-import { POSITION_TAG_CONFIG } from '../types/futsal';
+import type { PositionSlot, Player, AttackDirection } from '../types/futsal';
+import { getPositionConfig } from '../types/futsal';
 import { User, X, GripVertical } from 'lucide-react';
 
 interface FutsalPitchProps {
   slots: PositionSlot[];
   playersMap: Record<string, Player>;
   selectedSlotId: string | null;
+  attackDirection?: AttackDirection;
   onSelectSlot: (slotId: string) => void;
   onAssignPlayerToSlot: (slotId: string, playerId: string) => void;
   onClearSlot: (slotId: string) => void;
@@ -25,6 +26,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
   slots,
   playersMap,
   selectedSlotId,
+  attackDirection = 'right',
   onSelectSlot,
   onAssignPlayerToSlot,
   onClearSlot,
@@ -70,8 +72,48 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
     }
   };
 
+  const getPlayerAverage = (p: Player) => {
+    let sum = 0, count = 0;
+    if (p.stamina !== null) { sum += p.stamina; count++; }
+    if (p.attack !== null) { sum += p.attack; count++; }
+    if (p.defense !== null) { sum += p.defense; count++; }
+    return count > 0 ? (sum / count).toFixed(1) : '-';
+  };
+
+  const getPopoverPositionClass = (x: number, y: number) => {
+    // Vertical placement: default above, if near top (< 35%) place below
+    const vertClass = y < 35 ? 'top-[calc(100%+8px)]' : 'bottom-[calc(100%+8px)]';
+
+    // Horizontal placement:
+    // If near left edge (< 25%), align to left edge of card
+    // If near right edge (> 75%), align to right edge of card
+    // Otherwise center
+    let horizClass = 'left-1/2 -translate-x-1/2';
+    if (x < 25) {
+      horizClass = 'left-0 translate-x-0';
+    } else if (x > 75) {
+      horizClass = 'right-0 left-auto translate-x-0';
+    }
+
+    return `${vertClass} ${horizClass}`;
+  };
+
   return (
     <div className="futsal-pitch-container w-full">
+      {/* UI Safe Area: Dedicated Header Bar for Court Controls & Attack Direction */}
+      <div className="flex items-center justify-between bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl mb-3 border border-slate-700 text-white text-xs font-bold shadow-sm">
+        <div className="flex items-center space-x-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="text-slate-300 font-extrabold uppercase tracking-wider">SÂN THI ĐẤU FUTSAL</span>
+        </div>
+        <div className="flex items-center space-x-2 bg-slate-800/90 px-3 py-1 rounded-lg border border-slate-700">
+          <span className="text-slate-400">Hướng tấn công:</span>
+          <span className="text-yellow-400 font-extrabold flex items-center gap-1">
+            {attackDirection === 'left' ? '← Sang trái' : 'Sang phải →'}
+          </span>
+        </div>
+      </div>
+
       {/* Outer Pitch Border & Playing Floor */}
       <div className="futsal-pitch-floor relative min-h-[480px]">
         {/* Court markings */}
@@ -87,6 +129,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
         {slots.map((slot) => {
           const player = slot.playerId ? playersMap[slot.playerId] : null;
           const isSelected = selectedSlotId === slot.id;
+          const popoverPosClass = getPopoverPositionClass(slot.x, slot.y);
 
           return (
             <div
@@ -97,15 +140,15 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, slot.id)}
               onClick={() => onSelectSlot(slot.id)}
-              className={`pitch-player-card cursor-pointer ${
+              className={`pitch-player-card cursor-pointer group ${
                 isSelected ? 'ring-4 ring-yellow-400 ring-offset-2 scale-105 z-30' : ''
               }`}
             >
-              {/* Position Card Container */}
-              <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-[168px] p-2.5 overflow-hidden flex flex-col transition-all">
+              {/* Compact Tactical Card Container */}
+              <div className="bg-white rounded-xl shadow-xl border border-slate-200/90 w-[132px] sm:w-[138px] p-2 overflow-visible flex flex-col transition-all relative">
                 {/* Role Header Badge */}
                 <div
-                  className={`text-[9.5px] sm:text-[10.5px] font-black uppercase py-1 px-1.5 rounded-lg flex items-center justify-between mb-2 shadow-xs leading-tight ${getRoleBadgeClass(
+                  className={`text-[9px] sm:text-[10px] font-black uppercase py-0.5 px-1.5 rounded-lg flex items-center justify-between mb-1.5 shadow-2xs leading-tight ${getRoleBadgeClass(
                     slot.role
                   )}`}
                 >
@@ -116,88 +159,99 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                 </div>
 
                 {player ? (
-                  /* Player assigned */
+                  /* Player assigned - Compact Layout */
                   <div className="flex flex-col items-center relative text-center">
+                    {/* Redesigned Compact Circular Remove Button */}
                     <button
+                      type="button"
+                      onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
                         onClearSlot(slot.id);
                       }}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-opacity z-10 cursor-pointer"
+                      className="absolute -top-3.5 -right-3.5 w-5 h-5 rounded-full bg-white text-slate-400 border border-slate-200 shadow-xs opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-500 hover:text-white hover:border-red-500 hover:scale-110 z-20 cursor-pointer"
                       title="Bỏ cầu thủ khỏi vị trí"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3 h-3" />
                     </button>
 
-                    {/* Top Row: Shirt Number & Avatar (Only if custom image present) */}
-                    <div className="flex items-center justify-center space-x-2 mb-1 w-full">
-                      {player.avatar ? (
-                        <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
-                          <img src={player.avatar} alt={player.name} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <span className="text-2xl font-black text-blue-600 leading-none">
-                          #{player.number}
-                        </span>
-                      )}
+                    {/* Prominent Shirt Number */}
+                    <div className="flex items-center justify-center mb-0.5">
+                      <span className="text-base sm:text-lg font-black text-blue-600 leading-none">
+                        #{player.number}
+                      </span>
                     </div>
 
-                    {/* Big Prominent Vietnamese Name on New Dedicated Row */}
-                    <div className="w-full mb-1 px-1" title={player.name}>
-                      <span className="text-sm font-black text-slate-900 block truncate leading-tight">
+                    {/* Vietnamese Short Name */}
+                    <div className="w-full px-0.5 mb-1" title={player.name}>
+                      <span className="text-xs font-black text-slate-900 block truncate leading-tight">
                         {getVietnameseShortName(player.name)}
                       </span>
                     </div>
 
-                    {/* Quick Position Tags (GK, FI, AL, PI) */}
-                    {player.positions && player.positions.length > 0 && (
-                      <div className="flex flex-wrap items-center justify-center gap-1 mb-1.5">
-                        {player.positions.map((pos) => {
-                          const cfg = POSITION_TAG_CONFIG[pos];
-                          return (
-                            <span
-                              key={pos}
-                              className={`text-[10px] font-black px-1.5 py-0.2 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
-                              title={cfg.fullLabel}
-                            >
-                              {cfg.shortLabel}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Individual Player Notes Tag on Pitch Card */}
+                    {/* Individual Player Note (ONLY rendered if present, 1 line truncated) */}
                     {player.notes && player.notes.trim() !== '' && (
                       <div
-                        className="w-full mb-1.5 px-1.5 py-1 bg-amber-50 border border-amber-200/90 text-amber-900 rounded-lg text-[11px] font-bold leading-tight truncate text-left"
+                        className="w-full px-1.5 py-0.5 bg-amber-50 border border-amber-200/90 text-amber-900 rounded-md text-[10px] font-extrabold leading-tight truncate text-left"
                         title={player.notes}
                       >
                         📝 {player.notes}
                       </div>
                     )}
 
-                    {/* Stats List */}
-                    <div className="w-full text-xs font-bold space-y-1 pt-2 border-t border-slate-100 text-left">
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span>Thể Lực</span>
-                        <span className="font-black text-emerald-600">{player.stamina ?? '-'}</span>
+                    {/* Smart Floating Rich Popover Tooltip (Appears on Hover / Focus, Auto Positioned) */}
+                    <div className={`opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto absolute ${popoverPosClass} w-[190px] bg-slate-900/95 backdrop-blur-md text-white rounded-xl p-3 shadow-2xl border border-slate-700/80 z-50 flex flex-col gap-1.5 text-left`}>
+                      <div className="flex items-center justify-between border-b border-slate-700 pb-1.5">
+                        <span className="font-black text-sm text-yellow-400">#{player.number} {player.name}</span>
+                        <span className="text-[10px] font-extrabold bg-blue-600 px-1.5 py-0.5 rounded text-white">{getPlayerAverage(player)} đ</span>
                       </div>
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span>Tấn Công</span>
-                        <span className="font-black text-orange-600">{player.attack ?? '-'}</span>
+                      <div className="text-[10px] font-bold text-slate-300">
+                        {slot.label}
                       </div>
-                      <div className="flex justify-between items-center text-slate-600">
-                        <span>Phòng Thủ</span>
-                        <span className="font-black text-blue-600">{player.defense ?? '-'}</span>
+
+                      {/* Capabilities */}
+                      {player.positions && player.positions.length > 0 && (
+                        <div className="flex flex-wrap gap-1 my-0.5">
+                          {player.positions.map((pTag) => {
+                            const cfg = getPositionConfig(pTag);
+                            return (
+                              <span key={pTag} className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${cfg.bgClass} ${cfg.textClass}`}>
+                                {cfg.shortLabel}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Detailed Stats */}
+                      <div className="grid grid-cols-3 gap-1 text-[10px] font-bold text-center pt-1 border-t border-slate-800">
+                        <div className="bg-slate-800/80 p-1 rounded">
+                          <span className="text-emerald-400 block text-[9px]">TL</span>
+                          <span>{player.stamina ?? '-'}</span>
+                        </div>
+                        <div className="bg-slate-800/80 p-1 rounded">
+                          <span className="text-orange-400 block text-[9px]">TC</span>
+                          <span>{player.attack ?? '-'}</span>
+                        </div>
+                        <div className="bg-slate-800/80 p-1 rounded">
+                          <span className="text-blue-400 block text-[9px]">PT</span>
+                          <span>{player.defense ?? '-'}</span>
+                        </div>
                       </div>
+
+                      {/* Full Notes */}
+                      {player.notes && (
+                        <div className="text-[10px] text-amber-300 font-medium pt-1 border-t border-slate-800 break-words">
+                          📝 {player.notes}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
                   /* Empty Slot Placeholder */
-                  <div className="py-6 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center bg-slate-50 hover:bg-blue-50 transition-colors">
-                    <User className="w-7 h-7 text-slate-300 mb-1" />
-                    <span className="text-xs font-bold text-slate-400">Chọn cầu thủ</span>
+                  <div className="py-4 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center bg-slate-50 hover:bg-blue-50 transition-colors">
+                    <User className="w-5 h-5 text-slate-300 mb-0.5" />
+                    <span className="text-[10px] font-bold text-slate-400">Chọn cầu thủ</span>
                   </div>
                 )}
               </div>

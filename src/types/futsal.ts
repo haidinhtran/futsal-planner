@@ -61,11 +61,14 @@ export interface FormationPreset {
   }>;
 }
 
+export type AttackDirection = 'right' | 'left';
+
 export interface TacticalSquad {
   id: string;
   formationId: string;
   slots: PositionSlot[];
   notes: string;
+  attackDirection?: AttackDirection;
   updatedAt: string;
 }
 

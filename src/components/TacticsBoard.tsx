@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import type { Player, TacticalSquad, PositionSlot } from '../types/futsal';
+import type { Player, TacticalSquad, PositionSlot, AttackDirection } from '../types/futsal';
 import { POSITION_TAG_CONFIG, getPositionConfig } from '../types/futsal';
 import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
@@ -22,6 +22,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   const [currentFormationId, setCurrentFormationId] = useState<string>(squad.formationId || '3-1');
   const [slots, setSlots] = useState<PositionSlot[]>(squad.slots);
   const [notes, setNotes] = useState<string>(squad.notes || '');
+  const [attackDirection, setAttackDirection] = useState<AttackDirection>(squad.attackDirection || 'right');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
 
   // Filter 5 starting players with notes
@@ -42,6 +43,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
       setCurrentFormationId(squad.formationId || '3-1');
       setSlots(squad.slots || []);
       setNotes(squad.notes || '');
+      setAttackDirection(squad.attackDirection || 'right');
     }
   }, [squad]);
 
@@ -123,6 +125,19 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     };
   }, [slots, playersMap]);
 
+  // Toggle Attack Direction (Left <-> Right)
+  const handleToggleAttackDirection = () => {
+    const nextDirection: AttackDirection = attackDirection === 'right' ? 'left' : 'right';
+    setAttackDirection(nextDirection);
+    setSlots((prev) =>
+      prev.map((slot) => ({
+        ...slot,
+        x: Number((100 - slot.x).toFixed(2)),
+        y: Number((100 - slot.y).toFixed(2)),
+      }))
+    );
+  };
+
   // Change Preset Formation layout
   const handleSelectFormation = (formationId: string) => {
     setCurrentFormationId(formationId);
@@ -132,12 +147,14 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     // Keep existing assigned players if possible, map to new position coordinates
     const newSlots: PositionSlot[] = preset.positions.map((pos, idx) => {
       const existingPlayerId = slots[idx]?.playerId || null;
+      const posX = attackDirection === 'left' ? 100 - pos.x : pos.x;
+      const posY = attackDirection === 'left' ? 100 - pos.y : pos.y;
       return {
         id: `slot-${idx}`,
         role: pos.role,
         label: pos.label,
-        x: pos.x,
-        y: pos.y,
+        x: Number(posX.toFixed(2)),
+        y: Number(posY.toFixed(2)),
         playerId: existingPlayerId,
       };
     });
@@ -193,6 +210,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
       formationId: currentFormationId,
       slots,
       notes,
+      attackDirection,
       updatedAt: new Date().toISOString(),
     };
     onSaveSquad(updatedSquad);
@@ -204,16 +222,30 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     if (!preset) return;
 
     if (currentFormationId === INITIAL_TACTICAL_SQUAD.formationId) {
-      setSlots(INITIAL_TACTICAL_SQUAD.slots.map((s) => ({ ...s })));
+      setSlots(
+        INITIAL_TACTICAL_SQUAD.slots.map((s) => {
+          const posX = attackDirection === 'left' ? 100 - s.x : s.x;
+          const posY = attackDirection === 'left' ? 100 - s.y : s.y;
+          return {
+            ...s,
+            x: Number(posX.toFixed(2)),
+            y: Number(posY.toFixed(2)),
+          };
+        })
+      );
     } else {
-      const resetSlots: PositionSlot[] = preset.positions.map((pos, idx) => ({
-        id: `slot-${idx}`,
-        role: pos.role,
-        label: pos.label,
-        x: pos.x,
-        y: pos.y,
-        playerId: null,
-      }));
+      const resetSlots: PositionSlot[] = preset.positions.map((pos, idx) => {
+        const posX = attackDirection === 'left' ? 100 - pos.x : pos.x;
+        const posY = attackDirection === 'left' ? 100 - pos.y : pos.y;
+        return {
+          id: `slot-${idx}`,
+          role: pos.role,
+          label: pos.label,
+          x: Number(posX.toFixed(2)),
+          y: Number(posY.toFixed(2)),
+          playerId: null,
+        };
+      });
       setSlots(resetSlots);
     }
   };
@@ -262,6 +294,14 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
 
         {/* Action Buttons */}
         <div className="flex items-center justify-end space-x-2 shrink-0">
+          <button
+            onClick={handleToggleAttackDirection}
+            title="Đổi hướng tấn công"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+            <span>Đổi hướng ({attackDirection === 'right' ? '→' : '←'})</span>
+          </button>
           <button
             onClick={handleResetPreset}
             className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
@@ -397,6 +437,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               slots={slots}
               playersMap={playersMap}
               selectedSlotId={selectedSlotId}
+              attackDirection={attackDirection}
               onSelectSlot={(id) => setSelectedSlotId(selectedSlotId === id ? null : id)}
               onAssignPlayerToSlot={handleAssignPlayerToSlot}
               onClearSlot={handleClearSlot}
