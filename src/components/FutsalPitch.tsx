@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PositionSlot, Player } from '../types/futsal';
+import { POSITION_TAG_CONFIG } from '../types/futsal';
 import { User, X, GripVertical } from 'lucide-react';
 
 interface FutsalPitchProps {
@@ -127,7 +128,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                     </button>
 
                     {/* Top Row: Shirt Number & Centered Avatar */}
-                    <div className="flex items-center justify-center space-x-2.5 mb-2 w-full">
+                    <div className="flex items-center justify-center space-x-2.5 mb-1.5 w-full">
                       <span className="text-xl font-black text-slate-900 leading-none">
                         {player.number}
                       </span>
@@ -141,14 +142,29 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                     </div>
 
                     {/* Big Prominent Vietnamese Name on New Dedicated Row */}
-                    <div className="w-full mb-2 px-1" title={player.name}>
+                    <div className="w-full mb-1 px-1" title={player.name}>
                       <span className="text-sm font-black text-slate-900 block truncate leading-tight">
                         {getVietnameseShortName(player.name)}
                       </span>
-                      <span className="text-[10px] font-semibold text-slate-400 block truncate">
-                        {player.name}
-                      </span>
                     </div>
+
+                    {/* Quick Position Tags (GK, FI, AL, PI) */}
+                    {player.positions && player.positions.length > 0 && (
+                      <div className="flex flex-wrap items-center justify-center gap-1 mb-2">
+                        {player.positions.map((pos) => {
+                          const cfg = POSITION_TAG_CONFIG[pos];
+                          return (
+                            <span
+                              key={pos}
+                              className={`text-[10px] font-black px-1.5 py-0.2 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
+                              title={cfg.fullLabel}
+                            >
+                              {cfg.shortLabel}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     {/* Stats List */}
                     <div className="w-full text-xs font-bold space-y-1 pt-2 border-t border-slate-100 text-left">

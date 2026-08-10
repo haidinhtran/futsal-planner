@@ -1,35 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import type { Player, TacticalSquad } from './types/futsal';
+import { storageService } from './services/storageService';
 import { Header } from './components/Header';
 import { PlayerManagement } from './components/PlayerManagement';
 import { TacticsBoard } from './components/TacticsBoard';
 import { TacticalDiagram } from './components/TacticalDiagram';
-import type { Player, TacticalSquad } from './types/futsal';
-import { storageService } from './services/storageService';
 
-export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'players' | 'tactics' | 'presentation'>('tactics');
+export const App = () => {
+  const [activeTab, setActiveTab] = useState<'players' | 'tactics' | 'presentation'>('players');
 
-  // Synchronously initialize state from LocalStorage so data is available on 1st render (F5 refresh)
+  // Synchronous initial state load from LocalStorage
   const [players, setPlayers] = useState<Player[]>(() => storageService.getPlayers());
   const [squad, setSquad] = useState<TacticalSquad>(() => storageService.getSquad());
 
-  const loadData = () => {
-    const loadedPlayers = storageService.getPlayers();
-    const loadedSquad = storageService.getSquad();
-    setPlayers(loadedPlayers);
-    setSquad(loadedSquad);
+  // Function to reload state when reset/imported
+  const refreshData = () => {
+    setPlayers(storageService.getPlayers());
+    setSquad(storageService.getSquad());
   };
 
+  // Extra safety sync on mount
   useEffect(() => {
-    loadData();
+    refreshData();
   }, []);
 
   const handleSavePlayer = (updatedPlayer: Player) => {
-    const existingIdx = players.findIndex((p) => p.id === updatedPlayer.id);
+    const existingIndex = players.findIndex((p) => p.id === updatedPlayer.id);
     let newPlayers: Player[];
-    if (existingIdx >= 0) {
+    if (existingIndex >= 0) {
       newPlayers = [...players];
-      newPlayers[existingIdx] = updatedPlayer;
+      newPlayers[existingIndex] = updatedPlayer;
     } else {
       newPlayers = [...players, updatedPlayer];
     }
@@ -38,16 +38,18 @@ export const App: React.FC = () => {
   };
 
   const handleDeletePlayer = (id: string) => {
-    if (window.confirm('Bạn có chắc muốn xóa cầu thủ này?')) {
+    if (window.confirm('Bạn có chắc chắn muốn xóa cầu thủ này?')) {
       const newPlayers = players.filter((p) => p.id !== id);
       setPlayers(newPlayers);
       storageService.savePlayers(newPlayers);
 
-      // Also unassign player from squad slots if assigned
-      const updatedSlots = squad.slots.map((s) => (s.playerId === id ? { ...s, playerId: null } : s));
-      const updatedSquad = { ...squad, slots: updatedSlots };
-      setSquad(updatedSquad);
-      storageService.saveSquad(updatedSquad);
+      // Also unassign player from squad slot if currently on field
+      if (squad && squad.slots) {
+        const newSlots = squad.slots.map((slot) => (slot.playerId === id ? { ...slot, playerId: null } : slot));
+        const newSquad = { ...squad, slots: newSlots };
+        setSquad(newSquad);
+        storageService.saveSquad(newSquad);
+      }
     }
   };
 
@@ -57,22 +59,16 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
+      {/* Top Header Navbar */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onDataRefresh={loadData}
+        onDataRefresh={refreshData}
       />
 
+      {/* Main Tab View Content */}
       <main className="flex-1 pb-12">
-        {activeTab === 'tactics' && (
-          <TacticsBoard
-            players={players}
-            squad={squad}
-            onSaveSquad={handleSaveSquad}
-          />
-        )}
-
         {activeTab === 'players' && (
           <PlayerManagement
             players={players}
@@ -81,11 +77,19 @@ export const App: React.FC = () => {
           />
         )}
 
+        {activeTab === 'tactics' && (
+          <TacticsBoard
+            players={players}
+            squad={squad}
+            onSaveSquad={handleSaveSquad}
+          />
+        )}
+
         {activeTab === 'presentation' && <TacticalDiagram />}
       </main>
 
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs font-semibold text-slate-500">
-        Futsal Tactics & Squad Planner MVP • Lưu dữ liệu LocalStorage trình duyệt & Xuất File JSON
+        Một sản phẩm của AI với sự từ chối mọi trách nhiệm của Hải Trần
       </footer>
     </div>
   );

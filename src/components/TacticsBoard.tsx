@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Player, TacticalSquad, PositionSlot } from '../types/futsal';
+import { POSITION_TAG_CONFIG } from '../types/futsal';
 import { FORMATION_PRESETS } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
-import { RefreshCw, Save, Trash2, ArrowLeftRight, User, Info } from 'lucide-react';
+import { RefreshCw, Save, Trash2, ArrowLeftRight, Info } from 'lucide-react';
 
 interface TacticsBoardProps {
   players: Player[];
@@ -127,7 +128,6 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   const handleAssignPlayerToSlot = (slotId: string, playerId: string) => {
     setSlots((prev) =>
       prev.map((slot) => {
-        // If player already in another slot, unassign them first
         if (slot.playerId === playerId) {
           return { ...slot, playerId: null };
         }
@@ -237,7 +237,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center space-x-2 px-5 py-2.5 text-xs font-extrabold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-sm transition-all cursor-pointer"
+            className="flex items-center space-x-2 px-5 py-2.5 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>Lưu đội hình</span>
@@ -260,11 +260,11 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               {/* Table Header */}
               <div className="grid grid-cols-12 text-xs font-bold text-slate-500 uppercase pb-2 border-b border-slate-200">
                 <span className="col-span-1 text-center">#</span>
-                <span className="col-span-5">Cầu thủ</span>
+                <span className="col-span-6">Cầu thủ</span>
                 <span className="col-span-1 text-center text-emerald-600">TL</span>
                 <span className="col-span-1 text-center text-orange-600">TC</span>
                 <span className="col-span-1 text-center text-blue-600">PT</span>
-                <span className="col-span-3 text-right">Tổng</span>
+                <span className="col-span-2 text-right pr-1">Tổng</span>
               </div>
 
               {/* Player Scroll List */}
@@ -285,16 +285,27 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                       }`}
                     >
                       <span className="col-span-1 text-center font-black text-slate-700">{p.number}</span>
-                      <div className="col-span-5 flex items-center space-x-2 truncate">
-                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                          <User className="w-3.5 h-3.5 text-slate-500" />
-                        </div>
-                        <span className="truncate font-bold">{p.name}</span>
+                      <div className="col-span-6 flex items-center space-x-1.5 min-w-0 pr-1">
+                        <span className="truncate font-bold" title={p.name}>{p.name}</span>
+                        {/* Quick Position Badges */}
+                        {p.positions && p.positions.length > 0 && (
+                          <div className="flex items-center space-x-0.5 shrink-0">
+                            {p.positions.map((pos) => (
+                              <span
+                                key={pos}
+                                className={`text-[9px] font-black px-1 rounded border ${POSITION_TAG_CONFIG[pos].bgClass} ${POSITION_TAG_CONFIG[pos].textClass} ${POSITION_TAG_CONFIG[pos].borderClass}`}
+                                title={POSITION_TAG_CONFIG[pos].fullLabel}
+                              >
+                                {POSITION_TAG_CONFIG[pos].shortLabel}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <span className="col-span-1 text-center font-extrabold text-emerald-600">{p.stamina ?? '-'}</span>
                       <span className="col-span-1 text-center font-extrabold text-orange-600">{p.attack ?? '-'}</span>
                       <span className="col-span-1 text-center font-extrabold text-blue-600">{p.defense ?? '-'}</span>
-                      <span className="col-span-3 text-right font-black text-slate-900">
+                      <span className="col-span-2 text-right font-black text-slate-900 pr-1">
                         {total !== -1 ? total : '-'}
                       </span>
                     </div>
@@ -394,15 +405,33 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                   draggable
                   onDragStart={(e) => handleDragStartPlayer(e, p.id)}
                   onClick={() => handleSidebarPlayerClick(p.id)}
-                  className="bg-slate-50 hover:bg-blue-50/80 border border-slate-200 rounded-2xl p-3.5 min-w-[150px] shrink-0 cursor-pointer shadow-xs transition-all hover:scale-105"
+                  className="bg-slate-50 hover:bg-blue-50/80 border border-slate-200 rounded-2xl p-3.5 min-w-[155px] shrink-0 cursor-pointer shadow-xs transition-all hover:scale-105"
                 >
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="w-6 h-6 bg-slate-900 text-white font-black text-xs rounded-md flex items-center justify-center">
-                      {p.number}
-                    </span>
-                    <span className="text-xs font-bold text-slate-900 truncate">{p.name}</span>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center space-x-1.5 truncate">
+                      <span className="w-5 h-5 bg-slate-900 text-white font-black text-[10px] rounded flex items-center justify-center shrink-0">
+                        {p.number}
+                      </span>
+                      <span className="text-xs font-bold text-slate-900 truncate">{p.name}</span>
+                    </div>
                   </div>
-                  <div className="text-xs space-y-1 font-semibold text-slate-600">
+
+                  {/* Quick Position Tags */}
+                  {p.positions && p.positions.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {p.positions.map((pos) => (
+                        <span
+                          key={pos}
+                          className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${POSITION_TAG_CONFIG[pos].bgClass} ${POSITION_TAG_CONFIG[pos].textClass} ${POSITION_TAG_CONFIG[pos].borderClass}`}
+                          title={POSITION_TAG_CONFIG[pos].fullLabel}
+                        >
+                          {POSITION_TAG_CONFIG[pos].shortLabel}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="text-xs space-y-1 font-semibold text-slate-600 border-t border-slate-200/60 pt-1.5">
                     <div className="flex justify-between items-center">
                       <span>Thể Lực</span>
                       <span className="font-extrabold text-emerald-600">{p.stamina ?? '-'}</span>

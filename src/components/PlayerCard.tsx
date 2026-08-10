@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Player } from '../types/futsal';
+import { POSITION_TAG_CONFIG } from '../types/futsal';
 import { User, Edit2, Trash2 } from 'lucide-react';
 
 interface PlayerCardProps {
@@ -58,10 +59,29 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
           )}
         </div>
         <h3 className="text-base font-bold text-slate-900 text-center line-clamp-1">{player.name}</h3>
+
+        {/* Position Tags (Full Labels) */}
+        <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
+          {player.positions && player.positions.length > 0 ? (
+            player.positions.map((pos) => {
+              const cfg = POSITION_TAG_CONFIG[pos];
+              return (
+                <span
+                  key={pos}
+                  className={`text-[11px] font-extrabold px-2 py-0.5 rounded-md border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
+                >
+                  {cfg.fullLabel}
+                </span>
+              );
+            })
+          ) : (
+            <span className="text-[11px] font-semibold text-slate-400">Chưa xếp vị trí</span>
+          )}
+        </div>
       </div>
 
       {/* Stat Sliders / Bars */}
-      <div className="space-y-2.5 pt-1">
+      <div className="space-y-2.5 pt-1 border-t border-slate-100">
         {/* Thể Lực */}
         <div className="flex items-center space-x-2 text-xs font-semibold">
           <div className="flex items-center space-x-1 w-22 text-slate-700">
