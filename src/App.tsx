@@ -115,7 +115,7 @@ export const App = () => {
           />
         )}
 
-        {activeTab === 'presentation' && <TacticalDiagram />}
+        {activeTab === 'presentation' && <TacticalDiagram players={players} />}
       </main>
 
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs font-semibold text-slate-500 mb-16 md:mb-0">

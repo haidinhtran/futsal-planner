@@ -200,10 +200,14 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                     )}
 
                     {/* Smart Floating Rich Popover Tooltip (Appears on Hover / Focus, Auto Positioned) */}
-                    <div className={`opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto absolute ${popoverPosClass} w-[190px] bg-slate-900/95 backdrop-blur-md text-white rounded-xl p-3 shadow-2xl border border-slate-700/80 z-50 flex flex-col gap-1.5 text-left`}>
-                      <div className="flex items-center justify-between border-b border-slate-700 pb-1.5">
-                        <span className="font-black text-sm text-yellow-400">#{player.number} {player.name}</span>
-                        <span className="text-[10px] font-extrabold bg-blue-600 px-1.5 py-0.5 rounded text-white">{getPlayerAverage(player)} đ</span>
+                    <div className={`opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto absolute ${popoverPosClass} w-[205px] bg-slate-900/95 backdrop-blur-md text-white rounded-xl p-3 shadow-2xl border border-slate-700/80 z-50 flex flex-col gap-1.5 text-left`}>
+                      <div className="flex items-center justify-between border-b border-slate-700 pb-1.5 gap-2">
+                        <span className="font-black text-sm text-yellow-400 truncate flex-1 min-w-0" title={`#${player.number} ${player.name}`}>
+                          #{player.number} {player.name}
+                        </span>
+                        <span className="text-[10px] font-extrabold bg-blue-600 px-2 py-0.5 rounded text-white shrink-0 whitespace-nowrap">
+                          {getPlayerAverage(player)} đ
+                        </span>
                       </div>
                       <div className="text-[10px] font-bold text-slate-300">
                         {slot.label}

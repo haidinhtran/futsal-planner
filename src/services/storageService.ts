@@ -1,4 +1,4 @@
-import type { Player, TacticalSquad } from '../types/futsal';
+import type { Player, TacticalSquad, SavedTacticalDiagram } from '../types/futsal';
 import { INITIAL_PLAYERS, INITIAL_TACTICAL_SQUAD } from './initialData';
 
 const PLAYERS_KEY = 'futsal_planner_players_v1';
@@ -110,5 +110,43 @@ export const storageService = {
       reader.onerror = () => reject(new Error('Đọc file thất bại.'));
       reader.readAsText(file);
     });
+  },
+
+  getDiagrams(): SavedTacticalDiagram[] {
+    try {
+      const data = localStorage.getItem('futsal_planner_diagrams_v1');
+      if (!data) return [];
+      return JSON.parse(data);
+    } catch (e) {
+      console.error('Error reading diagrams from localStorage', e);
+      return [];
+    }
+  },
+
+  saveDiagram(diagram: SavedTacticalDiagram): void {
+    try {
+      const existing = this.getDiagrams();
+      const idx = existing.findIndex((d) => d.id === diagram.id);
+      let updated: SavedTacticalDiagram[];
+      if (idx >= 0) {
+        updated = [...existing];
+        updated[idx] = diagram;
+      } else {
+        updated = [diagram, ...existing];
+      }
+      localStorage.setItem('futsal_planner_diagrams_v1', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving diagram to localStorage', e);
+    }
+  },
+
+  deleteDiagram(id: string): void {
+    try {
+      const existing = this.getDiagrams();
+      const updated = existing.filter((d) => d.id !== id);
+      localStorage.setItem('futsal_planner_diagrams_v1', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error deleting diagram from localStorage', e);
+    }
   },
 };

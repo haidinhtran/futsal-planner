@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { Player, PositionTag } from '../types/futsal';
 import { POSITION_TAG_CONFIG, getPositionConfig } from '../types/futsal';
 import { PlayerCard } from './PlayerCard';
-import { Plus, Search, ArrowUpDown, LayoutGrid, List, X, Check, AlertCircle, Filter, Download, FileText } from 'lucide-react';
+import { Plus, Search, ArrowUpDown, LayoutGrid, List, X, Check, AlertCircle, Filter, Download, FileText, UserCheck } from 'lucide-react';
 
 const getFullPositionLabel = (positions?: PositionTag[]): string => {
   if (!positions || positions.length === 0) return 'Chưa phân vị trí';
@@ -491,15 +491,25 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
       {/* Edit / Add Modal */}
       {isModalOpen && editingPlayer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 pb-safe sm:pb-0">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-              <h3 className="text-lg font-bold text-slate-900">
-                {players.some((p) => p.id === editingPlayer.id) ? 'Chỉnh Sửa Cầu Thủ' : 'Thêm Cầu Thủ Mới'}
-              </h3>
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200/90 max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-50 p-2.5 rounded-2xl border border-blue-100 text-blue-600 shadow-2xs">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base sm:text-lg text-slate-900 tracking-tight">
+                    {players.some((p) => p.id === editingPlayer.id) ? 'Chỉnh Sửa Cầu Thủ' : 'Thêm Cầu Thủ Mới'}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Cập nhật vị trí, đặc điểm và chỉ số kỹ năng
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+                className="p-2 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

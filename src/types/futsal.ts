@@ -72,7 +72,7 @@ export interface TacticalSquad {
   updatedAt: string;
 }
 
-export type DrawTool = 'arrow' | 'dashed-arrow' | 'curve' | 'player-home' | 'player-away' | 'circle-red' | 'circle-blue' | 'cross-red' | 'pointer' | 'text' | 'ball' | 'eraser';
+export type DrawTool = 'select' | 'arrow' | 'dashed-arrow' | 'curve' | 'player-home' | 'player-away' | 'circle-red' | 'circle-blue' | 'cross-red' | 'pointer' | 'text' | 'ball' | 'eraser';
 
 export interface DrawShape {
   id: string;
@@ -80,5 +80,13 @@ export interface DrawShape {
   points: Array<{ x: number; y: number }>;
   color: string;
   text?: string;
+  number?: number;
   size?: number;
+}
+
+export interface SavedTacticalDiagram {
+  id: string;
+  name: string;
+  shapes: DrawShape[];
+  updatedAt: string;
 }
