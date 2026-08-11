@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Player } from '../types/futsal';
-import { getPositionConfig } from '../types/futsal';
+import { getPositionConfig } from '../constants/positionTags';
 import { User, Edit2, Trash2 } from 'lucide-react';
+import { StatBar } from './ui/StatBar';
 
 interface PlayerCardProps {
   player: Player;
@@ -10,14 +11,6 @@ interface PlayerCardProps {
 }
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete }) => {
-  const formatStat = (val: number | null) => (val !== null ? val : '-');
-
-  const getBarWidth = (val: number | null) => {
-    if (val === null) return '0%';
-    const pct = Math.min(Math.max((val / 10) * 100, 0), 100);
-    return `${pct}%`;
-  };
-
   return (
     <div className="relative bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs hover:shadow-md transition-all duration-200 group">
       {/* Shirt Number Badge */}
@@ -31,7 +24,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
           {onEdit && (
             <button
               onClick={() => onEdit(player)}
-              className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors"
+              className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
               title="Chỉnh sửa cầu thủ"
             >
               <Edit2 className="w-3.5 h-3.5" />
@@ -40,7 +33,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
           {onDelete && (
             <button
               onClick={() => onDelete(player.id)}
-              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
               title="Xóa cầu thủ"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -90,50 +83,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
       {/* Stat Sliders / Bars */}
       <div className="space-y-2.5 pt-1 border-t border-slate-100">
-        {/* Thể Lực */}
-        <div className="flex items-center space-x-2 text-xs font-semibold">
-          <div className="flex items-center space-x-1 w-22 text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-            <span>Thể Lực</span>
-          </div>
-          <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/50">
-            <div
-              className="bg-emerald-600 h-full rounded-full stat-bar-fill"
-              style={{ width: getBarWidth(player.stamina) }}
-            ></div>
-          </div>
-          <span className="w-7 text-right font-bold text-slate-800">{formatStat(player.stamina)}</span>
-        </div>
-
-        {/* Tấn Công */}
-        <div className="flex items-center space-x-2 text-xs font-semibold">
-          <div className="flex items-center space-x-1 w-22 text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-            <span>Tấn Công</span>
-          </div>
-          <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/50">
-            <div
-              className="bg-orange-500 h-full rounded-full stat-bar-fill"
-              style={{ width: getBarWidth(player.attack) }}
-            ></div>
-          </div>
-          <span className="w-7 text-right font-bold text-slate-800">{formatStat(player.attack)}</span>
-        </div>
-
-        {/* Phòng Thủ */}
-        <div className="flex items-center space-x-2 text-xs font-semibold">
-          <div className="flex items-center space-x-1 w-22 text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-            <span>Phòng Thủ</span>
-          </div>
-          <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/50">
-            <div
-              className="bg-blue-600 h-full rounded-full stat-bar-fill"
-              style={{ width: getBarWidth(player.defense) }}
-            ></div>
-          </div>
-          <span className="w-7 text-right font-bold text-slate-800">{formatStat(player.defense)}</span>
-        </div>
+        <StatBar label="Thể Lực" value={player.stamina} colorClass="bg-emerald-600" dotColorClass="bg-emerald-600" />
+        <StatBar label="Tấn Công" value={player.attack} colorClass="bg-orange-500" dotColorClass="bg-orange-500" />
+        <StatBar label="Phòng Thủ" value={player.defense} colorClass="bg-blue-600" dotColorClass="bg-blue-600" />
       </div>
     </div>
   );

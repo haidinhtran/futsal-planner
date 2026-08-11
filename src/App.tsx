@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
-import type { Player, TacticalSquad } from './types/futsal';
-import { storageService } from './services/storageService';
-import { Header } from './components/Header';
+import { useState, useEffect, useCallback } from 'react';
+import type { Player } from './types/futsal';
+import { Sidebar } from './components/Sidebar';
+import { Topbar } from './components/Topbar';
 import { PlayerManagement } from './components/PlayerManagement';
 import { TacticsBoard } from './components/TacticsBoard';
 import { TacticalDiagram } from './components/TacticalDiagram';
+import { TopbarProvider } from './context/TopbarContext';
+import { usePlayers } from './hooks/usePlayers';
+import { useSquad } from './hooks/useSquad';
 
 type TabType = 'tactics' | 'players' | 'presentation';
 
@@ -23,16 +26,13 @@ const getPathFromTab = (tab: TabType): string => {
 
 export const App = () => {
   const [activeTab, setActiveTab] = useState<TabType>(() => getTabFromLocation());
+  const { players, savePlayer, deletePlayer: removePlayerFromList, refreshPlayers } = usePlayers();
+  const { squad, saveSquad, unassignPlayerFromSquad, refreshSquad } = useSquad();
 
-  // Synchronous initial state load from LocalStorage
-  const [players, setPlayers] = useState<Player[]>(() => storageService.getPlayers());
-  const [squad, setSquad] = useState<TacticalSquad>(() => storageService.getSquad());
-
-  // Function to reload state when reset/imported
-  const refreshData = () => {
-    setPlayers(storageService.getPlayers());
-    setSquad(storageService.getSquad());
-  };
+  const refreshData = useCallback(() => {
+    refreshPlayers();
+    refreshSquad();
+  }, [refreshPlayers, refreshSquad]);
 
   // Sync route and handle browser Back/Forward (popstate)
   useEffect(() => {
@@ -44,7 +44,7 @@ export const App = () => {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [refreshData]);
 
   const handleTabChange = (newTab: TabType) => {
     setActiveTab(newTab);
@@ -55,73 +55,54 @@ export const App = () => {
   };
 
   const handleSavePlayer = (updatedPlayer: Player) => {
-    const existingIndex = players.findIndex((p) => p.id === updatedPlayer.id);
-    let newPlayers: Player[];
-    if (existingIndex >= 0) {
-      newPlayers = [...players];
-      newPlayers[existingIndex] = updatedPlayer;
-    } else {
-      newPlayers = [...players, updatedPlayer];
-    }
-    setPlayers(newPlayers);
-    storageService.savePlayers(newPlayers);
+    savePlayer(updatedPlayer);
   };
 
   const handleDeletePlayer = (id: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa cầu thủ này?')) {
-      const newPlayers = players.filter((p) => p.id !== id);
-      setPlayers(newPlayers);
-      storageService.savePlayers(newPlayers);
-
-      // Also unassign player from squad slot if currently on field
-      if (squad && squad.slots) {
-        const newSlots = squad.slots.map((slot) => (slot.playerId === id ? { ...slot, playerId: null } : slot));
-        const newSquad = { ...squad, slots: newSlots };
-        setSquad(newSquad);
-        storageService.saveSquad(newSquad);
-      }
+      removePlayerFromList(id);
+      unassignPlayerFromSquad(id);
     }
   };
 
-  const handleSaveSquad = (updatedSquad: TacticalSquad) => {
-    setSquad(updatedSquad);
-    storageService.saveSquad(updatedSquad);
-  };
-
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
-      {/* Top Header Navbar */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        onDataRefresh={refreshData}
-      />
+    <TopbarProvider>
+      <div className="h-screen w-screen overflow-hidden flex font-sans text-slate-800 antialiased selection:bg-blue-500 selection:text-white bg-slate-100">
+        {/* 1. Left Vertical Fixed Sidebar */}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+          onDataRefresh={refreshData}
+        />
 
-      {/* Main Tab View Content */}
-      <main className="flex-1 pb-16 md:pb-12 pb-safe">
-        {activeTab === 'tactics' && (
-          <TacticsBoard
-            players={players}
-            squad={squad}
-            onSaveSquad={handleSaveSquad}
-          />
-        )}
+        {/* 2. Main Content Wrapper filling remaining space */}
+        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+          {/* Dynamic Context-Aware Topbar */}
+          <Topbar />
 
-        {activeTab === 'players' && (
-          <PlayerManagement
-            players={players}
-            onSavePlayer={handleSavePlayer}
-            onDeletePlayer={handleDeletePlayer}
-          />
-        )}
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-y-auto">
+            {activeTab === 'tactics' && (
+              <TacticsBoard
+                players={players}
+                squad={squad}
+                onSaveSquad={saveSquad}
+              />
+            )}
 
-        {activeTab === 'presentation' && <TacticalDiagram players={players} />}
-      </main>
+            {activeTab === 'players' && (
+              <PlayerManagement
+                players={players}
+                onSavePlayer={handleSavePlayer}
+                onDeletePlayer={handleDeletePlayer}
+              />
+            )}
 
-      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs font-semibold text-slate-500 mb-16 md:mb-0">
-        Một sản phẩm của AI với sự từ chối mọi trách nhiệm từ tuiii - Hải Trần
-      </footer>
-    </div>
+            {activeTab === 'presentation' && <TacticalDiagram players={players} />}
+          </main>
+        </div>
+      </div>
+    </TopbarProvider>
   );
 };
 

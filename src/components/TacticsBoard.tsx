@@ -1,9 +1,25 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Player, TacticalSquad, PositionSlot, AttackDirection } from '../types/futsal';
-import { POSITION_TAG_CONFIG, getPositionConfig } from '../types/futsal';
+import { getPositionConfig } from '../types/futsal';
 import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
-import { RefreshCw, Save, Trash2, ArrowLeftRight, Info } from 'lucide-react';
+import { TopbarPortal } from '../context/TopbarContext';
+import {
+  RefreshCw,
+  Save,
+  Trash2,
+  ArrowLeftRight,
+  Info,
+  X,
+  FileText,
+  BarChart2,
+  Users,
+  Layout,
+} from 'lucide-react';
+
+import { BenchPanel } from '../features/tactics/components/BenchPanel';
+import { TeamStatsCard } from '../features/tactics/components/TeamStatsCard';
+import { TacticalNotesCard } from '../features/tactics/components/TacticalNotesCard';
 
 interface TacticsBoardProps {
   players: Player[];
@@ -11,19 +27,40 @@ interface TacticsBoardProps {
   onSaveSquad: (squad: TacticalSquad) => void;
 }
 
-const getVietnameseShortName = (fullName: string): string => {
-  if (!fullName) return '';
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length <= 2) return fullName;
-  return `${parts[0]} ${parts[parts.length - 1]}`;
-};
-
 export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSaveSquad }) => {
   const [currentFormationId, setCurrentFormationId] = useState<string>(squad.formationId || '3-1');
   const [slots, setSlots] = useState<PositionSlot[]>(squad.slots);
   const [notes, setNotes] = useState<string>(squad.notes || '');
   const [attackDirection, setAttackDirection] = useState<AttackDirection>(squad.attackDirection || 'right');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
+  // Viewport Size Tracking & Adaptive Workspace Detection
+  const [viewportSize, setViewportSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1920,
+    height: typeof window !== 'undefined' ? window.innerHeight : 1080,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Mode Detection: FULL WORKSPACE vs FOCUS WORKSPACE
+  // Full Workspace requires >= 1536px width AND >= 800px height
+  const isFullWorkspace = useMemo(() => {
+    return viewportSize.width >= 1536 && viewportSize.height >= 800;
+  }, [viewportSize.width, viewportSize.height]);
+
+  // Focus Workspace Interactive State (Drawers & Bottom Dock)
+  const [showLeftDrawer, setShowLeftDrawer] = useState<boolean>(false);
+  const [showBottomDock, setShowBottomDock] = useState<boolean>(false);
+  const [bottomDockTab, setBottomDockTab] = useState<'bench' | 'stats' | 'notes'>('bench');
 
   // Filter 5 starting players with notes
   const startingPlayersWithNotes = useMemo(() => {
@@ -144,7 +181,6 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     const preset = FORMATION_PRESETS.find((f) => f.id === formationId);
     if (!preset) return;
 
-    // Keep existing assigned players if possible, map to new position coordinates
     const newSlots: PositionSlot[] = preset.positions.map((pos, idx) => {
       const existingPlayerId = slots[idx]?.playerId || null;
       const posX = attackDirection === 'left' ? 100 - pos.x : pos.x;
@@ -267,332 +303,377 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     e.dataTransfer.setData('text/player-id', playerId);
   };
 
-  return (
-    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Top Bar: Formation Selector & Main Actions */}
-      <div className="bg-white px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
-        {/* Preset Formations Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-0.5 max-w-full no-scrollbar">
-          <span className="text-xs font-black text-slate-500 uppercase tracking-wider mr-1 shrink-0">
-            ĐỘI HÌNH:
-          </span>
-          {FORMATION_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              onClick={() => handleSelectFormation(preset.id)}
-              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-center transition-all cursor-pointer shrink-0 ${
-                currentFormationId === preset.id
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold ring-2 ring-blue-500 ring-offset-1'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold'
-              }`}
-            >
-              <div className="text-xs sm:text-sm font-black leading-none mb-0.5">{preset.name}</div>
-              <div className="text-[10px] opacity-80 font-medium leading-none">{preset.subName}</div>
-            </button>
-          ))}
+  // Render Component for Player List Sidebar Content
+  const renderPlayerListContent = () => (
+    <div className="flex flex-col h-full justify-between space-y-3">
+      <div>
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-2.5">
+          <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide flex items-center space-x-1.5">
+            <Users className="w-4 h-4 text-blue-600" />
+            <span>DANH SÁCH CẦU THỦ ({players.length})</span>
+          </h3>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-2 shrink-0">
-          <button
-            onClick={handleToggleAttackDirection}
-            title="Đổi hướng tấn công"
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs"
-          >
-            <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
-            <span>Đổi hướng ({attackDirection === 'right' ? '→' : '←'})</span>
-          </button>
-          <button
-            onClick={handleResetPreset}
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Đặt lại</span>
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
-          >
-            <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Lưu đội hình</span>
-          </button>
+        {/* Table Header */}
+        <div className="grid grid-cols-12 text-sm font-bold text-slate-500 uppercase pb-1.5 border-b border-slate-200">
+          <span className="col-span-1 text-center">#</span>
+          <span className="col-span-6">Cầu thủ</span>
+          <span className="col-span-1 text-center text-emerald-600">TL</span>
+          <span className="col-span-1 text-center text-orange-600">TC</span>
+          <span className="col-span-1 text-center text-blue-600">PT</span>
+          <span className="col-span-2 text-right pr-1">Tổng</span>
+        </div>
+
+        {/* Player Scroll List */}
+        <div className="max-h-[380px] xl:max-h-[460px] overflow-y-auto divide-y divide-slate-100 my-1 pr-1">
+          {sidebarPlayers.map((p) => {
+            const isAssigned = assignedPlayerIds.has(p.id);
+            const total = getPlayerTotalScore(p);
+            return (
+              <div
+                key={p.id}
+                draggable
+                onDragStart={(e) => handleDragStartPlayer(e, p.id)}
+                onClick={() => handleSidebarPlayerClick(p.id)}
+                className={`grid grid-cols-12 items-center py-2 px-1.5 text-sm cursor-pointer rounded-xl transition-colors ${
+                  isAssigned
+                    ? 'bg-slate-50 text-slate-400 opacity-60'
+                    : 'hover:bg-blue-50/80 text-slate-900 font-semibold'
+                }`}
+              >
+                <span className="col-span-1 text-center font-black text-slate-700">{p.number}</span>
+                <div className="col-span-6 flex items-center space-x-1 min-w-0 pr-1">
+                  <span className="truncate font-bold text-sm" title={p.name}>{p.name}</span>
+                  {p.positions && p.positions.length > 0 && (
+                    <div className="flex items-center space-x-0.5 shrink-0">
+                      {p.positions.map((pos) => {
+                        const cfg = getPositionConfig(pos);
+                        return (
+                          <span
+                            key={pos}
+                            className={`text-[9.5px] font-black px-1 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
+                            title={cfg.fullLabel}
+                          >
+                            {cfg.shortLabel}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                <span className="col-span-1 text-center font-extrabold text-emerald-600">{p.stamina ?? '-'}</span>
+                <span className="col-span-1 text-center font-extrabold text-orange-600">{p.attack ?? '-'}</span>
+                <span className="col-span-1 text-center font-extrabold text-blue-600">{p.defense ?? '-'}</span>
+                <span className="col-span-2 text-right font-black text-slate-900 pr-1">
+                  {total !== -1 ? total : '-'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Filters & Sorting */}
+        <div className="pt-3 border-t border-slate-100 space-y-2.5 text-sm">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="font-bold text-slate-500 uppercase text-xs">SẮP XẾP</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-slate-100 font-bold px-2.5 py-1 rounded-xl text-slate-800 border border-slate-200 cursor-pointer focus:outline-none text-sm"
+            >
+              <option value="total_desc">Tổng điểm (cao ➔ thấp)</option>
+              <option value="total_asc">Tổng điểm (thấp ➔ cao)</option>
+              <option value="number_asc">Số áo (1 ➔ 99)</option>
+            </select>
+          </div>
+
+          <label className="flex items-center space-x-2 text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={onlyUnselected}
+              onChange={(e) => setOnlyUnselected(e.target.checked)}
+              className="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+            <span className="font-bold text-sm">Chỉ hiển thị chưa chọn</span>
+          </label>
         </div>
       </div>
 
-      {/* Main Grid Layout: Left Sidebar (4 Cols) + Center Pitch (8 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Sidebar: Player List (4 Cols) */}
-        <div className="order-2 lg:order-1 lg:col-span-4 xl:col-span-4 space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col h-full justify-between space-y-4">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide">
-                  DANH SÁCH CẦU THỦ ({players.length})
-                </h3>
-              </div>
+      {/* Bottom Left: Squad Info */}
+      <div className="pt-2 border-t border-slate-100 bg-slate-50 p-3 rounded-xl space-y-0.5">
+        <h4 className="text-xs font-black text-slate-500 uppercase">THÔNG TIN SƠ ĐỒ</h4>
+        <p className="text-sm font-bold text-slate-800">
+          Đội hình: <span className="text-blue-600 font-extrabold">{currentPreset.name} ({currentPreset.subName})</span>
+        </p>
+      </div>
+    </div>
+  );
 
-              {/* Table Header */}
-              <div className="grid grid-cols-12 text-xs font-bold text-slate-500 uppercase pb-2 border-b border-slate-200">
-                <span className="col-span-1 text-center">#</span>
-                <span className="col-span-6">Cầu thủ</span>
-                <span className="col-span-1 text-center text-emerald-600">TL</span>
-                <span className="col-span-1 text-center text-orange-600">TC</span>
-                <span className="col-span-1 text-center text-blue-600">PT</span>
-                <span className="col-span-2 text-right pr-1">Tổng</span>
-              </div>
+  // Render Component for Bench Section
+  const renderBenchContent = () => (
+    <BenchPanel
+      benchPlayers={benchPlayers}
+      onDragStartPlayer={handleDragStartPlayer}
+      onPlayerClick={handleSidebarPlayerClick}
+    />
+  );
 
-              {/* Player Scroll List */}
-              <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-100 my-1 pr-1">
-                {sidebarPlayers.map((p) => {
-                  const isAssigned = assignedPlayerIds.has(p.id);
-                  const total = getPlayerTotalScore(p);
-                  return (
-                    <div
-                      key={p.id}
-                      draggable
-                      onDragStart={(e) => handleDragStartPlayer(e, p.id)}
-                      onClick={() => handleSidebarPlayerClick(p.id)}
-                      className={`grid grid-cols-12 items-center py-2.5 px-2 text-xs cursor-pointer rounded-xl transition-colors ${
-                        isAssigned
-                          ? 'bg-slate-50 text-slate-400 opacity-60'
-                          : 'hover:bg-blue-50/80 text-slate-900 font-semibold'
-                      }`}
-                    >
-                      <span className="col-span-1 text-center font-black text-slate-700">{p.number}</span>
-                      <div className="col-span-6 flex items-center space-x-1.5 min-w-0 pr-1">
-                        <span className="truncate font-bold" title={p.name}>{p.name}</span>
-                        {/* Quick Position Badges */}
-                        {p.positions && p.positions.length > 0 && (
-                          <div className="flex items-center space-x-0.5 shrink-0">
-                            {p.positions.map((pos) => {
-                              const cfg = getPositionConfig(pos);
-                              return (
-                                <span
-                                  key={pos}
-                                  className={`text-[9px] font-black px-1 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
-                                  title={cfg.fullLabel}
-                                >
-                                  {cfg.shortLabel}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                      <span className="col-span-1 text-center font-extrabold text-emerald-600">{p.stamina ?? '-'}</span>
-                      <span className="col-span-1 text-center font-extrabold text-orange-600">{p.attack ?? '-'}</span>
-                      <span className="col-span-1 text-center font-extrabold text-blue-600">{p.defense ?? '-'}</span>
-                      <span className="col-span-2 text-right font-black text-slate-900 pr-1">
-                        {total !== -1 ? total : '-'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+  // Render Component for Average Team Stats
+  const renderStatsContent = () => (
+    <TeamStatsCard teamAverageStats={teamAverageStats} />
+  );
 
-              {/* Filters & Sorting */}
-              <div className="pt-4 border-t border-slate-100 space-y-3 text-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-slate-500 uppercase text-xs">LỌC & SẮP XẾP</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-slate-100 font-bold px-3 py-1.5 rounded-xl text-slate-800 border border-slate-200 cursor-pointer focus:outline-none"
-                  >
-                    <option value="total_desc">Tổng điểm (cao ➔ thấp)</option>
-                    <option value="total_asc">Tổng điểm (thấp ➔ cao)</option>
-                    <option value="number_asc">Số áo (1 ➔ 99)</option>
-                  </select>
-                </div>
+  // Render Component for Tactical Notes
+  const renderNotesContent = () => (
+    <TacticalNotesCard
+      startingPlayersWithNotes={startingPlayersWithNotes}
+      notes={notes}
+      onNotesChange={setNotes}
+    />
+  );
 
-                <label className="flex items-center space-x-2 text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={onlyUnselected}
-                    onChange={(e) => setOnlyUnselected(e.target.checked)}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <span className="font-bold">Chỉ hiển thị cầu thủ chưa được chọn</span>
-                </label>
+  return (
+    <div className="max-w-[2200px] mx-auto px-2 sm:px-5 lg:px-6 py-3">
+      {/* Topbar Injection via React Portal */}
+      <TopbarPortal>
+        <div className="flex items-center justify-between gap-2 w-full">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs sm:text-sm font-black text-slate-900 tracking-tight flex items-center space-x-2">
+              <Layout className="w-4 h-4 text-blue-600" />
+              <span>SƠ ĐỒ CHIẾN THUẬT</span>
+            </span>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-1.5 shrink-0 ml-auto">
+            {!isFullWorkspace && (
+              <button
+                onClick={() => setShowLeftDrawer(true)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-extrabold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-all cursor-pointer shadow-2xs"
+                title="Mở danh sách cầu thủ"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Cầu thủ ({players.length})</span>
+              </button>
+            )}
+
+            {!isFullWorkspace && (
+              <button
+                onClick={() => setShowBottomDock(!showBottomDock)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-extrabold rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                  showBottomDock
+                    ? 'bg-amber-600 text-white border-amber-600'
+                    : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border-amber-200'
+                }`}
+                title="Mở thông tin Dự bị, Chỉ số & Ghi chú"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Chi tiết</span>
+              </button>
+            )}
+
+            <button
+              onClick={handleResetPreset}
+              className="flex items-center space-x-1.5 px-3 py-1.5 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs"
+              title="Khôi phục vị trí sơ đồ mặc định"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Khôi phục</span>
+            </button>
+
+            <button
+              onClick={handleSave}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 text-sm font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Lưu chiến thuật</span>
+            </button>
+          </div>
+        </div>
+      </TopbarPortal>
+      {/* 2. Main Content Layout */}
+      {isFullWorkspace ? (
+        /* FULL WORKSPACE (Desktop 24-27" 1080p & 2K): 3-Column Professional Layout */
+        <div className="grid grid-cols-12 gap-4 lg:gap-5 items-start">
+          {/* Column 1: Persistent Left Player List (3 Cols) */}
+          <div className="col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 h-[calc(100vh-84px)] overflow-hidden">
+            {renderPlayerListContent()}
+          </div>
+
+          {/* Column 2: Center Interactive Futsal Court (6 Cols) */}
+          <div className="col-span-6 space-y-3">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3.5 sm:p-4 space-y-2">
+              <FutsalPitch
+                slots={slots}
+                playersMap={playersMap}
+                selectedSlotId={selectedSlotId}
+                attackDirection={attackDirection}
+                currentFormationId={currentFormationId}
+                onSelectFormation={handleSelectFormation}
+                onToggleAttackDirection={handleToggleAttackDirection}
+                onSelectSlot={(id) => setSelectedSlotId(selectedSlotId === id ? null : id)}
+                onAssignPlayerToSlot={handleAssignPlayerToSlot}
+                onClearSlot={handleClearSlot}
+                onSwapSlots={handleSwapSlots}
+                onQuickSwap={handleQuickSwap}
+                onClearAllSlots={handleClearAllSlots}
+              />
+
+              {/* Pitch Bottom Info */}
+              <div className="flex items-center space-x-1.5 text-slate-600 font-semibold text-sm pt-1">
+                <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                <span className="truncate">Kéo thả cầu thủ vào sân để sắp xếp vị trí bài đánh.</span>
               </div>
             </div>
+          </div>
 
-            {/* Bottom Left: Squad Info */}
-            <div className="pt-3 border-t border-slate-100 bg-slate-50 p-4 rounded-xl space-y-1">
-              <h4 className="text-xs font-black text-slate-500 uppercase">THÔNG TIN ĐỘI HÌNH</h4>
-              <p className="text-xs font-bold text-slate-800">
-                Đội hình: <span className="text-blue-600 font-extrabold">{currentPreset.name} ({currentPreset.subName})</span>
-              </p>
-              <p className="text-xs text-slate-600">
-                Sơ đồ: <span className="font-semibold text-slate-800">{currentPreset.schema}</span>
-              </p>
+          {/* Column 3: Right Inspector Panel (3 Cols) - Bench + Stats + Notes */}
+          <div className="col-span-3 space-y-3.5 h-[calc(100vh-84px)] overflow-y-auto pr-1">
+            {/* Bench Card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              {renderBenchContent()}
+            </div>
+
+            {/* Average Stats Card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              {renderStatsContent()}
+            </div>
+
+            {/* Tactical Notes Card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              {renderNotesContent()}
             </div>
           </div>
         </div>
-
-        {/* Center: Interactive Futsal Court (8 Cols) */}
-        <div className="order-1 lg:order-2 lg:col-span-8 xl:col-span-8 space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+      ) : (
+        /* FOCUS WORKSPACE (Laptop 1366x768 / 1280x720 & Scale 125-150%): Max Pitch Height & Zero Page Scroll */
+        <div className="space-y-3">
+          {/* Main Pitch Viewport Container */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 space-y-2 max-w-full">
             <FutsalPitch
               slots={slots}
               playersMap={playersMap}
               selectedSlotId={selectedSlotId}
               attackDirection={attackDirection}
+              currentFormationId={currentFormationId}
+              onSelectFormation={handleSelectFormation}
+              onToggleAttackDirection={handleToggleAttackDirection}
               onSelectSlot={(id) => setSelectedSlotId(selectedSlotId === id ? null : id)}
               onAssignPlayerToSlot={handleAssignPlayerToSlot}
               onClearSlot={handleClearSlot}
               onSwapSlots={handleSwapSlots}
             />
 
-            {/* Pitch Bottom Info & Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between pt-2 text-xs gap-3">
-              <div className="flex items-center space-x-2 text-slate-600 font-semibold">
+            {/* Pitch Action Footer */}
+            <div className="flex items-center justify-between pt-1 text-xs gap-2">
+              <div className="flex items-center space-x-1.5 text-slate-600 font-semibold text-sm truncate">
                 <Info className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Kéo thả cầu thủ từ danh sách hoặc khu dự bị vào vị trí trên sân để thay đổi.</span>
+                <span className="truncate">Kéo thả cầu thủ vào vị trí trên sân.</span>
               </div>
 
-              <div className="flex items-center space-x-2 shrink-0">
+              <div className="flex items-center space-x-1.5 shrink-0">
                 <button
                   onClick={handleQuickSwap}
-                  className="flex items-center space-x-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                  className="flex items-center space-x-1 px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl border border-slate-200 transition-colors cursor-pointer"
                 >
-                  <ArrowLeftRight className="w-4 h-4" />
-                  <span>Hoán đổi nhanh</span>
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  <span>Hoán đổi</span>
                 </button>
                 <button
                   onClick={handleClearAllSlots}
-                  className="flex items-center space-x-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl border border-red-200 transition-colors cursor-pointer"
+                  className="flex items-center space-x-1 px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl border border-red-200 transition-colors cursor-pointer"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                   <span>Xóa tất cả</span>
                 </button>
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Bench Section ("DỰ BỊ / CHƯA CHỌN") */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wide">
-              DỰ BỊ / CHƯA CHỌN ({benchPlayers.length})
-            </h3>
+      {/* 3. FOCUS WORKSPACE INTERACTIVE OVERLAYS */}
 
-            <div className="flex items-center space-x-4 overflow-x-auto pb-3 pt-1">
-              {benchPlayers.map((p) => (
-                <div
-                  key={p.id}
-                  draggable
-                  onDragStart={(e) => handleDragStartPlayer(e, p.id)}
-                  onClick={() => handleSidebarPlayerClick(p.id)}
-                  className="bg-slate-50 hover:bg-blue-50/80 border border-slate-200 rounded-2xl p-3.5 min-w-[155px] shrink-0 cursor-pointer shadow-xs transition-all hover:scale-105"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center space-x-1.5 truncate">
-                      <span className="w-5 h-5 bg-slate-900 text-white font-black text-[10px] rounded flex items-center justify-center shrink-0">
-                        {p.number}
-                      </span>
-                      <span className="text-xs font-bold text-slate-900 truncate">{p.name}</span>
-                    </div>
-                  </div>
-
-                  {/* Quick Position Tags */}
-                  {p.positions && p.positions.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {p.positions.map((pos) => (
-                        <span
-                          key={pos}
-                          className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${POSITION_TAG_CONFIG[pos].bgClass} ${POSITION_TAG_CONFIG[pos].textClass} ${POSITION_TAG_CONFIG[pos].borderClass}`}
-                          title={POSITION_TAG_CONFIG[pos].fullLabel}
-                        >
-                          {POSITION_TAG_CONFIG[pos].shortLabel}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="text-xs space-y-1 font-semibold text-slate-600 border-t border-slate-200/60 pt-1.5">
-                    <div className="flex justify-between items-center">
-                      <span>Thể Lực</span>
-                      <span className="font-extrabold text-emerald-600">{p.stamina ?? '-'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Tấn Công</span>
-                      <span className="font-extrabold text-orange-600">{p.attack ?? '-'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Phòng Thủ</span>
-                      <span className="font-extrabold text-blue-600">{p.defense ?? '-'}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {benchPlayers.length === 0 && (
-                <p className="text-xs text-slate-400 font-medium italic py-2">Tất cả cầu thủ đã được xếp vào đội hình chính!</p>
-              )}
+      {/* Left Collapsible Drawer for Player List (Laptop Mode) */}
+      {showLeftDrawer && !isFullWorkspace && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex">
+          <div className="w-80 sm:w-96 bg-white h-full shadow-2xl border-r border-slate-200 p-4 flex flex-col justify-between animate-in slide-in-from-left duration-200">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-2">
+              <span className="font-black text-sm text-slate-900 uppercase">QUẢN LÝ ĐỘI HÌNH</span>
+              <button
+                onClick={() => setShowLeftDrawer(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              {renderPlayerListContent()}
             </div>
           </div>
+          <div className="flex-1" onClick={() => setShowLeftDrawer(false)}></div>
+        </div>
+      )}
 
-          {/* Bottom Average Team Stats & Tactical Notes */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-            {/* Average Stats */}
-            <div className="md:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide mb-3">
-                TỔNG CHỈ SỐ ĐỘI HÌNH (TB 5 CẦU THỦ)
-              </h4>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
-                  <span className="block text-xs font-bold text-emerald-700">🟢 Thể Lực</span>
-                  <span className="text-xl font-black text-emerald-700">{teamAverageStats.avgStamina}</span>
-                </div>
-                <div className="bg-orange-50 p-3 rounded-2xl border border-orange-100">
-                  <span className="block text-xs font-bold text-orange-700">🟠 Tấn Công</span>
-                  <span className="text-xl font-black text-orange-700">{teamAverageStats.avgAttack}</span>
-                </div>
-                <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
-                  <span className="block text-xs font-bold text-blue-700">🔵 Phòng Thủ</span>
-                  <span className="text-xl font-black text-blue-700">{teamAverageStats.avgDefense}</span>
-                </div>
-              </div>
+      {/* Bottom Inspector Dock for Bench / Stats / Notes (Laptop Mode) */}
+      {showBottomDock && !isFullWorkspace && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl p-3 max-h-[340px] flex flex-col animate-in slide-in-from-bottom-4 duration-200">
+          {/* Dock Header Tabs */}
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2 shrink-0">
+            <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+              <button
+                onClick={() => setBottomDockTab('bench')}
+                className={`flex items-center space-x-1.5 px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  bottomDockTab === 'bench'
+                    ? 'bg-white text-blue-600 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Dự Bị ({benchPlayers.length})</span>
+              </button>
+
+              <button
+                onClick={() => setBottomDockTab('stats')}
+                className={`flex items-center space-x-1.5 px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  bottomDockTab === 'stats'
+                    ? 'bg-white text-blue-600 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <BarChart2 className="w-3.5 h-3.5" />
+                <span>Chỉ Số TB</span>
+              </button>
+
+              <button
+                onClick={() => setBottomDockTab('notes')}
+                className={`flex items-center space-x-1.5 px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  bottomDockTab === 'notes'
+                    ? 'bg-white text-blue-600 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Ghi Chú</span>
+              </button>
             </div>
 
-            {/* Notes Section */}
-            <div className="md:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-3">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide">
-                GHI CHÚ ĐỘI HÌNH & 5 CẦU THỦ RA SÂN
-              </h4>
+            <button
+              onClick={() => setShowBottomDock(false)}
+              className="p-1 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-              {/* Starting Players Notes List */}
-              {startingPlayersWithNotes.length > 0 ? (
-                <div className="space-y-1.5 bg-amber-50/70 p-3 rounded-xl border border-amber-200/90">
-                  <span className="text-[11px] font-extrabold text-amber-900 uppercase tracking-wider block mb-1">
-                    📋 Đặc điểm cầu thủ ra sân ({startingPlayersWithNotes.length}):
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    {startingPlayersWithNotes.map(({ slot, player }) => (
-                      <div key={slot.id} className="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs flex items-start space-x-1.5">
-                        <span className="font-black text-slate-900 shrink-0">#{player.number} {getVietnameseShortName(player.name)}:</span>
-                        <span className="text-amber-900 font-semibold truncate" title={player.notes}>{player.notes}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-xs text-slate-400 font-medium italic bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  Chưa có cầu thủ ra sân nào có ghi chú cá nhân riêng.
-                </div>
-              )}
-
-              <textarea
-                placeholder="Nhập thêm ghi chú bài đánh chung cho đội hình này..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full flex-1 p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none font-medium text-slate-800"
-                rows={3}
-              ></textarea>
-            </div>
+          {/* Dock Tab Content */}
+          <div className="flex-1 overflow-y-auto">
+            {bottomDockTab === 'bench' && renderBenchContent()}
+            {bottomDockTab === 'stats' && renderStatsContent()}
+            {bottomDockTab === 'notes' && renderNotesContent()}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

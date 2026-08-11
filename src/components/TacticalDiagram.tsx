@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { DrawShape, DrawTool, Player, SavedTacticalDiagram } from '../types/futsal';
 import { storageService } from '../services/storageService';
-import { getVietnameseShortName } from './FutsalPitch';
+import { getVietnameseShortName } from '../utils/formatters';
 import { getPositionConfig } from '../types/futsal';
+import { TopbarPortal } from '../context/TopbarContext';
+import { LayerPanelModal } from '../features/diagram/components/LayerPanelModal';
 import {
   ArrowRight,
   XCircle,
@@ -21,8 +23,6 @@ import {
   FolderOpen,
   Edit3,
   Layers,
-  ChevronUp,
-  ChevronDown,
 } from 'lucide-react';
 
 interface TacticalDiagramProps {
@@ -636,54 +636,47 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
   };
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Master Tactical Diagram Card Container */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
-        {/* 1. Header Banner: Diagram Save & Load Control Panel (Minimalist Light Theme) */}
-        <div className="bg-white p-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/90">
+    <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Topbar Injection via React Portal */}
+      <TopbarPortal>
+        <div className="flex flex-wrap items-center justify-between gap-3 w-full py-1">
           {/* Current Diagram Title & Status Badge */}
-          <div className="flex items-center space-x-3">
-            <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-100 text-blue-600 shadow-2xs">
-              <Sparkles className="w-5 h-5" />
+          <div className="flex items-center space-x-2.5">
+            <div className="bg-blue-50 p-2 rounded-xl border border-blue-100 text-blue-600 shadow-2xs">
+              <Sparkles className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-black text-base sm:text-lg tracking-wide text-slate-900">
-                  {diagramName}
+            <div className="flex items-center space-x-2">
+              <span className="font-black text-sm sm:text-base tracking-wide text-slate-900">
+                {diagramName}
+              </span>
+              <button
+                onClick={handleSaveDiagram}
+                className="text-slate-400 hover:text-blue-600 p-1 rounded-lg transition-colors cursor-pointer"
+                title="Đổi tên bản vẽ"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+              </button>
+              {isDirty ? (
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                  • Chưa lưu
                 </span>
-                <button
-                  onClick={handleSaveDiagram}
-                  className="text-slate-400 hover:text-blue-600 p-1 rounded-lg transition-colors cursor-pointer"
-                  title="Đổi tên bản vẽ"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
-                {/* Status Badge (Only shown when changes exist or a saved diagram is loaded) */}
-                {isDirty ? (
-                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
-                    • Chưa lưu
-                  </span>
-                ) : currentDiagramId ? (
-                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    ✓ Đã lưu
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-xs text-slate-500 font-medium">
-                Sơ đồ diễn giải chiến thuật Futsal bài đánh
-              </p>
+              ) : currentDiagramId ? (
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  ✓ Đã lưu
+                </span>
+              ) : null}
             </div>
           </div>
 
-          {/* Saved Diagrams Selector & Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Saved Diagrams Selector & Actions */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0 ml-auto">
             {/* Load Selection Dropdown */}
-            <div className="relative flex items-center min-w-[210px]">
-              <FolderOpen className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+            <div className="relative flex items-center min-w-[190px]">
+              <FolderOpen className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
               <select
                 value={currentDiagramId || ''}
                 onChange={(e) => handleLoadDiagram(e.target.value)}
-                className="w-full bg-slate-50 hover:bg-slate-100/80 text-slate-800 font-bold text-xs pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer appearance-none transition-colors shadow-2xs"
+                className="w-full bg-slate-50 hover:bg-slate-100/80 text-slate-800 font-bold text-xs pl-8 pr-7 py-1.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer appearance-none transition-colors shadow-2xs"
               >
                 <option value="">-- Bản vẽ đã lưu ({savedDiagrams.length}) --</option>
                 {savedDiagrams.map((d) => (
@@ -692,42 +685,44 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                   </option>
                 ))}
               </select>
-              <div className="absolute right-3 pointer-events-none text-slate-400 text-xs">▼</div>
+              <div className="absolute right-2.5 pointer-events-none text-slate-400 text-xs">▼</div>
             </div>
 
             {/* New Diagram Button */}
             <button
               onClick={handleNewDiagram}
-              className="flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-extrabold rounded-xl border border-slate-200/90 transition-all cursor-pointer shadow-2xs"
-              title="Tạo bản vẽ chiến thuật mới"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs"
+              title="Tạo bản vẽ mới"
             >
-              <FilePlus className="w-4 h-4 text-blue-600" />
-              <span>Bản vẽ mới</span>
+              <FilePlus className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline">Bản vẽ mới</span>
             </button>
 
             {/* Save Diagram Button */}
             <button
               onClick={handleSaveDiagram}
-              className="flex items-center space-x-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer"
-              title="Lưu bản vẽ vào LocalStorage"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/20 border border-blue-500 transition-all cursor-pointer"
+              title="Lưu bản vẽ"
             >
-              <Save className="w-4 h-4" />
-              <span>Lưu Bản Vẽ</span>
+              <Save className="w-3.5 h-3.5" />
+              <span>Lưu bản vẽ</span>
             </button>
 
             {/* Delete Diagram Button */}
             {currentDiagramId && (
               <button
                 onClick={handleDeleteCurrentDiagram}
-                className="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl border border-red-200 transition-all cursor-pointer"
-                title="Xóa bản vẽ này khỏi LocalStorage"
+                className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl border border-red-200 transition-all cursor-pointer"
+                title="Xóa bản vẽ này"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         </div>
-
+      </TopbarPortal>
+      {/* Master Tactical Diagram Card Container */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
         {/* 2. Middle Toolbar: Drawing Tools & Tactical Presets */}
         <div className="bg-slate-50/80 p-4 sm:px-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
           {/* Drawing Tools Segmented Control */}
@@ -1404,142 +1399,20 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
           </div>
         </div>
       )}
-      {/* Floating Layer Panel (Popup Trôi Nổi Giữa / Góc Phải Màn Hình) */}
-      {showLayerPanel && (
-        <div className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 z-40 bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-2xl w-80 sm:w-96 overflow-hidden flex flex-col max-h-[460px] animate-in slide-in-from-bottom-4 duration-200">
-          {/* Header */}
-          <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="bg-blue-50 text-blue-600 p-2 rounded-xl border border-blue-100 shadow-2xs">
-                <Layers className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="font-black text-sm text-slate-900 flex items-center space-x-1.5">
-                  <span>Quản Lý Lớp (Layer)</span>
-                  <span className="text-[10px] bg-blue-100 text-blue-700 font-extrabold px-2 py-0.5 rounded-full">
-                    {shapes.length}
-                  </span>
-                </h4>
-                <p className="text-[10px] text-slate-500 font-medium">
-                  Chọn & chỉnh thứ tự lớp đối tượng bị chồng lên nhau
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowLayerPanel(false)}
-              className="p-1.5 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-full border border-slate-200 shadow-2xs transition-colors cursor-pointer"
-              title="Đóng bảng Layer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* List of shapes */}
-          <div className="p-3 overflow-y-auto space-y-1.5 flex-1 divide-y divide-slate-100">
-            {shapes.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 space-y-2">
-                <Layers className="w-8 h-8 mx-auto text-slate-300 stroke-1" />
-                <p className="text-xs font-semibold">Chưa có đối tượng nào trên sân</p>
-              </div>
-            ) : (
-              shapes.map((s, idx) => {
-                const isSelected = selectedShapeId === s.id;
-                let label = 'Đối tượng';
-                let icon = <Layers className="w-4 h-4 text-slate-500" />;
-
-                if (s.tool === 'player-home' || s.tool === 'circle-blue') {
-                  label = s.number !== undefined ? `#${s.number} ${s.text || 'Cầu Thủ Ta'}` : (s.text || 'Cầu Thủ Ta');
-                  icon = (
-                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
-                      {s.number !== undefined ? `#${s.number}` : 'Ta'}
-                    </div>
-                  );
-                } else if (s.tool === 'player-away' || s.tool === 'circle-red') {
-                  label = s.text || 'Cầu Thủ Địch';
-                  icon = (
-                    <div className="w-6 h-6 rounded-full bg-red-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
-                      Địch
-                    </div>
-                  );
-                } else if (s.tool === 'arrow') {
-                  label = 'Mũi tên di chuyển';
-                  icon = <ArrowRight className="w-4 h-4 text-blue-500 shrink-0" />;
-                } else if (s.tool === 'dashed-arrow') {
-                  label = 'Đường chuyền bóng';
-                  icon = <span className="font-mono text-xs font-black text-yellow-600 shrink-0">--➔</span>;
-                } else if (s.tool === 'ball') {
-                  label = 'Bóng Futsal ⚽';
-                  icon = <span className="text-sm shrink-0">⚽</span>;
-                } else if (s.tool === 'cross-red') {
-                  label = 'Dấu X Đỏ';
-                  icon = <XCircle className="w-4 h-4 text-red-500 shrink-0" />;
-                } else if (s.tool === 'text') {
-                  label = `Văn bản: "${s.text || ''}"`;
-                  icon = <Type className="w-4 h-4 text-slate-600 shrink-0" />;
-                }
-
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => {
-                      setSelectedShapeId(s.id);
-                      setActiveTool('select');
-                    }}
-                    className={`p-2.5 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${
-                      isSelected
-                        ? 'bg-blue-50/90 border-blue-300 text-blue-900 shadow-2xs font-extrabold'
-                        : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700 font-semibold'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                      {icon}
-                      <span className="text-xs truncate">{label}</span>
-                    </div>
-
-                    {/* Layer Actions (Re-order Z-Index & Delete) */}
-                    <div className="flex items-center space-x-1 shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveLayerUp(idx);
-                        }}
-                        disabled={idx === 0}
-                        className="p-1 hover:bg-slate-200/70 disabled:opacity-30 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-                        title="Đưa lên lớp phía trên"
-                      >
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveLayerDown(idx);
-                        }}
-                        disabled={idx === shapes.length - 1}
-                        className="p-1 hover:bg-slate-200/70 disabled:opacity-30 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-                        title="Hạ xuống lớp phía dưới"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSingleShape(s.id, e);
-                        }}
-                        className="p-1 hover:bg-red-100 rounded-lg text-red-500 hover:text-red-700 transition-colors cursor-pointer"
-                        title="Xóa đối tượng này"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
+      {/* Floating Layer Panel Modal */}
+      <LayerPanelModal
+        showLayerPanel={showLayerPanel}
+        onClose={() => setShowLayerPanel(false)}
+        shapes={shapes}
+        selectedShapeId={selectedShapeId}
+        onSelectShape={(id) => {
+          setSelectedShapeId(id);
+          setActiveTool('select');
+        }}
+        onMoveLayerUp={handleMoveLayerUp}
+        onMoveLayerDown={handleMoveLayerDown}
+        onDeleteSingleShape={handleDeleteSingleShape}
+      />
     </div>
   </div>
 );
