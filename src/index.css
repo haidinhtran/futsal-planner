@@ -41,30 +41,43 @@ body {
 
 /* Futsal Pitch Visual Styling */
 .futsal-pitch-container {
-  background: linear-gradient(135deg, #c49a6c 0%, #a67c52 100%);
+  background: linear-gradient(135deg, #143d1a 0%, #0d2811 100%);
   padding: 16px;
   border-radius: 12px;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.2);
   position: relative;
   user-select: none;
 }
 
 .futsal-pitch-floor {
-  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  background: 
+    /* Layer 1: Vignette & stadium lighting depth */
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.38) 100%),
+    /* Layer 2: Fine grass blade micro-texture */
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.03) 0px, rgba(0, 0, 0, 0.03) 2px, transparent 2px, transparent 4px),
+    /* Layer 3: Mown grass vertical lawn stripes (10 alternating green bands) */
+    repeating-linear-gradient(
+      to right,
+      #1b7a38 0%,
+      #1b7a38 10%,
+      #249646 10%,
+      #249646 20%
+    );
   position: relative;
   width: 100%;
   aspect-ratio: 1.9 / 1;
   border-radius: 4px;
-  border: 3px solid rgba(255, 255, 255, 0.9);
+  border: 3px solid rgba(255, 255, 255, 0.92);
   overflow: visible;
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
 }
 
 /* White Court Lines */
 .pitch-line {
   position: absolute;
-  border-color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.9);
   pointer-events: none;
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.25));
 }
 
 .pitch-center-line {
@@ -72,7 +85,7 @@ body {
   bottom: 0;
   left: 50%;
   width: 2px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   transform: translateX(-50%);
 }
 
@@ -81,7 +94,7 @@ body {
   left: 50%;
   width: 18%;
   aspect-ratio: 1;
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   transform: translate(-50%, -50%);
 }
@@ -91,7 +104,7 @@ body {
   left: 50%;
   width: 6px;
   height: 6px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
   transform: translate(-50%, -50%);
 }
@@ -102,7 +115,7 @@ body {
   left: 0;
   width: 16%;
   height: 60%;
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.9);
   border-left: none;
   border-radius: 0 100px 100px 0;
   transform: translateY(-50%);
@@ -113,10 +126,72 @@ body {
   right: 0;
   width: 16%;
   height: 60%;
-  border: 2px solid rgba(255, 255, 255, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.9);
   border-right: none;
   border-radius: 100px 0 0 100px;
   transform: translateY(-50%);
+}
+
+/* Penalty Spots 6m */
+.pitch-penalty-spot-left {
+  top: 50%;
+  left: 15%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pitch-penalty-spot-right {
+  top: 50%;
+  right: 15%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+/* Corner Arcs */
+.pitch-corner-tl {
+  top: 0;
+  left: 0;
+  width: 3%;
+  aspect-ratio: 1;
+  border-right: 2px solid rgba(255, 255, 255, 0.9);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+  border-bottom-right-radius: 100%;
+}
+
+.pitch-corner-tr {
+  top: 0;
+  right: 0;
+  width: 3%;
+  aspect-ratio: 1;
+  border-left: 2px solid rgba(255, 255, 255, 0.9);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+  border-bottom-left-radius: 100%;
+}
+
+.pitch-corner-bl {
+  bottom: 0;
+  left: 0;
+  width: 3%;
+  aspect-ratio: 1;
+  border-right: 2px solid rgba(255, 255, 255, 0.9);
+  border-top: 2px solid rgba(255, 255, 255, 0.9);
+  border-top-right-radius: 100%;
+}
+
+.pitch-corner-br {
+  bottom: 0;
+  right: 0;
+  width: 3%;
+  aspect-ratio: 1;
+  border-left: 2px solid rgba(255, 255, 255, 0.9);
+  border-top: 2px solid rgba(255, 255, 255, 0.9);
+  border-top-left-radius: 100%;
 }
 
 /* Goals */
@@ -126,9 +201,10 @@ body {
   top: 35%;
   height: 30%;
   width: 12px;
-  border: 2px solid white;
+  border: 2px solid rgba(255, 255, 255, 0.95);
   border-right: none;
-  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 3px, transparent 3px, transparent 6px);
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 3px, transparent 3px, transparent 6px);
+  box-shadow: -2px 0 6px rgba(0, 0, 0, 0.2);
 }
 
 .pitch-goal-right {
@@ -137,9 +213,10 @@ body {
   top: 35%;
   height: 30%;
   width: 12px;
-  border: 2px solid white;
+  border: 2px solid rgba(255, 255, 255, 0.95);
   border-left: none;
-  background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.2) 3px, transparent 3px, transparent 6px);
+  background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 3px, transparent 3px, transparent 6px);
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.2);
 }
 
 /* Position Role Badges */

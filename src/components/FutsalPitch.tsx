@@ -122,6 +122,12 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
         <div className="pitch-line pitch-center-spot"></div>
         <div className="pitch-line pitch-penalty-left"></div>
         <div className="pitch-line pitch-penalty-right"></div>
+        <div className="pitch-line pitch-penalty-spot-left"></div>
+        <div className="pitch-line pitch-penalty-spot-right"></div>
+        <div className="pitch-line pitch-corner-tl"></div>
+        <div className="pitch-line pitch-corner-tr"></div>
+        <div className="pitch-line pitch-corner-bl"></div>
+        <div className="pitch-line pitch-corner-br"></div>
         <div className="pitch-goal-left"></div>
         <div className="pitch-goal-right"></div>
 
