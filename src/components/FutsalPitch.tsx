@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { PositionSlot, Player, AttackDirection } from '../types/futsal';
-import { getPositionConfig } from '../types/futsal';
+import { FORMATION_PRESETS } from '../services/initialData';
+import { getUniquePositionConfigs } from '../types/futsal';
 import { User, X, GripVertical, ChevronUp, Users } from 'lucide-react';
 
 interface FutsalPitchProps {
@@ -8,6 +9,8 @@ interface FutsalPitchProps {
   playersMap: Record<string, Player>;
   selectedSlotId: string | null;
   attackDirection?: AttackDirection;
+  currentFormationId?: string;
+  onSelectFormation?: (formationId: string) => void;
   onToggleAttackDirection?: () => void;
   onSelectSlot: (slotId: string) => void;
   onAssignPlayerToSlot: (slotId: string, playerId: string) => void;
@@ -17,6 +20,24 @@ interface FutsalPitchProps {
   onPromoteSubToMain?: (slotId: string, subPlayerId: string) => void;
   onSwapSlots: (slotIdA: string, slotIdB: string) => void;
 }
+
+// Helper function to format clean English role titles for pitch card headers
+export const getEnglishRoleTitle = (role: string): string => {
+  switch (role) {
+    case 'GOALKEEPER':
+      return 'Goalkeeper';
+    case 'FIXO':
+      return 'Fixo';
+    case 'ALA_LEFT':
+      return 'Ala Left';
+    case 'ALA_RIGHT':
+      return 'Ala Right';
+    case 'PIVOT':
+      return 'Pivot';
+    default:
+      return role;
+  }
+};
 
 // Smart helper function for Vietnamese short names (e.g. "Nguyễn Cao Tấn" -> "Cao Tấn", "Hồ Đắc Thạnh" -> "Đắc Thạnh")
 export const getVietnameseShortName = (fullName: string): string => {
@@ -31,6 +52,8 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
   playersMap,
   selectedSlotId,
   attackDirection = 'right',
+  currentFormationId,
+  onSelectFormation,
   onToggleAttackDirection,
   onSelectSlot,
   onAssignPlayerToSlot,
@@ -133,7 +156,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
 
   return (
     <div className="futsal-pitch-container w-full">
-      {/* UI Safe Area: Dedicated Header Bar for Court Controls & Attack Direction / Sub Visibility Toggle */}
+      {/* UI Safe Area: Dedicated Header Bar for Court Controls & Formation / Direction / Sub Visibility Toggle */}
       <div className="flex flex-wrap items-center justify-between bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl mb-3 border border-slate-200/90 text-slate-800 text-xs font-bold shadow-sm gap-2">
         <div className="flex items-center space-x-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -141,7 +164,29 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
         </div>
 
         {/* Right Controls Group */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex flex-wrap items-center space-x-2 sm:space-x-3">
+          {/* Formation Preset Dropdown Selector */}
+          {currentFormationId && onSelectFormation && (
+            <>
+              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
+                <span className="text-slate-700 font-extrabold text-[11px] sm:text-xs shrink-0">Sơ đồ:</span>
+                <select
+                  value={currentFormationId}
+                  onChange={(e) => onSelectFormation(e.target.value)}
+                  className="bg-white text-blue-600 font-black text-xs px-2 py-0.5 rounded-md border border-slate-200/90 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                >
+                  {FORMATION_PRESETS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name} ({preset.subName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="h-4 w-px bg-slate-200"></div>
+            </>
+          )}
+
           {/* Direction Switcher Toggle */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
             <span className="text-slate-700 font-extrabold text-[11px] sm:text-xs">Đổi hướng:</span>
@@ -232,8 +277,8 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                     slot.role
                   )}`}
                 >
-                  <span className="whitespace-normal break-words text-center flex-1 tracking-tighter" title={slot.label}>
-                    {slot.label}
+                  <span className="whitespace-normal break-words text-left flex-1 tracking-tight" title={slot.label}>
+                    {getEnglishRoleTitle(slot.role)}
                   </span>
                   <GripVertical className="w-3 h-3 opacity-80 cursor-grab shrink-0 ml-1" />
                 </div>
@@ -300,14 +345,11 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
 
                         {mainPlayer.positions && mainPlayer.positions.length > 0 && (
                           <div className="flex flex-wrap gap-1 my-0.5">
-                            {mainPlayer.positions.map((pTag) => {
-                              const cfg = getPositionConfig(pTag);
-                              return (
-                                <span key={pTag} className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${cfg.bgClass} ${cfg.textClass}`}>
-                                  {cfg.shortLabel}
-                                </span>
-                              );
-                            })}
+                            {getUniquePositionConfigs(mainPlayer.positions).map((cfg) => (
+                              <span key={cfg.shortLabel} className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${cfg.bgClass} ${cfg.textClass}`}>
+                                {cfg.shortLabel}
+                              </span>
+                            ))}
                           </div>
                         )}
 

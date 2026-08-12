@@ -4,13 +4,12 @@ export const POSITION_TAG_CONFIG: Record<
   string,
   { shortLabel: string; fullLabel: string; bgClass: string; textClass: string; borderClass: string }
 > = {
-  GK: { shortLabel: 'GK', fullLabel: 'Thủ Môn', bgClass: 'bg-emerald-100', textClass: 'text-emerald-800', borderClass: 'border-emerald-200' },
-  FI: { shortLabel: 'FI', fullLabel: 'Hậu Vệ', bgClass: 'bg-purple-100', textClass: 'text-purple-800', borderClass: 'border-purple-200' },
-  AL_L: { shortLabel: 'AL_L', fullLabel: 'Tiền Vệ Cánh Trái', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
-  AL_R: { shortLabel: 'AL_R', fullLabel: 'Tiền Vệ Cánh Phải', bgClass: 'bg-indigo-100', textClass: 'text-indigo-800', borderClass: 'border-indigo-200' },
-  PI: { shortLabel: 'PI', fullLabel: 'Tiền Đạo', bgClass: 'bg-amber-100', textClass: 'text-amber-800', borderClass: 'border-amber-200' },
-  // Backward compatibility alias for legacy 'AL' tag saved in browser localStorage
-  AL: { shortLabel: 'AL', fullLabel: 'Tiền Vệ Cánh', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
+  GK: { shortLabel: 'GK', fullLabel: 'Thủ Môn (Goalkeeper)', bgClass: 'bg-emerald-100', textClass: 'text-emerald-800', borderClass: 'border-emerald-200' },
+  FI: { shortLabel: 'FI', fullLabel: 'Hậu Vệ (Fixo)', bgClass: 'bg-purple-100', textClass: 'text-purple-800', borderClass: 'border-purple-200' },
+  AL_L: { shortLabel: 'AL', fullLabel: 'Tiền Vệ Cánh Trái (Ala Left)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
+  AL_R: { shortLabel: 'AL', fullLabel: 'Tiền Vệ Cánh Phải (Ala Right)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
+  PI: { shortLabel: 'PI', fullLabel: 'Tiền Đạo (Pivot)', bgClass: 'bg-amber-100', textClass: 'text-amber-800', borderClass: 'border-amber-200' },
+  AL: { shortLabel: 'AL', fullLabel: 'Tiền Vệ Cánh (Ala)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
 };
 
 export const getPositionConfig = (pos: string) => {
@@ -23,6 +22,21 @@ export const getPositionConfig = (pos: string) => {
       borderClass: 'border-slate-200',
     }
   );
+};
+
+export const getUniquePositionConfigs = (positions?: string[]) => {
+  if (!positions || positions.length === 0) return [];
+  const seen = new Set<string>();
+  const list: Array<{ shortLabel: string; fullLabel: string; bgClass: string; textClass: string; borderClass: string }> = [];
+
+  for (const pos of positions) {
+    const cfg = getPositionConfig(pos);
+    if (!seen.has(cfg.shortLabel)) {
+      seen.add(cfg.shortLabel);
+      list.push(cfg);
+    }
+  }
+  return list;
 };
 
 export interface Player {
