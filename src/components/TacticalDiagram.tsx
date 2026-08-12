@@ -647,9 +647,9 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
   return (
     <div className="max-w-7xl 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Master Tactical Diagram Card Container */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl">
         {/* 1. Header Banner: Diagram Save & Load Control Panel (Minimalist Light Theme) */}
-        <div className="bg-white p-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/90">
+        <div className="bg-white p-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/90 rounded-t-3xl">
           {/* Current Diagram Title & Status Badge */}
           <div className="flex items-center space-x-3">
             <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-100 text-blue-600 shadow-2xs">
@@ -737,209 +737,194 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
           </div>
         </div>
 
-        {/* 2. Middle Toolbar: Drawing Tools & Tactical Presets */}
-        <div className="bg-slate-50/80 p-4 sm:px-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          {/* Drawing Tools Segmented Control */}
-          <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+        {/* 2. Middle Floating Toolbar: Compact Icon-Only Tools, Preset Dropdown & Red-Boxed Trash Button */}
+        <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md px-3 py-2 sm:px-4 border-b border-slate-200/90 shadow-md flex items-center justify-between gap-2 overflow-x-auto">
+          {/* Icon-Only Boxed Drawing Tools */}
+          <div className="flex items-center space-x-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shrink-0">
             {/* Select & Drag Tool */}
             <button
               onClick={() => setActiveTool('select')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'select'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
               title="Chọn & Kéo thả di chuyển đối tượng"
             >
               <Move className="w-4 h-4" />
-              <span>Chọn / Di chuyển</span>
             </button>
 
             {/* Pointer Laser Tool */}
             <button
               onClick={() => setActiveTool('pointer')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'pointer'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
               title="Laser Con Trỏ Thuyết Trình"
             >
               <Pointer className={`w-4 h-4 ${activeTool === 'pointer' ? 'text-white' : 'text-amber-500'}`} />
-              <span>Con trỏ Laser</span>
             </button>
 
             {/* Movement Arrow */}
             <button
               onClick={() => setActiveTool('arrow')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'arrow'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
               title="Mũi tên di chuyển"
             >
               <ArrowRight className={`w-4 h-4 ${activeTool === 'arrow' ? 'text-white' : 'text-blue-500'}`} />
-              <span>Mũi tên</span>
             </button>
 
             {/* Pass Arrow */}
             <button
               onClick={() => setActiveTool('dashed-arrow')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'dashed-arrow'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
-              title="Mũi tên đường chuyền"
+              title="Mũi tên đường chuyền bóng (nét đứt)"
             >
               <span className={`font-mono text-xs font-black ${activeTool === 'dashed-arrow' ? 'text-white' : 'text-blue-600'}`}>--➔</span>
-              <span>Chuyền bóng</span>
             </button>
 
             {/* Cầu Thủ Ta */}
             <button
               onClick={() => setActiveTool('player-home')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'player-home'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
               title="Đặt vị trí Cầu Thủ Ta (Chọn Tên & Số áo từ đội bóng)"
             >
               <UserCheck className={`w-4 h-4 ${activeTool === 'player-home' ? 'text-white' : 'text-emerald-600'}`} />
-              <span>Cầu Thủ Ta</span>
             </button>
 
             {/* Cầu Thủ Địch */}
             <button
               onClick={() => setActiveTool('player-away')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'player-away'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
               title="Đặt vị trí Cầu Thủ Địch (Đối thủ)"
             >
               <UserX className={`w-4 h-4 ${activeTool === 'player-away' ? 'text-white' : 'text-red-500'}`} />
-              <span>Cầu Thủ Địch</span>
             </button>
 
             {/* Dấu X Đỏ */}
             <button
               onClick={() => setActiveTool('cross-red')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'cross-red'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
-              title="Dấu gạch chéo đỏ"
+              title="Dấu gạch chéo đỏ (Vị trí phạm lỗi/định vị)"
             >
               <XCircle className={`w-4 h-4 ${activeTool === 'cross-red' ? 'text-white' : 'text-red-500'}`} />
-              <span>Dấu X Đỏ</span>
             </button>
 
-            {/* Bóng */}
+            {/* Bóng Futsal */}
             <button
               onClick={() => setActiveTool('ball')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'ball'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
               title="Đặt Bóng Futsal"
             >
               <span className="text-sm">⚽</span>
-              <span>Bóng</span>
             </button>
 
             {/* Văn bản */}
             <button
               onClick={() => setActiveTool('text')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'text'
-                  ? 'bg-blue-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
-              title="Ghi chú văn bản"
+              title="Thêm ghi chú văn bản"
             >
               <Type className={`w-4 h-4 ${activeTool === 'text' ? 'text-white' : 'text-slate-600'}`} />
-              <span>Văn bản</span>
             </button>
 
             {/* Eraser Tool */}
             <button
               onClick={() => setActiveTool('eraser')}
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 activeTool === 'eraser'
-                  ? 'bg-red-600 text-white shadow-xs font-black'
-                  : 'text-slate-700 hover:bg-slate-100 font-bold'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'text-slate-700 hover:bg-white/90'
               }`}
-              title="Cục tẩy: Nhấp vào đối tượng để xóa"
+              title="Cục Tẩy (Nhấp vào đối tượng trên sân để xóa)"
             >
               <Eraser className={`w-4 h-4 ${activeTool === 'eraser' ? 'text-white' : 'text-amber-600'}`} />
-              <span>Cục Tẩy</span>
             </button>
           </div>
 
-          {/* Preset Tactical Maneuvers & Actions (Moved Undo & Trash to far right) */}
-          <div className="flex flex-wrap items-center gap-3 ml-auto">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-black text-slate-500 uppercase mr-1 hidden sm:inline">
-                MẪU:
-              </span>
-              <button
-                onClick={() => loadPresetRun('side')}
-                className="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-extrabold rounded-xl border border-blue-200/70 transition-colors cursor-pointer"
-              >
-                Chạy biên
-              </button>
-              <button
-                onClick={() => loadPresetRun('pivot')}
-                className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-extrabold rounded-xl border border-amber-200/70 transition-colors cursor-pointer"
-              >
-                Đè Pivot
-              </button>
-              <button
-                onClick={() => loadPresetRun('defense')}
-                className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold rounded-xl border border-rose-200/70 transition-colors cursor-pointer"
-              >
-                Bọc lót
-              </button>
-            </div>
+          {/* Right Controls: Presets Dropdown, Layers, Undo, Red-Boxed Trash */}
+          <div className="flex items-center space-x-1.5 shrink-0 ml-auto">
+            {/* Tactical Presets Dropdown Select */}
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  loadPresetRun(e.target.value as 'side' | 'pivot' | 'defense');
+                  e.target.value = '';
+                }
+              }}
+              defaultValue=""
+              className="bg-slate-100/90 hover:bg-slate-200/90 text-slate-800 font-extrabold text-xs px-2.5 py-1.5 rounded-xl border border-slate-200/90 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors shadow-2xs"
+              title="Nạp mẫu bài đánh chiến thuật có sẵn"
+            >
+              <option value="" disabled>-- Mẫu bài đánh --</option>
+              <option value="side">🏃 Chạy biên</option>
+              <option value="pivot">🛡️ Đè Pivot</option>
+              <option value="defense">🔄 Bọc lót</option>
+            </select>
 
-            <div className="h-6 w-px bg-slate-300/80 hidden sm:block"></div>
+            <div className="h-5 w-px bg-slate-200 mx-0.5"></div>
 
-            {/* Undo, Trash, and Layer Panel Toggle Buttons on the far right */}
-            <div className="flex items-center space-x-1.5">
-              <button
-                onClick={() => setShowLayerPanel(!showLayerPanel)}
-                className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs transition-all cursor-pointer ${
-                  showLayerPanel
-                    ? 'bg-blue-600 text-white shadow-xs font-black'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 font-extrabold shadow-2xs'
-                }`}
-                title="Mở bảng quản lý Lớp đối tượng (Layer)"
-              >
-                <Layers className={`w-4 h-4 ${showLayerPanel ? 'text-white' : 'text-blue-600'}`} />
-                <span>Lớp ({shapes.length})</span>
-              </button>
+            {/* Layer Panel Button */}
+            <button
+              onClick={() => setShowLayerPanel(!showLayerPanel)}
+              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
+                showLayerPanel
+                  ? 'bg-blue-600 text-white font-black shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold border border-slate-200/80'
+              }`}
+              title="Bảng Quản Lý Lớp Đối Tượng (Layer)"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Lớp ({shapes.length})</span>
+            </button>
 
-              <button
-                onClick={handleUndo}
-                className="p-2 text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
-                title="Hoàn tác nét vẽ"
-              >
-                <Undo2 className="w-4.5 h-4.5" />
-              </button>
-              <button
-                onClick={handleClearAll}
-                className="p-2 text-red-600 hover:bg-red-100/60 rounded-xl transition-colors cursor-pointer"
-                title="Xóa tất cả nét vẽ"
-              >
-                <Trash2 className="w-4.5 h-4.5" />
-              </button>
-            </div>
+            {/* Undo Button */}
+            <button
+              onClick={handleUndo}
+              className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
+              title="Hoàn tác nét vẽ (Undo)"
+            >
+              <Undo2 className="w-4 h-4" />
+            </button>
+
+            {/* Red Boxed Trash Clear Canvas Button */}
+            <button
+              onClick={handleClearAll}
+              className="w-8 h-8 sm:w-9 sm:h-9 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/90 rounded-xl flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
+              title="Xóa tất cả nét vẽ trên sân"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </button>
           </div>
         </div>
 
