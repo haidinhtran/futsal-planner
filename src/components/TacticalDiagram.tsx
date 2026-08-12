@@ -89,6 +89,11 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
   const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
   const [initialShapePoints, setInitialShapePoints] = useState<Array<{ x: number; y: number }> | null>(null);
 
+  // Automatically deselect current object on pitch whenever drawing tool changes
+  useEffect(() => {
+    setSelectedShapeId(null);
+  }, [activeTool]);
+
   // Player Selector Modal State
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [pendingPt, setPendingPt] = useState<{ x: number; y: number } | null>(null);
@@ -274,7 +279,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
 
   const getShapeBounds = (shape: DrawShape) => {
     if (!shape.points || shape.points.length === 0) {
-      return { x: 50, y: 50, width: 6, height: 6, maxX: 53, minY: 47 };
+      return { x: 50, y: 50, width: 4, height: 4, maxX: 52, minY: 48 };
     }
 
     const xs = shape.points.map((p) => p.x);
@@ -284,30 +289,34 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
     const minY = Math.min(...ys);
     const maxY = Math.max(...ys);
 
-    let padX = 3.5;
-    let padYTop = 4.5;
-    let padYBottom = 4.5;
+    let padX = 2.0;
+    let padYTop = 2.6;
+    let padYBottom = 2.6;
 
     if (shape.points.length === 1) {
       if (shape.tool === 'text') {
         const textLen = shape.text?.length || 4;
-        padX = Math.max(4, textLen * 0.75);
-        padYTop = 3.5;
-        padYBottom = 3.5;
+        padX = Math.max(2.2, textLen * 0.4);
+        padYTop = 2.0;
+        padYBottom = 2.0;
       } else if (shape.tool === 'player-home' && shape.number !== undefined && shape.text && shape.text !== 'Ta') {
-        padX = 5.5;
-        padYTop = 4.8;
-        padYBottom = 9.8; // Generous bottom padding to enclose player name badge (+40px) inside selection box
+        padX = 3.2;
+        padYTop = 2.8;
+        padYBottom = 5.8; // Tight bottom padding enclosing player name badge
+      } else if (shape.tool === 'player-home' || shape.tool === 'player-away' || shape.tool === 'circle-blue' || shape.tool === 'circle-red') {
+        padX = 2.0;
+        padYTop = 2.6;
+        padYBottom = 2.6;
       } else if (shape.tool === 'ball' || shape.tool === 'cross-red') {
-        padX = 3.0;
-        padYTop = 3.8;
-        padYBottom = 3.8;
+        padX = 1.6;
+        padYTop = 2.2;
+        padYBottom = 2.2;
       }
     } else {
       // Multi-point lines/arrows
-      padX = 2.5;
-      padYTop = 3.5;
-      padYBottom = 3.5;
+      padX = 1.8;
+      padYTop = 2.2;
+      padYBottom = 2.2;
     }
 
     const boundsMinX = Number(Math.max(0.5, minX - padX).toFixed(2));
@@ -318,8 +327,8 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
     return {
       x: boundsMinX,
       y: boundsMinY,
-      width: Number(Math.max(6, boundsMaxX - boundsMinX).toFixed(2)),
-      height: Number(Math.max(6, boundsMaxY - boundsMinY).toFixed(2)),
+      width: Number(Math.max(3, boundsMaxX - boundsMinX).toFixed(2)),
+      height: Number(Math.max(3, boundsMaxY - boundsMinY).toFixed(2)),
       maxX: boundsMaxX,
       minY: boundsMinY,
     };
@@ -991,6 +1000,13 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                 >
                   <polygon points="0 0, 8 4, 0 8" fill="#facc15" />
                 </marker>
+                <filter id="laser-neon-glow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
               </defs>
 
               {/* Render Saved Shapes (sortedShapes ensures selected shape is rendered at the top Z-index layer) */}
@@ -1306,11 +1322,41 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                 />
               )}
 
-              {/* Render Glowing Laser Pointer Cursor */}
+              {/* Render Glowing Yellow Neon Laser Pointer Cursor (Without lagging CSS scaling artifacts) */}
               {laserPos && (
-                <g>
-                  <circle cx={`${laserPos.x}%`} cy={`${laserPos.y}%`} r="14" fill="rgba(239, 68, 68, 0.4)" />
-                  <circle cx={`${laserPos.x}%`} cy={`${laserPos.y}%`} r="6" fill="#ef4444" className="animate-pulse" />
+                <g className="pointer-events-none">
+                  {/* Soft Outer Neon Halo */}
+                  <circle
+                    cx={`${laserPos.x}%`}
+                    cy={`${laserPos.y}%`}
+                    r="18"
+                    fill="rgba(250, 204, 21, 0.25)"
+                    filter="url(#laser-neon-glow)"
+                  />
+                  {/* Neon Glow Ring */}
+                  <circle
+                    cx={`${laserPos.x}%`}
+                    cy={`${laserPos.y}%`}
+                    r="12"
+                    fill="rgba(250, 204, 21, 0.6)"
+                    filter="url(#laser-neon-glow)"
+                  />
+                  {/* Core Yellow Circle */}
+                  <circle
+                    cx={`${laserPos.x}%`}
+                    cy={`${laserPos.y}%`}
+                    r="7"
+                    fill="#facc15"
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                  />
+                  {/* Center White Core Spot */}
+                  <circle
+                    cx={`${laserPos.x}%`}
+                    cy={`${laserPos.y}%`}
+                    r="2.5"
+                    fill="#ffffff"
+                  />
                 </g>
               )}
             </svg>

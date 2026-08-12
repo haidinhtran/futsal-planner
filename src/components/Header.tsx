@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Users, Layout, PenTool, Download, Upload, RotateCcw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Users, Layout, PenTool, Download, Upload, RotateCcw, Settings, ChevronDown } from 'lucide-react';
 import { storageService } from '../services/storageService';
 
 interface HeaderProps {
@@ -10,6 +10,19 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataRefresh }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const [showSettingsMenu, setShowSettingsMenu] = useState<boolean>(false);
+
+  // Close Settings Dropdown menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
+        setShowSettingsMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleExport = () => {
     storageService.exportBackup();
@@ -98,26 +111,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
               </button>
             </nav>
 
-            {/* Secondary Actions: Export/Import JSON & Reset */}
-            <div className="flex items-center space-x-1 sm:space-x-2">
-              <button
-                onClick={handleExport}
-                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs xl:text-sm font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                title="Xuất dữ liệu LocalStorage ra file JSON"
-              >
-                <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">Xuất JSON</span>
-              </button>
-
-              <button
-                onClick={handleImportClick}
-                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs xl:text-sm font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-                title="Nhập dữ liệu từ file JSON"
-              >
-                <Upload className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">Nhập JSON</span>
-              </button>
-
+            {/* Secondary Action: Settings Dropdown Menu (JSON Export, Import & Reset) */}
+            <div className="relative" ref={settingsMenuRef}>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -126,16 +121,70 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
                 className="hidden"
               />
 
-              <div className="h-4 w-px bg-slate-200 mx-0.5 sm:mx-1"></div>
-
               <button
-                onClick={handleReset}
-                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs xl:text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                title="Khôi phục dữ liệu 14 cầu thủ mặc định"
+                type="button"
+                onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs xl:text-sm font-extrabold rounded-xl border transition-all cursor-pointer shadow-2xs ${
+                  showSettingsMenu
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-500/20'
+                    : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/90 border-slate-200/90'
+                }`}
+                title="Cài đặt & Quản lý dữ liệu (Xuất/Nhập JSON & Mặc định)"
               >
-                <RotateCcw className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">Mặc định</span>
+                <Settings className={`w-4 h-4 transition-transform ${showSettingsMenu ? 'rotate-90 text-white' : 'text-slate-600'}`} />
+                <span className="hidden sm:inline">Cài đặt</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSettingsMenu ? 'rotate-180 text-white' : 'text-slate-500'}`} />
               </button>
+
+              {/* Dropdown Menu Popup */}
+              {showSettingsMenu && (
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-slate-200/90 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-3.5 py-1 mb-1 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    QUẢN LÝ DỮ LIỆU JSON
+                  </div>
+
+                  {/* 1. Xuất JSON */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSettingsMenu(false);
+                      handleExport();
+                    }}
+                    className="w-full flex items-center space-x-2.5 px-4 py-2 text-xs xl:text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors text-left"
+                  >
+                    <Download className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>Xuất JSON</span>
+                  </button>
+
+                  {/* 2. Nhập JSON */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSettingsMenu(false);
+                      handleImportClick();
+                    }}
+                    className="w-full flex items-center space-x-2.5 px-4 py-2 text-xs xl:text-sm font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors text-left"
+                  >
+                    <Upload className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Nhập JSON</span>
+                  </button>
+
+                  <div className="my-1 border-t border-slate-100"></div>
+
+                  {/* 3. Mặc định */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSettingsMenu(false);
+                      handleReset();
+                    }}
+                    className="w-full flex items-center space-x-2.5 px-4 py-2 text-xs xl:text-sm font-bold text-red-600 hover:bg-red-50 transition-colors text-left"
+                  >
+                    <RotateCcw className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>Khôi phục Mặc định</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

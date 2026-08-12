@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { Player, TacticalSquad, PositionSlot, AttackDirection } from '../types/futsal';
-import { POSITION_TAG_CONFIG, getUniquePositionConfigs } from '../types/futsal';
+import { getUniquePositionConfigs } from '../types/futsal';
 import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
 import { RefreshCw, Save, Trash2, ArrowLeftRight, Info } from 'lucide-react';
@@ -50,6 +50,28 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   // Sidebar Filter & Sort
   const [onlyUnselected, setOnlyUnselected] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<'total_desc' | 'total_asc' | 'number_asc'>('total_desc');
+
+  // Bench Horizontal Scroll Ref & Wheel Event Listener
+  const benchScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = benchScrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (el.scrollWidth > el.clientWidth) {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          el.scrollLeft += e.deltaY;
+        }
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   // Quick Map of Players for fast lookup
   const playersMap = useMemo(() => {
@@ -278,9 +300,26 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   };
 
   const handleQuickSwap = () => {
-    if (slots.length >= 2) {
-      handleSwapSlots(slots[1].id, slots[2].id);
+    if (slots.length < 2) return;
+
+    // 1. Check if formation has both ALA_LEFT and ALA_RIGHT slots
+    const alaLeftSlot = slots.find((s) => s.role === 'ALA_LEFT');
+    const alaRightSlot = slots.find((s) => s.role === 'ALA_RIGHT');
+
+    if (alaLeftSlot && alaRightSlot && alaLeftSlot.id !== alaRightSlot.id) {
+      handleSwapSlots(alaLeftSlot.id, alaRightSlot.id);
+      return;
     }
+
+    // 2. Fallback: if 2 ALA slots exist (e.g. 4-0 formation)
+    const alaSlots = slots.filter((s) => s.role === 'ALA_LEFT' || s.role === 'ALA_RIGHT');
+    if (alaSlots.length >= 2) {
+      handleSwapSlots(alaSlots[0].id, alaSlots[1].id);
+      return;
+    }
+
+    // 3. Fallback: swap middle field slots (slot-1 & slot-2)
+    handleSwapSlots(slots[1].id, slots[2].id);
   };
 
   const handleSave = () => {
@@ -537,7 +576,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               DỰ BỊ / CHƯA CHỌN ({benchPlayers.length})
             </h3>
 
-            <div className="flex items-center space-x-4 overflow-x-auto pb-3 pt-1">
+            <div ref={benchScrollRef} className="flex items-center space-x-4 overflow-x-auto pb-3 pt-1">
               {benchPlayers.map((p) => (
                 <div
                   key={p.id}
@@ -558,13 +597,13 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                   {/* Quick Position Tags */}
                   {p.positions && p.positions.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {p.positions.map((pos) => (
+                      {getUniquePositionConfigs(p.positions).map((cfg) => (
                         <span
-                          key={pos}
-                          className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${POSITION_TAG_CONFIG[pos].bgClass} ${POSITION_TAG_CONFIG[pos].textClass} ${POSITION_TAG_CONFIG[pos].borderClass}`}
-                          title={POSITION_TAG_CONFIG[pos].fullLabel}
+                          key={cfg.shortLabel}
+                          className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
+                          title={cfg.fullLabel}
                         >
-                          {POSITION_TAG_CONFIG[pos].shortLabel}
+                          {cfg.shortLabel}
                         </span>
                       ))}
                     </div>
