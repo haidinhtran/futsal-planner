@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { PositionSlot, Player, AttackDirection } from '../types/futsal';
 import { FORMATION_PRESETS } from '../services/initialData';
-import { getUniquePositionConfigs } from '../types/futsal';
+import { getUniquePositionConfigs as _getUniquePositionConfigs } from '../types/futsal';
 import { User, X, GripVertical, ChevronUp, Users } from 'lucide-react';
 
 interface FutsalPitchProps {
@@ -135,6 +135,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
     e.dataTransfer.setData('text/player-id', playerId);
   };
 
+  /* Temporarily commented out popover helpers
   const getPlayerAverage = (p: Player) => {
     let sum = 0, count = 0;
     if (p.stamina !== null) { sum += p.stamina; count++; }
@@ -153,6 +154,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
     }
     return `${vertClass} ${horizClass}`;
   };
+  */
 
   return (
     <div className="futsal-pitch-container w-full">
@@ -258,7 +260,6 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
           const subPlayerIds = slot.subPlayerIds || [];
           const subPlayers = subPlayerIds.map((id) => playersMap[id]).filter(Boolean);
           const isSelected = selectedSlotId === slot.id;
-          const popoverPosClass = getPopoverPositionClass(slot.x, slot.y);
 
           return (
             <div
@@ -294,29 +295,25 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                   {mainPlayer ? (
                     /* Main Starter Player Card - Prominently Styled: [ #5 - Cao Tấn ] */
                     <div className="flex flex-col items-center relative text-center">
-                      {/* Clear Main Starter Button */}
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onClearSlot(slot.id);
-                        }}
-                        className="absolute -top-2.5 -right-2.5 w-5 h-5 rounded-full bg-white text-slate-400 border border-slate-200 shadow-xs opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center hover:bg-red-500 hover:text-white hover:border-red-500 hover:scale-110 z-20 cursor-pointer"
-                        title="Bỏ cầu thủ chính khỏi vị trí"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-
-                      {/* Prominent Label: [ #Number - Name ] */}
-                      <div className="w-full bg-blue-50/90 border border-blue-200/80 rounded-md py-1 px-1.5 mb-1 flex items-center justify-center space-x-1 shadow-2xs">
-                        <span className="text-sm xl:text-base font-black text-blue-600 leading-none">
-                          #{mainPlayer.number}
+                      {/* Synchronized Main Starter Badge: [ #Number - ShortName ] + Inline Remove Button */}
+                      <div className="w-full bg-blue-50/90 border border-blue-200/80 rounded-md py-1 px-1.5 mb-1 flex items-center justify-between shadow-2xs">
+                        <span className="text-xs xl:text-sm font-bold text-slate-900 truncate flex-1 min-w-0 pr-1 text-left" title={mainPlayer.name}>
+                          <span className="font-extrabold text-blue-600">#{mainPlayer.number}</span>
+                          <span className="text-slate-400 mx-0.5">-</span>
+                          <span>{getVietnameseShortName(mainPlayer.name)}</span>
                         </span>
-                        <span className="text-slate-400 font-bold text-xs">-</span>
-                        <span className="text-xs xl:text-sm font-black text-slate-900 truncate leading-tight" title={mainPlayer.name}>
-                          {getVietnameseShortName(mainPlayer.name)}
-                        </span>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onClearSlot(slot.id);
+                          }}
+                          className="p-0.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors shrink-0 ml-1 cursor-pointer"
+                          title="Bỏ cầu thủ chính khỏi vị trí"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
 
                       {/* Main Player Note (if present) */}
@@ -329,7 +326,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                         </div>
                       )}
 
-                      {/* Floating Rich Popover Tooltip */}
+                      {/* Floating Rich Popover Tooltip (Temporarily Commented Out)
                       <div className={`opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto absolute ${popoverPosClass} w-[205px] bg-slate-900/95 backdrop-blur-md text-white rounded-xl p-3 shadow-2xl border border-slate-700/80 z-50 flex flex-col gap-1.5 text-left`}>
                         <div className="flex items-center justify-between border-b border-slate-700 pb-1.5 gap-2">
                           <span className="font-black text-sm text-yellow-400 truncate flex-1 min-w-0" title={`#${mainPlayer.number} ${mainPlayer.name}`}>
@@ -374,6 +371,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                           </div>
                         )}
                       </div>
+                      */}
                     </div>
                   ) : (
                     /* Empty Main Starter Slot Placeholder */
