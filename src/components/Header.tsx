@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
     <>
       {/* Top Header Navbar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo & Title */}
             <div className="flex items-center space-x-2.5 sm:space-x-3 shrink-0">
@@ -54,8 +54,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
                 </svg>
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl font-black text-blue-600 leading-none tracking-tight">FTSP</h1>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-bold mt-0.5 sm:mt-1">Futsal Tactics & Squad Planner</p>
+                <h1 className="text-lg sm:text-xl xl:text-2xl font-black text-blue-600 leading-none tracking-tight">FTSP</h1>
+                <p className="text-[10px] sm:text-xs xl:text-sm text-slate-500 font-bold mt-0.5 sm:mt-1">Futsal Tactics & Squad Planner</p>
               </div>
             </div>
 
@@ -63,37 +63,37 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
             <nav className="hidden md:flex space-x-1.5 bg-slate-100 p-1.5 rounded-xl">
               <button
                 onClick={() => setActiveTab('tactics')}
-                className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex items-center space-x-2 px-4 py-2 text-xs xl:text-sm font-bold rounded-lg transition-all cursor-pointer ${
                   activeTab === 'tactics'
                     ? 'bg-white text-blue-600 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Layout className="w-4 h-4" />
+                <Layout className="w-4 h-4 xl:w-4.5 xl:h-4.5" />
                 <span>Thiết Kế Thế Trận</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('players')}
-                className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex items-center space-x-2 px-4 py-2 text-xs xl:text-sm font-bold rounded-lg transition-all cursor-pointer ${
                   activeTab === 'players'
                     ? 'bg-white text-blue-600 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4 xl:w-4.5 xl:h-4.5" />
                 <span>Quản Lý Cầu Thủ</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('presentation')}
-                className={`flex items-center space-x-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex items-center space-x-2 px-4 py-2 text-xs xl:text-sm font-bold rounded-lg transition-all cursor-pointer ${
                   activeTab === 'presentation'
                     ? 'bg-white text-blue-600 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <PenTool className="w-4 h-4" />
+                <PenTool className="w-4 h-4 xl:w-4.5 xl:h-4.5" />
                 <span>Diễn Giải Chiến Thuật</span>
               </button>
             </nav>
@@ -102,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
             <div className="flex items-center space-x-1 sm:space-x-2">
               <button
                 onClick={handleExport}
-                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs xl:text-sm font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 title="Xuất dữ liệu LocalStorage ra file JSON"
               >
                 <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -111,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
 
               <button
                 onClick={handleImportClick}
-                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs xl:text-sm font-semibold text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 title="Nhập dữ liệu từ file JSON"
               >
                 <Upload className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onDataR
 
               <button
                 onClick={handleReset}
-                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center space-x-1 p-2 sm:px-3 sm:py-1.5 text-xs xl:text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                 title="Khôi phục dữ liệu 14 cầu thủ mặc định"
               >
                 <RotateCcw className="w-4 h-4 sm:w-3.5 sm:h-3.5" />

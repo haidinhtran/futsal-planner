@@ -63,14 +63,30 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     return FORMATION_PRESETS.find((f) => f.id === currentFormationId) || FORMATION_PRESETS[1];
   }, [currentFormationId]);
 
-  // Set of player IDs currently assigned on the pitch
-  const assignedPlayerIds = useMemo(() => {
+  // Set of player IDs assigned as main starter
+  const assignedMainPlayerIds = useMemo(() => {
     const set = new Set<string>();
     slots.forEach((s) => {
       if (s.playerId) set.add(s.playerId);
     });
     return set;
   }, [slots]);
+
+  // Set of player IDs assigned as sub
+  const assignedSubPlayerIds = useMemo(() => {
+    const set = new Set<string>();
+    slots.forEach((s) => {
+      if (s.subPlayerIds) {
+        s.subPlayerIds.forEach((id) => set.add(id));
+      }
+    });
+    return set;
+  }, [slots]);
+
+  // Set of all player IDs currently assigned on the pitch (main + sub)
+  const assignedPlayerIds = useMemo(() => {
+    return new Set([...assignedMainPlayerIds, ...assignedSubPlayerIds]);
+  }, [assignedMainPlayerIds, assignedSubPlayerIds]);
 
   // Calculate total score of a player
   const getPlayerTotalScore = (p: Player) => {
@@ -147,6 +163,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     // Keep existing assigned players if possible, map to new position coordinates
     const newSlots: PositionSlot[] = preset.positions.map((pos, idx) => {
       const existingPlayerId = slots[idx]?.playerId || null;
+      const existingSubs = slots[idx]?.subPlayerIds || [];
       const posX = attackDirection === 'left' ? 100 - pos.x : pos.x;
       const posY = attackDirection === 'left' ? 100 - pos.y : pos.y;
       return {
@@ -156,6 +173,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
         x: Number(posX.toFixed(2)),
         y: Number(posY.toFixed(2)),
         playerId: existingPlayerId,
+        subPlayerIds: existingSubs,
       };
     });
     setSlots(newSlots);
@@ -164,24 +182,85 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   const handleAssignPlayerToSlot = (slotId: string, playerId: string) => {
     setSlots((prev) =>
       prev.map((slot) => {
-        if (slot.playerId === playerId) {
-          return { ...slot, playerId: null };
+        let newSlot = { ...slot };
+        if (newSlot.playerId === playerId) {
+          newSlot.playerId = null;
         }
-        if (slot.id === slotId) {
-          return { ...slot, playerId };
+        if (newSlot.subPlayerIds && newSlot.subPlayerIds.includes(playerId)) {
+          newSlot.subPlayerIds = newSlot.subPlayerIds.filter((id) => id !== playerId);
         }
-        return slot;
+        if (newSlot.id === slotId) {
+          newSlot.playerId = playerId;
+        }
+        return newSlot;
       })
     );
     setSelectedSlotId(null);
+  };
+
+  const handleAssignSubPlayerToSlot = (slotId: string, playerId: string) => {
+    setSlots((prev) => {
+      const targetSlot = prev.find((s) => s.id === slotId);
+      if (!targetSlot) return prev;
+      const currentSubs = targetSlot.subPlayerIds || [];
+      if (currentSubs.length >= 5 || currentSubs.includes(playerId)) return prev;
+
+      return prev.map((slot) => {
+        let newSlot = { ...slot };
+        if (newSlot.playerId === playerId) {
+          newSlot.playerId = null;
+        }
+        if (newSlot.subPlayerIds && newSlot.subPlayerIds.includes(playerId)) {
+          newSlot.subPlayerIds = newSlot.subPlayerIds.filter((id) => id !== playerId);
+        }
+        if (newSlot.id === slotId) {
+          newSlot.subPlayerIds = [...(newSlot.subPlayerIds || []), playerId];
+        }
+        return newSlot;
+      });
+    });
   };
 
   const handleClearSlot = (slotId: string) => {
     setSlots((prev) => prev.map((s) => (s.id === slotId ? { ...s, playerId: null } : s)));
   };
 
+  const handleClearSubPlayer = (slotId: string, subPlayerId: string) => {
+    setSlots((prev) =>
+      prev.map((slot) => {
+        if (slot.id === slotId && slot.subPlayerIds) {
+          return {
+            ...slot,
+            subPlayerIds: slot.subPlayerIds.filter((id) => id !== subPlayerId),
+          };
+        }
+        return slot;
+      })
+    );
+  };
+
+  const handlePromoteSubToMain = (slotId: string, subPlayerId: string) => {
+    setSlots((prev) =>
+      prev.map((slot) => {
+        if (slot.id === slotId) {
+          const oldMain = slot.playerId;
+          const newSubs = (slot.subPlayerIds || []).filter((id) => id !== subPlayerId);
+          if (oldMain) {
+            newSubs.push(oldMain);
+          }
+          return {
+            ...slot,
+            playerId: subPlayerId,
+            subPlayerIds: newSubs.slice(0, 5),
+          };
+        }
+        return slot;
+      })
+    );
+  };
+
   const handleClearAllSlots = () => {
-    setSlots((prev) => prev.map((s) => ({ ...s, playerId: null })));
+    setSlots((prev) => prev.map((s) => ({ ...s, playerId: null, subPlayerIds: [] })));
   };
 
   const handleSwapSlots = (slotIdA: string, slotIdB: string) => {
@@ -191,8 +270,8 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
       if (!slotA || !slotB) return prev;
 
       return prev.map((s) => {
-        if (s.id === slotIdA) return { ...s, playerId: slotB.playerId };
-        if (s.id === slotIdB) return { ...s, playerId: slotA.playerId };
+        if (s.id === slotIdA) return { ...s, playerId: slotB.playerId, subPlayerIds: slotB.subPlayerIds || [] };
+        if (s.id === slotIdB) return { ...s, playerId: slotA.playerId, subPlayerIds: slotA.subPlayerIds || [] };
         return s;
       });
     });
@@ -268,12 +347,12 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   };
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div className="max-w-7xl 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
       {/* Top Bar: Formation Selector & Main Actions */}
       <div className="bg-white px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
         {/* Preset Formations Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto py-1 px-0.5 max-w-full no-scrollbar">
-          <span className="text-xs font-black text-slate-500 uppercase tracking-wider mr-1 shrink-0">
+          <span className="text-xs xl:text-sm font-black text-slate-500 uppercase tracking-wider mr-1 shrink-0">
             ĐỘI HÌNH:
           </span>
           {FORMATION_PRESETS.map((preset) => (
@@ -286,8 +365,8 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold'
               }`}
             >
-              <div className="text-xs sm:text-sm font-black leading-none mb-0.5">{preset.name}</div>
-              <div className="text-[10px] opacity-80 font-medium leading-none">{preset.subName}</div>
+              <div className="text-xs sm:text-sm xl:text-base font-black leading-none mb-0.5">{preset.name}</div>
+              <div className="text-[10px] xl:text-xs opacity-80 font-medium leading-none">{preset.subName}</div>
             </button>
           ))}
         </div>
@@ -295,23 +374,15 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
         {/* Action Buttons */}
         <div className="flex items-center justify-end space-x-2 shrink-0">
           <button
-            onClick={handleToggleAttackDirection}
-            title="Đổi hướng tấn công"
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer shadow-2xs"
-          >
-            <ArrowLeftRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
-            <span>Đổi hướng ({attackDirection === 'right' ? '→' : '←'})</span>
-          </button>
-          <button
             onClick={handleResetPreset}
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs xl:text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Đặt lại</span>
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-xs xl:text-sm font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
           >
             <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Lưu đội hình</span>
@@ -326,13 +397,13 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col h-full justify-between space-y-4">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wide">
+                <h3 className="text-sm xl:text-base font-extrabold text-slate-900 uppercase tracking-wide">
                   DANH SÁCH CẦU THỦ ({players.length})
                 </h3>
               </div>
 
               {/* Table Header */}
-              <div className="grid grid-cols-12 text-xs font-bold text-slate-500 uppercase pb-2 border-b border-slate-200">
+              <div className="grid grid-cols-12 text-xs xl:text-sm font-bold text-slate-500 uppercase pb-2 border-b border-slate-200">
                 <span className="col-span-1 text-center">#</span>
                 <span className="col-span-6">Cầu thủ</span>
                 <span className="col-span-1 text-center text-emerald-600">TL</span>
@@ -342,9 +413,11 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               </div>
 
               {/* Player Scroll List */}
-              <div className="max-h-[420px] overflow-y-auto divide-y divide-slate-100 my-1 pr-1">
+              <div className="max-h-[420px] xl:max-h-[500px] overflow-y-auto divide-y divide-slate-100 my-1 pr-1">
                 {sidebarPlayers.map((p) => {
-                  const isAssigned = assignedPlayerIds.has(p.id);
+                  const isAssignedMain = assignedMainPlayerIds.has(p.id);
+                  const isAssignedSub = assignedSubPlayerIds.has(p.id);
+                  const isAssigned = isAssignedMain || isAssignedSub;
                   const total = getPlayerTotalScore(p);
                   return (
                     <div
@@ -352,15 +425,25 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                       draggable
                       onDragStart={(e) => handleDragStartPlayer(e, p.id)}
                       onClick={() => handleSidebarPlayerClick(p.id)}
-                      className={`grid grid-cols-12 items-center py-2.5 px-2 text-xs cursor-pointer rounded-xl transition-colors ${
+                      className={`grid grid-cols-12 items-center py-2.5 px-2 text-xs xl:text-sm cursor-pointer rounded-xl transition-colors ${
                         isAssigned
-                          ? 'bg-slate-50 text-slate-400 opacity-60'
+                          ? 'bg-slate-50 text-slate-400 opacity-70'
                           : 'hover:bg-blue-50/80 text-slate-900 font-semibold'
                       }`}
                     >
                       <span className="col-span-1 text-center font-black text-slate-700">{p.number}</span>
                       <div className="col-span-6 flex items-center space-x-1.5 min-w-0 pr-1">
                         <span className="truncate font-bold" title={p.name}>{p.name}</span>
+                        {isAssignedMain && (
+                          <span className="text-[9px] font-black px-1 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                            Chính
+                          </span>
+                        )}
+                        {isAssignedSub && (
+                          <span className="text-[9px] font-black px-1 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200 shrink-0">
+                            Dự bị
+                          </span>
+                        )}
                         {/* Quick Position Badges */}
                         {p.positions && p.positions.length > 0 && (
                           <div className="flex items-center space-x-0.5 shrink-0">
@@ -369,7 +452,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                               return (
                                 <span
                                   key={pos}
-                                  className={`text-[9px] font-black px-1 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
+                                  className={`text-[9px] xl:text-[10px] font-black px-1 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
                                   title={cfg.fullLabel}
                                 >
                                   {cfg.shortLabel}
@@ -391,9 +474,9 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               </div>
 
               {/* Filters & Sorting */}
-              <div className="pt-4 border-t border-slate-100 space-y-3 text-xs">
+              <div className="pt-4 border-t border-slate-100 space-y-3 text-xs xl:text-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-slate-500 uppercase text-xs">LỌC & SẮP XẾP</span>
+                  <span className="font-bold text-slate-500 uppercase text-xs xl:text-sm">LỌC & SẮP XẾP</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
@@ -418,12 +501,12 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
             </div>
 
             {/* Bottom Left: Squad Info */}
-            <div className="pt-3 border-t border-slate-100 bg-slate-50 p-4 rounded-xl space-y-1">
-              <h4 className="text-xs font-black text-slate-500 uppercase">THÔNG TIN ĐỘI HÌNH</h4>
-              <p className="text-xs font-bold text-slate-800">
+            <div className="pt-3 border-t border-slate-100 bg-slate-50 p-4 rounded-xl space-y-1 text-xs xl:text-sm">
+              <h4 className="font-black text-slate-500 uppercase text-xs xl:text-sm">THÔNG TIN ĐỘI HÌNH</h4>
+              <p className="font-bold text-slate-800">
                 Đội hình: <span className="text-blue-600 font-extrabold">{currentPreset.name} ({currentPreset.subName})</span>
               </p>
-              <p className="text-xs text-slate-600">
+              <p className="text-slate-600">
                 Sơ đồ: <span className="font-semibold text-slate-800">{currentPreset.schema}</span>
               </p>
             </div>
@@ -438,9 +521,13 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
               playersMap={playersMap}
               selectedSlotId={selectedSlotId}
               attackDirection={attackDirection}
+              onToggleAttackDirection={handleToggleAttackDirection}
               onSelectSlot={(id) => setSelectedSlotId(selectedSlotId === id ? null : id)}
               onAssignPlayerToSlot={handleAssignPlayerToSlot}
+              onAssignSubPlayerToSlot={handleAssignSubPlayerToSlot}
               onClearSlot={handleClearSlot}
+              onClearSubPlayer={handleClearSubPlayer}
+              onPromoteSubToMain={handlePromoteSubToMain}
               onSwapSlots={handleSwapSlots}
             />
 

@@ -46,6 +46,7 @@ export interface PositionSlot {
   x: number; // percentage 0-100
   y: number; // percentage 0-100
   playerId: string | null;
+  subPlayerIds?: string[]; // Up to 5 substitute player IDs assigned to this position
 }
 
 export interface FormationPreset {

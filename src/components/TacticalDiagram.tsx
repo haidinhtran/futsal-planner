@@ -636,7 +636,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
   };
 
   return (
-    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="max-w-7xl 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Master Tactical Diagram Card Container */}
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden">
         {/* 1. Header Banner: Diagram Save & Load Control Panel (Minimalist Light Theme) */}

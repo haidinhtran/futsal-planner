@@ -30,24 +30,35 @@ export const storageService = {
   getSquad(): TacticalSquad {
     try {
       const data = localStorage.getItem(SQUAD_KEY);
+      let squad: TacticalSquad;
       if (!data) {
-        const initialSquad: TacticalSquad = {
+        squad = {
           id: 'default',
           formationId: INITIAL_TACTICAL_SQUAD.formationId,
           slots: INITIAL_TACTICAL_SQUAD.slots,
           notes: INITIAL_TACTICAL_SQUAD.notes,
           updatedAt: new Date().toISOString(),
         };
-        this.saveSquad(initialSquad);
-        return initialSquad;
+        this.saveSquad(squad);
+      } else {
+        squad = JSON.parse(data);
       }
-      return JSON.parse(data);
+
+      // Ensure backward compatibility: normalize subPlayerIds array on all slots
+      if (squad && Array.isArray(squad.slots)) {
+        squad.slots = squad.slots.map((s) => ({
+          ...s,
+          subPlayerIds: Array.isArray(s.subPlayerIds) ? s.subPlayerIds : [],
+        }));
+      }
+
+      return squad;
     } catch (e) {
       console.error('Error reading squad from localStorage', e);
       return {
         id: 'default',
         formationId: INITIAL_TACTICAL_SQUAD.formationId,
-        slots: INITIAL_TACTICAL_SQUAD.slots,
+        slots: INITIAL_TACTICAL_SQUAD.slots.map((s) => ({ ...s, subPlayerIds: [] })),
         notes: INITIAL_TACTICAL_SQUAD.notes,
         updatedAt: new Date().toISOString(),
       };

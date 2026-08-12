@@ -3,10 +3,29 @@
 @tailwind utilities;
 
 :root {
+  /* Tactical Position Role Tokens */
+  --color-role-gk: #16a34a;
+  --color-role-fixo: #9333ea;
+  --color-role-ala: #0284c7;
+  --color-role-pivot: #ea580c;
+
+  /* Stat Category Tokens */
+  --color-stat-stamina: #059669;
+  --color-stat-attack: #d97706;
+  --color-stat-defense: #2563eb;
   --color-tl: #16a34a;
   --color-tc: #ea580c;
   --color-pt: #2563eb;
+
+  /* Pitch Surface & Frame Tokens */
+  --pitch-grass-dark: #1b7a38;
+  --pitch-grass-light: #249646;
+  --pitch-border-dark: #143d1a;
+  --pitch-frame-shadow: rgba(0, 0, 0, 0.4);
+
+  /* Layout & Surface Tokens */
   --bg-app: #f1f5f9;
+  --border-card: #e2e8f0;
 }
 
 * {

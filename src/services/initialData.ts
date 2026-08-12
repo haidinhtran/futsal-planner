@@ -101,11 +101,11 @@ export const FORMATION_PRESETS: FormationPreset[] = [
 export const INITIAL_TACTICAL_SQUAD = {
   formationId: '4-0',
   slots: [
-    { id: 'slot-0', role: 'GOALKEEPER' as const, label: 'THỦ MÔN (GOALKEEPER)', x: 10, y: 50, playerId: '13' },
-    { id: 'slot-1', role: 'ALA_LEFT' as const, label: 'TIỀN VỆ CÁNH TRÁI DƯỚI (ALA LEFT)', x: 42, y: 25, playerId: '1' },
-    { id: 'slot-2', role: 'ALA_RIGHT' as const, label: 'TIỀN VỆ CÁNH PHẢI DƯỚI (ALA RIGHT)', x: 42, y: 75, playerId: '2' },
-    { id: 'slot-3', role: 'ALA_LEFT' as const, label: 'TIỀN VỆ CÁNH TRÁI TRÊN (ALA LEFT)', x: 75, y: 25, playerId: '4' },
-    { id: 'slot-4', role: 'ALA_RIGHT' as const, label: 'TIỀN VỆ CÁNH PHẢI TRÊN (ALA RIGHT)', x: 75, y: 75, playerId: '6' },
+    { id: 'slot-0', role: 'GOALKEEPER' as const, label: 'THỦ MÔN (GOALKEEPER)', x: 10, y: 50, playerId: '13', subPlayerIds: [] },
+    { id: 'slot-1', role: 'ALA_LEFT' as const, label: 'TIỀN VỆ CÁNH TRÁI DƯỚI (ALA LEFT)', x: 42, y: 25, playerId: '1', subPlayerIds: [] },
+    { id: 'slot-2', role: 'ALA_RIGHT' as const, label: 'TIỀN VỆ CÁNH PHẢI DƯỚI (ALA RIGHT)', x: 42, y: 75, playerId: '2', subPlayerIds: [] },
+    { id: 'slot-3', role: 'ALA_LEFT' as const, label: 'TIỀN VỆ CÁNH TRÁI TRÊN (ALA LEFT)', x: 75, y: 25, playerId: '4', subPlayerIds: [] },
+    { id: 'slot-4', role: 'ALA_RIGHT' as const, label: 'TIỀN VỆ CÁNH PHẢI TRÊN (ALA RIGHT)', x: 75, y: 75, playerId: '6', subPlayerIds: [] },
   ],
   notes: '',
 };
