@@ -25,8 +25,8 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     schema: '1-4-0 (Tứ giác xoay vòng)',
     positions: [
       { role: 'GOALKEEPER', label: 'THỦ MÔN (GOALKEEPER)', x: 10, y: 50 },
-      { role: 'ALA_LEFT', label: 'TIỀN VỆ CÁNH TRÁI DƯỚI (ALA LEFT)', x: 42, y: 25 },
-      { role: 'ALA_RIGHT', label: 'TIỀN VỆ CÁNH PHẢI DƯỚI (ALA RIGHT)', x: 42, y: 75 },
+      { role: 'FIXO', label: 'HẬU VỆ TRÁI DƯỚI (FIXO LEFT)', x: 42, y: 25 },
+      { role: 'FIXO', label: 'HẬU VỆ PHẢI DƯỚI (FIXO RIGHT)', x: 42, y: 75 },
       { role: 'ALA_LEFT', label: 'TIỀN VỆ CÁNH TRÁI TRÊN (ALA LEFT)', x: 75, y: 25 },
       { role: 'ALA_RIGHT', label: 'TIỀN VỆ CÁNH PHẢI TRÊN (ALA RIGHT)', x: 75, y: 75 },
     ],
@@ -39,8 +39,8 @@ export const FORMATION_PRESETS: FormationPreset[] = [
     positions: [
       { role: 'GOALKEEPER', label: 'THỦ MÔN (GOALKEEPER)', x: 10, y: 50 },
       { role: 'FIXO', label: 'HẬU VỆ (FIXO)', x: 35, y: 50 },
-      { role: 'ALA_LEFT', label: 'TIỀN VỆ CÁNH TRÁI (ALA LEFT)', x: 65, y: 22 },
-      { role: 'ALA_RIGHT', label: 'TIỀN VỆ CÁNH PHẢI (ALA RIGHT)', x: 65, y: 78 },
+      { role: 'ALA_LEFT', label: 'TIỀN VỆ CÁNH TRÁI (ALA LEFT)', x: 42, y: 22 },
+      { role: 'ALA_RIGHT', label: 'TIỀN VỆ CÁNH PHẢI (ALA RIGHT)', x: 42, y: 78 },
       { role: 'PIVOT', label: 'TIỀN ĐẠO (PIVOT)', x: 82, y: 50 },
     ],
   },
