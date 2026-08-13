@@ -41,6 +41,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   onRegisterControls,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<SVGSVGElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const toolbarDragLimitsRef = useRef<{
     minX: number;
@@ -577,8 +578,8 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   };
 
   const getRelativeCoords = (clientX: number, clientY: number) => {
-    if (!containerRef.current) return { x: 0, y: 0 };
-    const rect = containerRef.current.getBoundingClientRect();
+    if (!canvasRef.current) return { x: 0, y: 0 };
+    const rect = canvasRef.current.getBoundingClientRect();
     const x = ((clientX - rect.left) / rect.width) * 100;
     const y = ((clientY - rect.top) / rect.height) * 100;
     return {
@@ -1318,6 +1319,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
 
           {/* SVG Drawing Canvas Overlay */}
           <svg
+            ref={canvasRef}
             className={`absolute inset-0 w-full h-full z-20 touch-none-canvas ${
               activeTool === "select"
                 ? "cursor-default"
