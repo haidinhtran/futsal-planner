@@ -1,14 +1,16 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Player, TacticalSquad, PositionSlot, AttackDirection } from '../types/futsal';
 import { getUniquePositionConfigs } from '../types/futsal';
 import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
-import { RefreshCw, Save, Trash2, ArrowLeftRight, Info } from 'lucide-react';
+import { Trash2, ArrowLeftRight, Info, GripVertical, Filter } from 'lucide-react';
 
 interface TacticsBoardProps {
   players: Player[];
   squad: TacticalSquad;
   onSaveSquad: (squad: TacticalSquad) => void;
+  onRegisterActions?: (actions: { resetPreset: () => void; saveSquad: () => void }) => void;
+  onEditPlayer?: (player: Player) => void;
 }
 
 const getVietnameseShortName = (fullName: string): string => {
@@ -18,7 +20,7 @@ const getVietnameseShortName = (fullName: string): string => {
   return `${parts[0]} ${parts[parts.length - 1]}`;
 };
 
-export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSaveSquad }) => {
+export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSaveSquad, onRegisterActions }) => {
   const [currentFormationId, setCurrentFormationId] = useState<string>(squad.formationId || '3-1');
   const [slots, setSlots] = useState<PositionSlot[]>(squad.slots);
   const [notes, setNotes] = useState<string>(squad.notes || '');
@@ -47,31 +49,9 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     }
   }, [squad]);
 
-  // Sidebar Filter & Sort
-  const [onlyUnselected, setOnlyUnselected] = useState<boolean>(false);
+  // Sidebar Filter & Sort (Default: onlyUnselected = true)
+  const [onlyUnselected, setOnlyUnselected] = useState<boolean>(true);
   const [sortBy, setSortBy] = useState<'total_desc' | 'total_asc' | 'number_asc'>('total_desc');
-
-  // Bench Horizontal Scroll Ref & Wheel Event Listener
-  const benchScrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = benchScrollRef.current;
-    if (!el) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      if (el.scrollWidth > el.clientWidth) {
-        if (e.deltaY !== 0) {
-          e.preventDefault();
-          el.scrollLeft += e.deltaY;
-        }
-      }
-    };
-
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
 
   // Quick Map of Players for fast lookup
   const playersMap = useMemo(() => {
@@ -135,11 +115,6 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
         return totalA - totalB;
       });
   }, [players, onlyUnselected, assignedPlayerIds, sortBy]);
-
-  // Unassigned Sub / Bench Players
-  const benchPlayers = useMemo(() => {
-    return players.filter((p) => !assignedPlayerIds.has(p.id));
-  }, [players, assignedPlayerIds]);
 
   // Average Stats of the 5 starting players on court
   const teamAverageStats = useMemo(() => {
@@ -322,52 +297,6 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     handleSwapSlots(slots[1].id, slots[2].id);
   };
 
-  const handleSave = () => {
-    const updatedSquad: TacticalSquad = {
-      id: squad.id || 'default',
-      formationId: currentFormationId,
-      slots,
-      notes,
-      attackDirection,
-      updatedAt: new Date().toISOString(),
-    };
-    onSaveSquad(updatedSquad);
-    alert('Đã lưu sơ đồ thế trận futsal thành công!');
-  };
-
-  const handleResetPreset = () => {
-    const preset = FORMATION_PRESETS.find((f) => f.id === currentFormationId);
-    if (!preset) return;
-
-    if (currentFormationId === INITIAL_TACTICAL_SQUAD.formationId) {
-      setSlots(
-        INITIAL_TACTICAL_SQUAD.slots.map((s) => {
-          const posX = attackDirection === 'left' ? 100 - s.x : s.x;
-          const posY = attackDirection === 'left' ? 100 - s.y : s.y;
-          return {
-            ...s,
-            x: Number(posX.toFixed(2)),
-            y: Number(posY.toFixed(2)),
-          };
-        })
-      );
-    } else {
-      const resetSlots: PositionSlot[] = preset.positions.map((pos, idx) => {
-        const posX = attackDirection === 'left' ? 100 - pos.x : pos.x;
-        const posY = attackDirection === 'left' ? 100 - pos.y : pos.y;
-        return {
-          id: `slot-${idx}`,
-          role: pos.role,
-          label: pos.label,
-          x: Number(posX.toFixed(2)),
-          y: Number(posY.toFixed(2)),
-          playerId: null,
-        };
-      });
-      setSlots(resetSlots);
-    }
-  };
-
   const handleSidebarPlayerClick = (playerId: string) => {
     if (selectedSlotId) {
       handleAssignPlayerToSlot(selectedSlotId, playerId);
@@ -382,314 +311,328 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   };
 
   const handleDragStartPlayer = (e: React.DragEvent, playerId: string) => {
+    e.stopPropagation();
     e.dataTransfer.setData('text/player-id', playerId);
+    e.dataTransfer.setData('text/plain', playerId);
+    e.dataTransfer.effectAllowed = 'copyMove';
   };
 
+  useEffect(() => {
+    if (onRegisterActions) {
+      onRegisterActions({
+        resetPreset: () => {
+          const preset = FORMATION_PRESETS.find((f) => f.id === currentFormationId);
+          if (!preset) return;
+          if (currentFormationId === INITIAL_TACTICAL_SQUAD.formationId) {
+            setSlots(
+              INITIAL_TACTICAL_SQUAD.slots.map((s) => ({
+                ...s,
+                x: Number((attackDirection === 'left' ? 100 - s.x : s.x).toFixed(2)),
+                y: Number((attackDirection === 'left' ? 100 - s.y : s.y).toFixed(2)),
+              }))
+            );
+          } else {
+            setSlots(
+              preset.positions.map((pos, idx) => ({
+                id: `slot-${idx}`,
+                role: pos.role,
+                label: pos.label,
+                x: Number((attackDirection === 'left' ? 100 - pos.x : pos.x).toFixed(2)),
+                y: Number((attackDirection === 'left' ? 100 - pos.y : pos.y).toFixed(2)),
+                playerId: null,
+              }))
+            );
+          }
+        },
+        saveSquad: () => {
+          onSaveSquad({
+            id: squad.id || 'default',
+            formationId: currentFormationId,
+            slots,
+            notes,
+            attackDirection,
+            updatedAt: new Date().toISOString(),
+          });
+          alert('Đã lưu sơ đồ thế trận futsal thành công!');
+        },
+      });
+    }
+  }, [onRegisterActions, currentFormationId, slots, notes, attackDirection, squad.id, onSaveSquad]);
+
   return (
-    <div className="max-w-7xl 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Top Bar: Main Actions */}
-      <div className="bg-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-3">
-        <div className="flex items-center space-x-2">
-          <span className="font-extrabold text-slate-900 text-sm xl:text-base uppercase tracking-wider">
-            QUẢN LÝ ĐỘI HÌNH & THẾ TRẬN
-          </span>
+    <div className="w-full bg-white">
+      {/* Monolithic Main Grid: Left Sidebar (4 Cols on lg, 3 Cols on xl) | Right Pitch Panel (8 Cols on lg, 9 Cols on xl) */}
+      <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+        {/* Left Sidebar: Player List & Filters */}
+        <div className="order-2 lg:order-1 lg:col-span-4 xl:col-span-3 py-4 sm:py-5 pr-0 lg:pr-6 bg-white flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            {/* Header: Title & Player Count */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs shrink-0"></span>
+                <h3 className="text-sm xl:text-base font-extrabold text-slate-900 uppercase tracking-wide">
+                  DANH SÁCH CẦU THỦ
+                </h3>
+                <span className="bg-blue-100 text-blue-800 text-xs font-black px-2 py-0.5 rounded-full border border-blue-200">
+                  {players.length}
+                </span>
+              </div>
+            </div>
+
+            {/* TOOLBAR: Filter & Sort (Directly under Title) */}
+            <div className="p-2.5 bg-slate-50/70 rounded-lg border border-slate-200 space-y-2 text-xs xl:text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <label className="font-bold text-slate-500 uppercase text-[11px] shrink-0 flex items-center gap-1">
+                  <Filter className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Sắp xếp:</span>
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-white font-bold px-2 py-1 text-slate-700 border border-slate-200 rounded-lg cursor-pointer focus:outline-none focus:border-blue-500 text-xs flex-1 min-w-0"
+                >
+                  <option value="total_desc">Tổng điểm (cao ➔ thấp)</option>
+                  <option value="total_asc">Tổng điểm (thấp ➔ cao)</option>
+                  <option value="number_asc">Số áo (1 ➔ 99)</option>
+                </select>
+              </div>
+
+              <label className="flex items-center space-x-2 text-slate-700 cursor-pointer pt-1.5 border-t border-slate-200/60">
+                <input
+                  type="checkbox"
+                  checked={onlyUnselected}
+                  onChange={(e) => setOnlyUnselected(e.target.checked)}
+                  className="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500/30 cursor-pointer"
+                />
+                <span className="font-bold text-xs select-none">Chỉ hiển thị cầu thủ chưa được chọn</span>
+              </label>
+            </div>
+
+            {/* Player Cards Scroll Container - Fixed top clipping padding */}
+            <div className="max-h-[520px] xl:max-h-[600px] overflow-y-auto px-1 pt-2 pb-2 space-y-2.5">
+              {sidebarPlayers.map((p) => {
+                const isAssigned = assignedMainPlayerIds.has(p.id) || assignedSubPlayerIds.has(p.id);
+                const total = getPlayerTotalScore(p);
+                const uniquePositions = getUniquePositionConfigs(p.positions);
+
+                return (
+                  <div
+                    key={p.id}
+                    draggable={true}
+                    onDragStart={(e) => handleDragStartPlayer(e, p.id)}
+                    onDragEnd={(e) => e.preventDefault()}
+                    onClick={() => handleSidebarPlayerClick(p.id)}
+                    className={`group relative p-2.5 rounded-lg border transition-all duration-200 select-none flex flex-col justify-between ${
+                      isAssigned
+                        ? 'bg-slate-50 border-slate-200/80 opacity-60 shadow-none cursor-pointer'
+                        : 'bg-white border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-md hover:border-blue-400/80 hover:-translate-y-0.5 cursor-grab active:cursor-grabbing'
+                    }`}
+                  >
+                    {/* TOP ROW: Drag handle + #Number + Name + Total score */}
+                    <div className="flex items-center justify-between pb-1.5 mb-1.5 gap-2 border-b border-slate-100">
+                      <div className="flex items-center space-x-2 min-w-0 flex-1 pr-1">
+                        {/* Drag Handle Icon (:::) */}
+                        <GripVertical className={`w-4 h-4 shrink-0 transition-colors ${
+                          isAssigned ? 'text-slate-300' : 'text-slate-400 group-hover:text-blue-600'
+                        }`} />
+
+                        {/* Shirt Number Badge */}
+                        <span className={`w-5 h-5 font-black text-xs rounded-lg flex items-center justify-center shrink-0 shadow-2xs ${
+                          isAssigned ? 'bg-slate-400 text-white' : 'bg-slate-900 text-white'
+                        }`}>
+                          #{p.number}
+                        </span>
+
+                        {/* Player Name */}
+                        <span className={`font-extrabold text-xs xl:text-sm truncate ${
+                          isAssigned ? 'text-slate-400' : 'text-slate-900'
+                        }`} title={p.name}>
+                          {p.name}
+                        </span>
+                      </div>
+
+                      {/* Total Score Badge (Removed Edit button as requested) */}
+                      <div className="flex items-center space-x-1 shrink-0">
+                        <span className="text-xs font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/80 shrink-0">
+                          {total !== -1 ? `${total}đ` : '-'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* BOTTOM ROW: Compact Stats Chips (Công, Thủ, Bền) + Position Badges */}
+                    <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                      {/* Compact Stats Badges: Công, Thủ, Bền */}
+                      <div className="flex items-center gap-1 min-w-0 flex-1 text-[11px]">
+                        <span className="inline-flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200/60" title="Tấn công">
+                          <span className="text-[10px] text-amber-600 font-semibold">Công</span>
+                          <span className="font-extrabold">{p.attack ?? '-'}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200/60" title="Phòng thủ">
+                          <span className="text-[10px] text-blue-600 font-semibold">Thủ</span>
+                          <span className="font-extrabold">{p.defense ?? '-'}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200/60" title="Thể lực / Độ bền">
+                          <span className="text-[10px] text-emerald-600 font-semibold">Bền</span>
+                          <span className="font-extrabold">{p.stamina ?? '-'}</span>
+                        </span>
+                      </div>
+
+                      {/* Positions Badges */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {uniquePositions.length > 0 ? (
+                          uniquePositions.slice(0, 3).map((cfg) => (
+                            <span
+                              key={cfg.shortLabel}
+                              className="text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200/80 truncate cursor-help"
+                              title={cfg.fullLabel}
+                            >
+                              {cfg.shortLabel}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic">-</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center space-x-2 shrink-0">
-          <button
-            onClick={handleResetPreset}
-            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs xl:text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl border border-slate-200 transition-all cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Đặt lại sơ đồ</span>
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-xs xl:text-sm font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/25 border border-blue-500 transition-all cursor-pointer"
-          >
-            <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Lưu đội hình</span>
-          </button>
+        {/* Center & Right Column: Interactive Futsal Pitch Section (8 Cols on lg, 9 Cols on xl) */}
+        <div className="order-1 lg:order-2 lg:col-span-8 xl:col-span-9 py-4 sm:py-5 pl-0 lg:pl-6 bg-white space-y-4">
+          <FutsalPitch
+            slots={slots}
+            playersMap={playersMap}
+            selectedSlotId={selectedSlotId}
+            attackDirection={attackDirection}
+            currentFormationId={currentFormationId}
+            onSelectFormation={handleSelectFormation}
+            onToggleAttackDirection={handleToggleAttackDirection}
+            onSelectSlot={(id) => setSelectedSlotId(selectedSlotId === id ? null : id)}
+            onAssignPlayerToSlot={handleAssignPlayerToSlot}
+            onAssignSubPlayerToSlot={handleAssignSubPlayerToSlot}
+            onClearSlot={handleClearSlot}
+            onClearSubPlayer={handleClearSubPlayer}
+            onPromoteSubToMain={handlePromoteSubToMain}
+            onSwapSlots={handleSwapSlots}
+          />
+
+          {/* Pitch Bottom Info & Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-between pt-1 text-sm gap-3">
+            <div className="flex items-center space-x-2 text-slate-600 font-semibold">
+              <Info className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>Kéo thả cầu thủ từ danh sách vào vị trí trên sân để thay đổi.</span>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                onClick={handleQuickSwap}
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 font-bold border border-slate-300 rounded-lg transition-colors cursor-pointer shadow-2xs text-sm"
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+                <span>Hoán đổi nhanh</span>
+              </button>
+              <button
+                onClick={handleClearAllSlots}
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-white hover:bg-red-50 text-slate-700 hover:text-red-600 font-bold border border-slate-300 hover:border-red-200 rounded-lg transition-colors cursor-pointer shadow-2xs text-sm"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Xóa tất cả</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main Grid Layout: Left Sidebar (4 Cols) + Center Pitch (8 Cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Sidebar: Player List (4 Cols) */}
-        <div className="order-2 lg:order-1 lg:col-span-4 xl:col-span-4 space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col h-full justify-between space-y-4">
-            <div>
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-                <h3 className="text-sm xl:text-base font-extrabold text-slate-900 uppercase tracking-wide">
-                  DANH SÁCH CẦU THỦ ({players.length})
-                </h3>
-              </div>
-
-              {/* Table Header */}
-              <div className="grid grid-cols-12 text-xs xl:text-sm font-bold text-slate-500 uppercase pb-2 border-b border-slate-200">
-                <span className="col-span-1 text-center">#</span>
-                <span className="col-span-6">Cầu thủ</span>
-                <span className="col-span-1 text-center text-emerald-600">TL</span>
-                <span className="col-span-1 text-center text-orange-600">TC</span>
-                <span className="col-span-1 text-center text-blue-600">PT</span>
-                <span className="col-span-2 text-right pr-1">Tổng</span>
-              </div>
-
-              {/* Player Scroll List */}
-              <div className="max-h-[420px] xl:max-h-[500px] overflow-y-auto divide-y divide-slate-100 my-1 pr-1">
-                {sidebarPlayers.map((p) => {
-                  const isAssignedMain = assignedMainPlayerIds.has(p.id);
-                  const isAssignedSub = assignedSubPlayerIds.has(p.id);
-                  const isAssigned = isAssignedMain || isAssignedSub;
-                  const total = getPlayerTotalScore(p);
-                  return (
-                    <div
-                      key={p.id}
-                      draggable
-                      onDragStart={(e) => handleDragStartPlayer(e, p.id)}
-                      onClick={() => handleSidebarPlayerClick(p.id)}
-                      className={`grid grid-cols-12 items-center py-2.5 px-2 text-xs xl:text-sm cursor-pointer rounded-xl transition-colors ${
-                        isAssigned
-                          ? 'bg-slate-50 text-slate-400 opacity-70'
-                          : 'hover:bg-blue-50/80 text-slate-900 font-semibold'
-                      }`}
-                    >
-                      <span className="col-span-1 text-center font-black text-slate-700">{p.number}</span>
-                      <div className="col-span-6 flex items-center space-x-1.5 min-w-0 pr-1">
-                        <span className="truncate font-bold" title={p.name}>{p.name}</span>
-                        {/* Quick Position Badges */}
-                        {p.positions && p.positions.length > 0 && (
-                          <div className="flex items-center space-x-0.5 shrink-0">
-                            {getUniquePositionConfigs(p.positions).map((cfg) => (
-                              <span
-                                key={cfg.shortLabel}
-                                className={`text-[9px] xl:text-[10px] font-black px-1 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
-                                title={cfg.fullLabel}
-                              >
-                                {cfg.shortLabel}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <span className="col-span-1 text-center font-extrabold text-emerald-600">{p.stamina ?? '-'}</span>
-                      <span className="col-span-1 text-center font-extrabold text-orange-600">{p.attack ?? '-'}</span>
-                      <span className="col-span-1 text-center font-extrabold text-blue-600">{p.defense ?? '-'}</span>
-                      <span className="col-span-2 text-right font-black text-slate-900 pr-1">
-                        {total !== -1 ? total : '-'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Filters & Sorting */}
-              <div className="pt-4 border-t border-slate-100 space-y-3 text-xs xl:text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-slate-500 uppercase text-xs xl:text-sm">LỌC & SẮP XẾP</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-slate-100 font-bold px-3 py-1.5 rounded-xl text-slate-800 border border-slate-200 cursor-pointer focus:outline-none"
-                  >
-                    <option value="total_desc">Tổng điểm (cao ➔ thấp)</option>
-                    <option value="total_asc">Tổng điểm (thấp ➔ cao)</option>
-                    <option value="number_asc">Số áo (1 ➔ 99)</option>
-                  </select>
+      {/* NEW ROW: Seamless 2-Column Layout for Squad Overview & Tactical Notes (Part of Page Content) */}
+      <div className="border-t border-slate-200 pt-5 pb-6">
+        <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* COLUMN 1 (6 Cols): Combined Squad Info + Average Team Stats */}
+          <div className="lg:col-span-6 space-y-4">
+            {/* 1.1 Squad Formation Details */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1.5 flex items-center space-x-2">
+                <span className="w-2 h-2 bg-indigo-500 rounded-xs shrink-0"></span>
+                <span>THÔNG TIN ĐỘI HÌNH & BÀI ĐÁNH</span>
+              </h4>
+              <div className="grid grid-cols-3 gap-3 text-xs pt-0.5">
+                <div className="bg-slate-50 p-2.5 rounded border border-slate-200/70">
+                  <span className="font-semibold text-slate-500 block text-[11px]">Đội hình:</span>
+                  <span className="text-blue-700 font-black text-sm block mt-0.5">{currentPreset.name}</span>
                 </div>
-
-                <label className="flex items-center space-x-2 text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={onlyUnselected}
-                    onChange={(e) => setOnlyUnselected(e.target.checked)}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <span className="font-bold">Chỉ hiển thị cầu thủ chưa được chọn</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Bottom Left: Squad Info */}
-            <div className="pt-3 border-t border-slate-100 bg-slate-50 p-4 rounded-xl space-y-1 text-xs xl:text-sm">
-              <h4 className="font-black text-slate-500 uppercase text-xs xl:text-sm">THÔNG TIN ĐỘI HÌNH</h4>
-              <p className="font-bold text-slate-800">
-                Đội hình: <span className="text-blue-600 font-extrabold">{currentPreset.name} ({currentPreset.subName})</span>
-              </p>
-              <p className="text-slate-600">
-                Sơ đồ: <span className="font-semibold text-slate-800">{currentPreset.schema}</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Center: Interactive Futsal Court (8 Cols) */}
-        <div className="order-1 lg:order-2 lg:col-span-8 xl:col-span-8 space-y-5">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <FutsalPitch
-              slots={slots}
-              playersMap={playersMap}
-              selectedSlotId={selectedSlotId}
-              attackDirection={attackDirection}
-              currentFormationId={currentFormationId}
-              onSelectFormation={handleSelectFormation}
-              onToggleAttackDirection={handleToggleAttackDirection}
-              onSelectSlot={(id) => setSelectedSlotId(selectedSlotId === id ? null : id)}
-              onAssignPlayerToSlot={handleAssignPlayerToSlot}
-              onAssignSubPlayerToSlot={handleAssignSubPlayerToSlot}
-              onClearSlot={handleClearSlot}
-              onClearSubPlayer={handleClearSubPlayer}
-              onPromoteSubToMain={handlePromoteSubToMain}
-              onSwapSlots={handleSwapSlots}
-            />
-
-            {/* Pitch Bottom Info & Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between pt-2 text-xs gap-3">
-              <div className="flex items-center space-x-2 text-slate-600 font-semibold">
-                <Info className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Kéo thả cầu thủ từ danh sách hoặc khu dự bị vào vị trí trên sân để thay đổi.</span>
-              </div>
-
-              <div className="flex items-center space-x-2 shrink-0">
-                <button
-                  onClick={handleQuickSwap}
-                  className="flex items-center space-x-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl border border-slate-200 transition-colors cursor-pointer"
-                >
-                  <ArrowLeftRight className="w-4 h-4" />
-                  <span>Hoán đổi nhanh</span>
-                </button>
-                <button
-                  onClick={handleClearAllSlots}
-                  className="flex items-center space-x-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl border border-red-200 transition-colors cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Xóa tất cả</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Bench Section ("DỰ BỊ / CHƯA CHỌN") */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wide">
-              DỰ BỊ / CHƯA CHỌN ({benchPlayers.length})
-            </h3>
-
-            <div ref={benchScrollRef} className="flex items-center space-x-4 overflow-x-auto pb-3 pt-1">
-              {benchPlayers.map((p) => (
-                <div
-                  key={p.id}
-                  draggable
-                  onDragStart={(e) => handleDragStartPlayer(e, p.id)}
-                  onClick={() => handleSidebarPlayerClick(p.id)}
-                  className="bg-slate-50 hover:bg-blue-50/80 border border-slate-200 rounded-2xl p-3.5 min-w-[155px] shrink-0 cursor-pointer shadow-xs transition-all hover:scale-105"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center space-x-1.5 truncate">
-                      <span className="w-5 h-5 bg-slate-900 text-white font-black text-[10px] rounded flex items-center justify-center shrink-0">
-                        {p.number}
-                      </span>
-                      <span className="text-xs font-bold text-slate-900 truncate">{p.name}</span>
-                    </div>
-                  </div>
-
-                  {/* Quick Position Tags */}
-                  {p.positions && p.positions.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {getUniquePositionConfigs(p.positions).map((cfg) => (
-                        <span
-                          key={cfg.shortLabel}
-                          className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass}`}
-                          title={cfg.fullLabel}
-                        >
-                          {cfg.shortLabel}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="text-xs space-y-1 font-semibold text-slate-600 border-t border-slate-200/60 pt-1.5">
-                    <div className="flex justify-between items-center">
-                      <span>Thể Lực</span>
-                      <span className="font-extrabold text-emerald-600">{p.stamina ?? '-'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Tấn Công</span>
-                      <span className="font-extrabold text-orange-600">{p.attack ?? '-'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Phòng Thủ</span>
-                      <span className="font-extrabold text-blue-600">{p.defense ?? '-'}</span>
-                    </div>
-                  </div>
+                <div className="bg-slate-50 p-2.5 rounded border border-slate-200/70">
+                  <span className="font-semibold text-slate-500 block text-[11px]">Sơ đồ:</span>
+                  <span className="font-bold text-slate-800 text-xs block mt-0.5 truncate" title={currentPreset.schema}>{currentPreset.schema}</span>
                 </div>
-              ))}
-
-              {benchPlayers.length === 0 && (
-                <p className="text-xs text-slate-400 font-medium italic py-2">Tất cả cầu thủ đã được xếp vào đội hình chính!</p>
-              )}
+                <div className="bg-slate-50 p-2.5 rounded border border-slate-200/70">
+                  <span className="font-semibold text-slate-500 block text-[11px]">Hướng tấn công:</span>
+                  <span className="font-bold text-slate-800 text-xs block mt-0.5">
+                    {attackDirection === 'right' ? 'Phải ➔' : '🧠 Trái'}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Bottom Average Team Stats & Tactical Notes */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-            {/* Average Stats */}
-            <div className="md:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide mb-3">
-                TỔNG CHỈ SỐ ĐỘI HÌNH (TB 5 CẦU THỦ)
+            {/* 1.2 Average Stats (TB 5 cầu thủ ra sân) */}
+            <div className="space-y-2 pt-1">
+              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1.5 flex items-center space-x-2">
+                <span className="w-2 h-2 bg-indigo-500 rounded-xs shrink-0"></span>
+                <span>TỔNG CHỈ SỐ ĐỘI HÌNH (TB 5 CẦU THỦ RA SÂN)</span>
               </h4>
               <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
-                  <span className="block text-xs font-bold text-emerald-700">🟢 Thể Lực</span>
-                  <span className="text-xl font-black text-emerald-700">{teamAverageStats.avgStamina}</span>
+                <div className="bg-emerald-50/70 p-2.5 rounded border border-emerald-200/70">
+                  <span className="block text-[11px] font-bold text-emerald-700">🟢 Bền (Thể Lực)</span>
+                  <span className="text-lg font-black text-emerald-700 mt-0.5 block">{teamAverageStats.avgStamina}</span>
                 </div>
-                <div className="bg-orange-50 p-3 rounded-2xl border border-orange-100">
-                  <span className="block text-xs font-bold text-orange-700">🟠 Tấn Công</span>
-                  <span className="text-xl font-black text-orange-700">{teamAverageStats.avgAttack}</span>
+                <div className="bg-amber-50/70 p-2.5 rounded border border-amber-200/70">
+                  <span className="block text-[11px] font-bold text-amber-700">🟠 Công (Tấn Công)</span>
+                  <span className="text-lg font-black text-amber-700 mt-0.5 block">{teamAverageStats.avgAttack}</span>
                 </div>
-                <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
-                  <span className="block text-xs font-bold text-blue-700">🔵 Phòng Thủ</span>
-                  <span className="text-xl font-black text-blue-700">{teamAverageStats.avgDefense}</span>
+                <div className="bg-blue-50/70 p-2.5 rounded border border-blue-200/70">
+                  <span className="block text-[11px] font-bold text-blue-700">🔵 Thủ (Phòng Thủ)</span>
+                  <span className="text-lg font-black text-blue-700 mt-0.5 block">{teamAverageStats.avgDefense}</span>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Notes Section */}
-            <div className="md:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col space-y-3">
-              <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide">
-                GHI CHÚ ĐỘI HÌNH & 5 CẦU THỦ RA SÂN
-              </h4>
+          {/* COLUMN 2 (6 Cols): Tactical Notes & Starting Players Characteristics */}
+          <div className="lg:col-span-6 space-y-3">
+            <h4 className="text-xs font-black text-slate-500 uppercase tracking-wide border-b border-slate-200 pb-1.5 flex items-center space-x-2">
+              <span className="w-2 h-2 bg-indigo-500 rounded-xs shrink-0"></span>
+              <span>GHI CHÚ ĐỘI HÌNH & 5 CẦU THỦ RA SÂN</span>
+            </h4>
 
-              {/* Starting Players Notes List */}
-              {startingPlayersWithNotes.length > 0 ? (
-                <div className="space-y-1.5 bg-amber-50/70 p-3 rounded-xl border border-amber-200/90">
-                  <span className="text-[11px] font-extrabold text-amber-900 uppercase tracking-wider block mb-1">
-                    📋 Đặc điểm cầu thủ ra sân ({startingPlayersWithNotes.length}):
-                  </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    {startingPlayersWithNotes.map(({ slot, player }) => (
-                      <div key={slot.id} className="bg-white p-2 rounded-lg border border-amber-200/80 shadow-2xs flex items-start space-x-1.5">
-                        <span className="font-black text-slate-900 shrink-0">#{player.number} {getVietnameseShortName(player.name)}:</span>
-                        <span className="text-amber-900 font-semibold truncate" title={player.notes}>{player.notes}</span>
-                      </div>
-                    ))}
-                  </div>
+            {startingPlayersWithNotes.length > 0 ? (
+              <div className="space-y-1.5 bg-amber-50/70 p-2.5 rounded border border-amber-200/70">
+                <span className="text-[11px] font-extrabold text-amber-900 uppercase tracking-wider block mb-1">
+                  📋 Đặc điểm cầu thủ ra sân ({startingPlayersWithNotes.length}):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+                  {startingPlayersWithNotes.map(({ slot, player }) => (
+                    <div key={slot.id} className="bg-white p-1.5 rounded border border-amber-200/80 flex items-center space-x-1.5 min-w-0">
+                      <span className="font-black text-slate-900 shrink-0">#{player.number} {getVietnameseShortName(player.name)}:</span>
+                      <span className="text-amber-900 font-semibold truncate" title={player.notes}>{player.notes}</span>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <div className="text-xs text-slate-400 font-medium italic bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  Chưa có cầu thủ ra sân nào có ghi chú cá nhân riêng.
-                </div>
-              )}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-400 font-medium italic bg-slate-50 p-2 rounded border border-slate-200/80 text-center">
+                Chưa có cầu thủ ra sân nào có ghi chú cá nhân riêng.
+              </div>
+            )}
 
-              <textarea
-                placeholder="Nhập thêm ghi chú bài đánh chung cho đội hình này..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full flex-1 p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none font-medium text-slate-800"
-                rows={3}
-              ></textarea>
-            </div>
+            <textarea
+              placeholder="Nhập thêm ghi chú bài đánh chung cho đội hình này..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:border-blue-600 resize-none font-medium text-slate-800"
+              rows={3}
+            ></textarea>
           </div>
         </div>
       </div>

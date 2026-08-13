@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { DrawShape, DrawTool, Player, SavedTacticalDiagram } from '../types/futsal';
+import type { DiagramControlsData } from './TopBar';
 import { storageService } from '../services/storageService';
 import { getVietnameseShortName } from './FutsalPitch';
 import { getPositionConfig } from '../types/futsal';
@@ -10,27 +11,28 @@ import {
   Trash2,
   Undo2,
   Type,
-  Sparkles,
   UserCheck,
   UserX,
   Move,
   Eraser,
   X,
-  Save,
-  FilePlus,
-  FolderOpen,
-  Edit3,
   Layers,
   ChevronUp,
   ChevronDown,
+  Maximize,
+  Minimize,
+  GripVertical,
 } from 'lucide-react';
 
 interface TacticalDiagramProps {
   players?: Player[];
+  onRegisterControls?: (controls: DiagramControlsData) => void;
 }
 
-export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initialPlayers }) => {
+export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initialPlayers, onRegisterControls }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const toolbarDragLimitsRef = useRef<{ minX: number; maxX: number; minY: number; maxY: number } | null>(null);
   const [activeTool, setActiveTool] = useState<DrawTool>('select');
   const [shapes, setShapes] = useState<DrawShape[]>([]);
   const [currentPoints, setCurrentPoints] = useState<Array<{ x: number; y: number }>>([]);
@@ -57,6 +59,111 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
   const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState<boolean>(false);
   const [showLayerPanel, setShowLayerPanel] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isToolbarExpanded, setIsToolbarExpanded] = useState<boolean>(true);
+  const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isDraggingToolbar, setIsDraggingToolbar] = useState<boolean>(false);
+  const [toolbarDragStartPos, setToolbarDragStartPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Fullscreen toggle handler
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      try {
+        if (containerRef.current.requestFullscreen) {
+          await containerRef.current.requestFullscreen();
+        } else if ((containerRef.current as any).webkitRequestFullscreen) {
+          await (containerRef.current as any).webkitRequestFullscreen();
+        }
+      } catch (err) {
+        console.error('Fullscreen request failed:', err);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        await (document as any).webkitExitFullscreen();
+      }
+    }
+  };
+
+  // Reset toolbar position when fullscreen mode toggles or expand state changes
+  useEffect(() => {
+    setToolbarPos({ x: 0, y: 0 });
+  }, [isFullscreen, isToolbarExpanded]);
+
+  // Sync fullscreen change listener
+  useEffect(() => {
+    const handleFSChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+      setToolbarPos({ x: 0, y: 0 });
+    };
+    document.addEventListener('fullscreenchange', handleFSChange);
+    document.addEventListener('webkitfullscreenchange', handleFSChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFSChange);
+      document.removeEventListener('webkitfullscreenchange', handleFSChange);
+    };
+  }, []);
+
+  // Draggable Handle pointer start with boundary limits calculation
+  const handleToolbarDragStart = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (containerRef.current && toolbarRef.current) {
+      const pitchRect = containerRef.current.getBoundingClientRect();
+      const toolbarRect = toolbarRef.current.getBoundingClientRect();
+
+      // Current un-translated base coordinates of toolbar
+      const baseLeft = toolbarRect.left - toolbarPos.x;
+      const baseTop = toolbarRect.top - toolbarPos.y;
+
+      // Min & Max allowed translation offsets so toolbar stays 100% inside pitch
+      const minX = pitchRect.left - baseLeft;
+      const maxX = pitchRect.right - toolbarRect.width - baseLeft;
+      const minY = pitchRect.top - baseTop;
+      const maxY = pitchRect.bottom - toolbarRect.height - baseTop;
+
+      toolbarDragLimitsRef.current = { minX, maxX, minY, maxY };
+    }
+
+    setIsDraggingToolbar(true);
+    setToolbarDragStartPos({
+      x: e.clientX - toolbarPos.x,
+      y: e.clientY - toolbarPos.y,
+    });
+  };
+
+  // Draggable Handle pointer move & up global listeners with clamping
+  useEffect(() => {
+    if (!isDraggingToolbar) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const rawX = e.clientX - toolbarDragStartPos.x;
+      const rawY = e.clientY - toolbarDragStartPos.y;
+
+      if (toolbarDragLimitsRef.current) {
+        const { minX, maxX, minY, maxY } = toolbarDragLimitsRef.current;
+        const clampedX = Math.max(minX, Math.min(maxX, rawX));
+        const clampedY = Math.max(minY, Math.min(maxY, rawY));
+        setToolbarPos({ x: clampedX, y: clampedY });
+      } else {
+        setToolbarPos({ x: rawX, y: rawY });
+      }
+    };
+
+    const handlePointerUp = () => {
+      setIsDraggingToolbar(false);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [isDraggingToolbar, toolbarDragStartPos]);
 
   // Re-order Layer Z-Index Functions
   const handleMoveLayerUp = (index: number) => {
@@ -221,6 +328,22 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
       setIsDirty(false);
     }
   };
+
+  // Sync diagram controls to TopBar
+  useEffect(() => {
+    if (onRegisterControls) {
+      onRegisterControls({
+        diagramName,
+        isDirty,
+        currentDiagramId,
+        savedDiagrams,
+        onSaveDiagram: handleSaveDiagram,
+        onLoadDiagram: handleLoadDiagram,
+        onNewDiagram: handleNewDiagram,
+        onDeleteDiagram: handleDeleteCurrentDiagram,
+      });
+    }
+  }, [onRegisterControls, diagramName, isDirty, currentDiagramId, savedDiagrams]);
 
   // Sample tactical presets (Updated with full features: Player names, Shirt numbers, Ball, Passes)
   const loadPresetRun = (presetType: 'side' | 'pivot' | 'defense') => {
@@ -645,294 +768,271 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
   };
 
   return (
-    <div className="max-w-7xl 2xl:max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Master Tactical Diagram Card Container */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl">
-        {/* 1. Header Banner: Diagram Save & Load Control Panel (Minimalist Light Theme) */}
-        <div className="bg-white p-4 sm:px-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/90 rounded-t-3xl">
-          {/* Current Diagram Title & Status Badge */}
-          <div className="flex items-center space-x-3">
-            <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-100 text-blue-600 shadow-2xs">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-black text-base sm:text-lg tracking-wide text-slate-900">
-                  {diagramName}
-                </span>
-                <button
-                  onClick={handleSaveDiagram}
-                  className="text-slate-400 hover:text-blue-600 p-1 rounded-lg transition-colors cursor-pointer"
-                  title="Đổi tên bản vẽ"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
-                {/* Status Badge (Only shown when changes exist or a saved diagram is loaded) */}
-                {isDirty ? (
-                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
-                    • Chưa lưu
-                  </span>
-                ) : currentDiagramId ? (
-                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    ✓ Đã lưu
-                  </span>
-                ) : null}
+    <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 py-4">
+      {/* Pitch Container with Embedded Floating Overlay Toolbar & Fullscreen Support */}
+      <div
+        className={`futsal-pitch-container w-full relative ${isFullscreen ? 'is-fullscreen' : ''}`}
+        ref={containerRef}
+      >
+        {/* Floating Overlay Toolbar - Anchored Top Right, Draggable with GripVertical (:::), Design Token rounded-lg */}
+        <div
+          ref={toolbarRef}
+          className="absolute top-2 right-2 sm:top-3 sm:right-3 z-30 flex items-start justify-end pointer-events-none gap-2 max-w-[calc(100%-1rem)]"
+          style={{ transform: `translate3d(${toolbarPos.x}px, ${toolbarPos.y}px, 0)` }}
+        >
+          {/* EXPANDED OVERLAY TOOLBAR */}
+          {isToolbarExpanded ? (
+            <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl rounded-lg p-1.5 flex items-center gap-1.5 text-slate-800 max-w-full overflow-x-auto animate-in fade-in zoom-in-95 duration-150 select-none">
+              {/* Drag Handle ::: */}
+              <div
+                onPointerDown={handleToolbarDragStart}
+                className="h-9 p-1 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 flex items-center justify-center shrink-0"
+                title="Kéo thả để di chuyển thanh công cụ"
+              >
+                <GripVertical className="w-4 h-4" />
               </div>
-              <p className="text-xs text-slate-500 font-medium">
-                Sơ đồ diễn giải chiến thuật Futsal bài đánh
-              </p>
-            </div>
-          </div>
 
-          {/* Saved Diagrams Selector & Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Load Selection Dropdown */}
-            <div className="relative flex items-center min-w-[210px]">
-              <FolderOpen className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
-              <select
-                value={currentDiagramId || ''}
-                onChange={(e) => handleLoadDiagram(e.target.value)}
-                className="w-full bg-slate-50 hover:bg-slate-100/80 text-slate-800 font-bold text-xs pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer appearance-none transition-colors shadow-2xs"
-              >
-                <option value="">-- Bản vẽ đã lưu ({savedDiagrams.length}) --</option>
-                {savedDiagrams.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} ({new Date(d.updatedAt).toLocaleDateString('vi-VN')})
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 pointer-events-none text-slate-400 text-xs">▼</div>
-            </div>
-
-            {/* New Diagram Button */}
-            <button
-              onClick={handleNewDiagram}
-              className="flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-extrabold rounded-xl border border-slate-200/90 transition-all cursor-pointer shadow-2xs"
-              title="Tạo bản vẽ chiến thuật mới"
-            >
-              <FilePlus className="w-4 h-4 text-blue-600" />
-              <span>Bản vẽ mới</span>
-            </button>
-
-            {/* Save Diagram Button */}
-            <button
-              onClick={handleSaveDiagram}
-              className="flex items-center space-x-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all cursor-pointer"
-              title="Lưu bản vẽ vào LocalStorage"
-            >
-              <Save className="w-4 h-4" />
-              <span>Lưu Bản Vẽ</span>
-            </button>
-
-            {/* Delete Diagram Button */}
-            {currentDiagramId && (
+              {/* Select & Drag */}
               <button
-                onClick={handleDeleteCurrentDiagram}
-                className="p-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-xl border border-red-200 transition-all cursor-pointer"
-                title="Xóa bản vẽ này khỏi LocalStorage"
+                onClick={() => setActiveTool('select')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'select'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Chọn & Kéo thả di chuyển đối tượng"
               >
-                <Trash2 className="w-4 h-4" />
+                <Move className={`w-4 h-4 ${activeTool === 'select' ? 'text-white' : 'text-slate-600'}`} />
               </button>
-            )}
-          </div>
+
+              {/* Pointer Laser Tool */}
+              <button
+                onClick={() => setActiveTool('pointer')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'pointer'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Laser Con Trỏ Thuyết Trình"
+              >
+                <Pointer className={`w-4 h-4 ${activeTool === 'pointer' ? 'text-white' : 'text-amber-500'}`} />
+              </button>
+
+              {/* Movement Arrow */}
+              <button
+                onClick={() => setActiveTool('arrow')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'arrow'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Mũi tên di chuyển"
+              >
+                <ArrowRight className={`w-4 h-4 ${activeTool === 'arrow' ? 'text-white' : 'text-blue-500'}`} />
+              </button>
+
+              {/* Pass Arrow */}
+              <button
+                onClick={() => setActiveTool('dashed-arrow')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'dashed-arrow'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Mũi tên đường chuyền bóng (nét đứt)"
+              >
+                <span className={`font-mono text-xs font-black ${activeTool === 'dashed-arrow' ? 'text-white' : 'text-blue-600'}`}>--➔</span>
+              </button>
+
+              {/* Cầu Thủ Ta */}
+              <button
+                onClick={() => setActiveTool('player-home')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'player-home'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Đặt vị trí Cầu Thủ Ta"
+              >
+                <UserCheck className={`w-4 h-4 ${activeTool === 'player-home' ? 'text-white' : 'text-sky-600'}`} />
+              </button>
+
+              {/* Cầu Thủ Địch */}
+              <button
+                onClick={() => setActiveTool('player-away')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'player-away'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Đặt vị trí Cầu Thủ Địch"
+              >
+                <UserX className={`w-4 h-4 ${activeTool === 'player-away' ? 'text-white' : 'text-red-500'}`} />
+              </button>
+
+              {/* Dấu X Đỏ */}
+              <button
+                onClick={() => setActiveTool('cross-red')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'cross-red'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Dấu gạch chéo đỏ"
+              >
+                <XCircle className={`w-4 h-4 ${activeTool === 'cross-red' ? 'text-white' : 'text-red-500'}`} />
+              </button>
+
+              {/* Bóng Futsal */}
+              <button
+                onClick={() => setActiveTool('ball')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'ball'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Đặt Bóng Futsal"
+              >
+                <span className="text-xs">⚽</span>
+              </button>
+
+              {/* Text Note */}
+              <button
+                onClick={() => setActiveTool('text')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'text'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Thêm ghi chú văn bản"
+              >
+                <Type className={`w-4 h-4 ${activeTool === 'text' ? 'text-white' : 'text-slate-600'}`} />
+              </button>
+
+              {/* Eraser */}
+              <button
+                onClick={() => setActiveTool('eraser')}
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
+                  activeTool === 'eraser'
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Cục Tẩy"
+              >
+                <Eraser className={`w-4 h-4 ${activeTool === 'eraser' ? 'text-white' : 'text-amber-600'}`} />
+              </button>
+
+              {/* Separator */}
+              <div className="h-5 w-px bg-slate-200 mx-0.5 hidden sm:block shrink-0"></div>
+
+              {/* Presets Select */}
+              <select
+                onChange={(e) => {
+                  if (e.target.value) {
+                    loadPresetRun(e.target.value as 'side' | 'pivot' | 'defense');
+                    e.target.value = '';
+                  }
+                }}
+                defaultValue=""
+                className="h-9 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs px-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors shadow-2xs shrink-0"
+                title="Nạp mẫu bài đánh chiến thuật"
+              >
+                <option value="" disabled>-- Mẫu bài --</option>
+                <option value="side">🏃 Chạy biên</option>
+                <option value="pivot">🛡️ Đè Pivot</option>
+                <option value="defense">🔄 Bọc lót</option>
+              </select>
+
+              {/* Layer Panel Button */}
+              <button
+                onClick={() => setShowLayerPanel(!showLayerPanel)}
+                className={`h-9 flex items-center space-x-1 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer border shrink-0 ${
+                  showLayerPanel
+                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-2xs'
+                }`}
+                title="Quản Lý Lớp Đối Tượng"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Lớp ({shapes.length})</span>
+              </button>
+
+              {/* Undo */}
+              <button
+                onClick={handleUndo}
+                className="w-9 h-9 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
+                title="Hoàn tác (Undo)"
+              >
+                <Undo2 className="w-3.5 h-3.5 text-slate-600" />
+              </button>
+
+              {/* Clear */}
+              <button
+                onClick={handleClearAll}
+                className="w-9 h-9 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-lg flex items-center justify-center transition-colors cursor-pointer shadow-2xs shrink-0"
+                title="Xóa tất cả hình vẽ trên sa bàn"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Separator */}
+              <div className="h-5 w-px bg-slate-200 mx-0.5 shrink-0"></div>
+
+              {/* Fullscreen Button - Standard Neutral Button */}
+              <button
+                onClick={toggleFullscreen}
+                className="h-9 flex items-center space-x-1.5 px-3 rounded-lg text-xs font-extrabold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-2xs shrink-0"
+                title={isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình (ESC)' : 'Toàn Màn Hình'}
+              >
+                {isFullscreen ? <Minimize className="w-3.5 h-3.5 text-slate-600" /> : <Maximize className="w-3.5 h-3.5 text-slate-600" />}
+                <span>{isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình' : 'Toàn Màn Hình'}</span>
+              </button>
+
+              {/* Collapse Button */}
+              <button
+                onClick={() => setIsToolbarExpanded(false)}
+                className="w-9 h-9 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors cursor-pointer flex items-center justify-center shrink-0 ml-auto"
+                title="Thu gọn thanh công cụ"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            /* COLLAPSED FLOATING WIDGET (LIGHT THEME & TOP RIGHT ANCHORED) */
+            <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200 shadow-xl rounded-lg p-1.5 flex items-center gap-1.5 text-slate-800 animate-in fade-in zoom-in-95 duration-150 select-none">
+              {/* Drag Handle ::: */}
+              <div
+                onPointerDown={handleToolbarDragStart}
+                className="h-9 p-1 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-700 flex items-center justify-center shrink-0"
+                title="Kéo thả để di chuyển thanh công cụ"
+              >
+                <GripVertical className="w-4 h-4" />
+              </div>
+
+              {/* Fullscreen Button */}
+              <button
+                onClick={toggleFullscreen}
+                className="h-9 flex items-center space-x-1.5 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-lg text-xs font-extrabold transition-all cursor-pointer shadow-2xs shrink-0"
+                title={isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình' : 'Toàn Màn Hình'}
+              >
+                {isFullscreen ? <Minimize className="w-3.5 h-3.5 text-slate-600" /> : <Maximize className="w-3.5 h-3.5 text-slate-600" />}
+                <span>{isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình' : 'Toàn Màn Hình'}</span>
+              </button>
+
+              {/* Expand Toolbar Button */}
+              <button
+                onClick={() => setIsToolbarExpanded(true)}
+                className="h-9 flex items-center space-x-1 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-2xs shrink-0"
+                title="Mở rộng thanh công cụ"
+              >
+                <ChevronDown className="w-3.5 h-3.5 text-slate-600" />
+                <span>Công cụ</span>
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* 2. Middle Floating Toolbar: Compact Icon-Only Tools, Preset Dropdown & Red-Boxed Trash Button */}
-        <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md px-3 py-2 sm:px-4 border-b border-slate-200/90 shadow-md flex items-center justify-between gap-2 overflow-x-auto">
-          {/* Icon-Only Boxed Drawing Tools */}
-          <div className="flex items-center space-x-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/80 shrink-0">
-            {/* Select & Drag Tool */}
-            <button
-              onClick={() => setActiveTool('select')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'select'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Chọn & Kéo thả di chuyển đối tượng"
-            >
-              <Move className="w-4 h-4" />
-            </button>
-
-            {/* Pointer Laser Tool */}
-            <button
-              onClick={() => setActiveTool('pointer')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'pointer'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Laser Con Trỏ Thuyết Trình"
-            >
-              <Pointer className={`w-4 h-4 ${activeTool === 'pointer' ? 'text-white' : 'text-amber-500'}`} />
-            </button>
-
-            {/* Movement Arrow */}
-            <button
-              onClick={() => setActiveTool('arrow')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'arrow'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Mũi tên di chuyển"
-            >
-              <ArrowRight className={`w-4 h-4 ${activeTool === 'arrow' ? 'text-white' : 'text-blue-500'}`} />
-            </button>
-
-            {/* Pass Arrow */}
-            <button
-              onClick={() => setActiveTool('dashed-arrow')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'dashed-arrow'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Mũi tên đường chuyền bóng (nét đứt)"
-            >
-              <span className={`font-mono text-xs font-black ${activeTool === 'dashed-arrow' ? 'text-white' : 'text-blue-600'}`}>--➔</span>
-            </button>
-
-            {/* Cầu Thủ Ta */}
-            <button
-              onClick={() => setActiveTool('player-home')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'player-home'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Đặt vị trí Cầu Thủ Ta (Chọn Tên & Số áo từ đội bóng)"
-            >
-              <UserCheck className={`w-4 h-4 ${activeTool === 'player-home' ? 'text-white' : 'text-emerald-600'}`} />
-            </button>
-
-            {/* Cầu Thủ Địch */}
-            <button
-              onClick={() => setActiveTool('player-away')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'player-away'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Đặt vị trí Cầu Thủ Địch (Đối thủ)"
-            >
-              <UserX className={`w-4 h-4 ${activeTool === 'player-away' ? 'text-white' : 'text-red-500'}`} />
-            </button>
-
-            {/* Dấu X Đỏ */}
-            <button
-              onClick={() => setActiveTool('cross-red')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'cross-red'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Dấu gạch chéo đỏ (Vị trí phạm lỗi/định vị)"
-            >
-              <XCircle className={`w-4 h-4 ${activeTool === 'cross-red' ? 'text-white' : 'text-red-500'}`} />
-            </button>
-
-            {/* Bóng Futsal */}
-            <button
-              onClick={() => setActiveTool('ball')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'ball'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Đặt Bóng Futsal"
-            >
-              <span className="text-sm">⚽</span>
-            </button>
-
-            {/* Văn bản */}
-            <button
-              onClick={() => setActiveTool('text')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'text'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Thêm ghi chú văn bản"
-            >
-              <Type className={`w-4 h-4 ${activeTool === 'text' ? 'text-white' : 'text-slate-600'}`} />
-            </button>
-
-            {/* Eraser Tool */}
-            <button
-              onClick={() => setActiveTool('eraser')}
-              className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                activeTool === 'eraser'
-                  ? 'bg-red-600 text-white shadow-xs'
-                  : 'text-slate-700 hover:bg-white/90'
-              }`}
-              title="Cục Tẩy (Nhấp vào đối tượng trên sân để xóa)"
-            >
-              <Eraser className={`w-4 h-4 ${activeTool === 'eraser' ? 'text-white' : 'text-amber-600'}`} />
-            </button>
-          </div>
-
-          {/* Right Controls: Presets Dropdown, Layers, Undo, Red-Boxed Trash */}
-          <div className="flex items-center space-x-1.5 shrink-0 ml-auto">
-            {/* Tactical Presets Dropdown Select */}
-            <select
-              onChange={(e) => {
-                if (e.target.value) {
-                  loadPresetRun(e.target.value as 'side' | 'pivot' | 'defense');
-                  e.target.value = '';
-                }
-              }}
-              defaultValue=""
-              className="bg-slate-100/90 hover:bg-slate-200/90 text-slate-800 font-extrabold text-xs px-2.5 py-1.5 rounded-xl border border-slate-200/90 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors shadow-2xs"
-              title="Nạp mẫu bài đánh chiến thuật có sẵn"
-            >
-              <option value="" disabled>-- Mẫu bài đánh --</option>
-              <option value="side">🏃 Chạy biên</option>
-              <option value="pivot">🛡️ Đè Pivot</option>
-              <option value="defense">🔄 Bọc lót</option>
-            </select>
-
-            <div className="h-5 w-px bg-slate-200 mx-0.5"></div>
-
-            {/* Layer Panel Button */}
-            <button
-              onClick={() => setShowLayerPanel(!showLayerPanel)}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer ${
-                showLayerPanel
-                  ? 'bg-blue-600 text-white font-black shadow-xs'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold border border-slate-200/80'
-              }`}
-              title="Bảng Quản Lý Lớp Đối Tượng (Layer)"
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Lớp ({shapes.length})</span>
-            </button>
-
-            {/* Undo Button */}
-            <button
-              onClick={handleUndo}
-              className="w-8 h-8 sm:w-9 sm:h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
-              title="Hoàn tác nét vẽ (Undo)"
-            >
-              <Undo2 className="w-4 h-4" />
-            </button>
-
-            {/* Red Boxed Trash Clear Canvas Button */}
-            <button
-              onClick={handleClearAll}
-              className="w-8 h-8 sm:w-9 sm:h-9 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200/90 rounded-xl flex items-center justify-center transition-colors cursor-pointer shadow-2xs"
-              title="Xóa tất cả nét vẽ trên sân"
-            >
-              <Trash2 className="w-4 h-4 text-red-600" />
-            </button>
-          </div>
-        </div>
-
-        {/* 3. Main Interactive Pitch Section */}
-        <div className="p-4 sm:p-6">
-
-        <div className="futsal-pitch-container w-full" ref={containerRef}>
-          <div className="futsal-pitch-floor relative overflow-hidden min-h-[480px]">
+        <div className="futsal-pitch-floor relative overflow-hidden min-h-[480px]">
             {/* Standard pitch markings */}
             <div className="pitch-line pitch-center-line"></div>
             <div className="pitch-line pitch-center-circle"></div>
@@ -1346,23 +1446,24 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
               )}
             </svg>
           </div>
-        </div>
-      </div>
 
       {/* Player Selector Modal Dialog */}
       {showPlayerModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
             {/* Modal Header */}
             <div className="bg-white p-5 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="bg-emerald-50 p-2.5 rounded-2xl border border-emerald-100 text-emerald-600 shadow-2xs">
+                <div className="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 text-emerald-600 shadow-2xs">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-black text-base sm:text-lg text-slate-900 tracking-tight">
-                    CHỌN CẦU THỦ THI ĐẤU (CẦU THỦ TA)
-                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 bg-amber-500 rounded-xs shrink-0"></span>
+                    <h3 className="font-black text-base sm:text-lg text-slate-900 tracking-tight">
+                      CHỌN CẦU THỦ THI ĐẤU (CẦU THỦ TA)
+                    </h3>
+                  </div>
                   <p className="text-xs text-slate-500 font-medium mt-0.5">
                     Gán tên & số áo cầu thủ lên sơ đồ chiến thuật
                   </p>
@@ -1386,7 +1487,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
               {/* Option 0: Default "Ta" */}
               <button
                 onClick={() => handleSelectPlayerForShape(null)}
-                className="w-full p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all text-left flex items-center justify-between group cursor-pointer"
+                className="w-full p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all text-left flex items-center justify-between group cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
@@ -1410,10 +1511,10 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                   <button
                     key={player.id}
                     onClick={() => handleSelectPlayerForShape(player)}
-                    className="p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex items-center justify-between group cursor-pointer shadow-2xs"
+                    className="p-3 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex items-center justify-between group cursor-pointer shadow-2xs"
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
+                      <div className="w-9 h-9 rounded-lg bg-blue-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
                         #{player.number}
                       </div>
                       <div className="min-w-0">
@@ -1425,7 +1526,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                             {player.positions.map((p) => {
                               const cfg = getPositionConfig(p);
                               return (
-                                <span key={p} className={`text-[8.5px] font-black px-1 py-0.2 rounded border ${cfg.bgClass} ${cfg.textClass}`}>
+                                <span key={p} className={`text-xs font-black px-1.5 py-0.5 rounded-lg border ${cfg.bgClass} ${cfg.textClass}`}>
                                   {cfg.shortLabel}
                                 </span>
                               );
@@ -1441,23 +1542,24 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
           </div>
         </div>
       )}
-      {/* Floating Layer Panel (Popup Trôi Nổi Giữa / Góc Phải Màn Hình) */}
+      {/* Floating Layer Panel */}
       {showLayerPanel && (
-        <div className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 z-40 bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-2xl w-80 sm:w-96 overflow-hidden flex flex-col max-h-[460px] animate-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 z-40 bg-white/95 backdrop-blur-md rounded-lg border border-slate-200 shadow-2xl w-80 sm:w-96 overflow-hidden flex flex-col max-h-[460px] animate-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
-              <div className="bg-blue-50 text-blue-600 p-2 rounded-xl border border-blue-100 shadow-2xs">
+              <div className="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100 shadow-2xs">
                 <Layers className="w-4 h-4" />
               </div>
               <div>
                 <h4 className="font-black text-sm text-slate-900 flex items-center space-x-1.5">
+                  <span className="w-2 h-2 bg-amber-500 rounded-xs shrink-0"></span>
                   <span>Quản Lý Lớp (Layer)</span>
-                  <span className="text-[10px] bg-blue-100 text-blue-700 font-extrabold px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-blue-100 text-blue-700 font-extrabold px-2 py-0.5 rounded-lg">
                     {shapes.length}
                   </span>
                 </h4>
-                <p className="text-[10px] text-slate-500 font-medium">
+                <p className="text-xs text-slate-500 font-medium">
                   Chọn & chỉnh thứ tự lớp đối tượng bị chồng lên nhau
                 </p>
               </div>
@@ -1475,7 +1577,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
           <div className="p-3 overflow-y-auto space-y-1.5 flex-1 divide-y divide-slate-100">
             {shapes.length === 0 ? (
               <div className="p-6 text-center text-slate-400 space-y-2">
-                <Layers className="w-8 h-8 mx-auto text-slate-300 stroke-1" />
+                <Layers className="w-8 h-8 mx-auto text-slate-300" />
                 <p className="text-xs font-semibold">Chưa có đối tượng nào trên sân</p>
               </div>
             ) : (
@@ -1487,14 +1589,14 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                 if (s.tool === 'player-home' || s.tool === 'circle-blue') {
                   label = s.number !== undefined ? `#${s.number} ${s.text || 'Cầu Thủ Ta'}` : (s.text || 'Cầu Thủ Ta');
                   icon = (
-                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0">
                       {s.number !== undefined ? `#${s.number}` : 'Ta'}
                     </div>
                   );
                 } else if (s.tool === 'player-away' || s.tool === 'circle-red') {
                   label = s.text || 'Cầu Thủ Địch';
                   icon = (
-                    <div className="w-6 h-6 rounded-full bg-red-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-red-600 text-white font-black text-xs flex items-center justify-center shrink-0">
                       Địch
                     </div>
                   );
@@ -1522,7 +1624,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                       setSelectedShapeId(s.id);
                       setActiveTool('select');
                     }}
-                    className={`p-2.5 rounded-2xl border transition-all flex items-center justify-between group cursor-pointer ${
+                    className={`p-2.5 rounded-lg border transition-all flex items-center justify-between group cursor-pointer ${
                       isSelected
                         ? 'bg-blue-50/90 border-blue-300 text-blue-900 shadow-2xs font-extrabold'
                         : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700 font-semibold'
@@ -1564,7 +1666,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
                           e.stopPropagation();
                           handleDeleteSingleShape(s.id, e);
                         }}
-                        className="p-1 hover:bg-red-100 rounded-lg text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         title="Xóa đối tượng này"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1577,7 +1679,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
           </div>
         </div>
       )}
+        </div>
     </div>
-  </div>
-);
+  );
 };

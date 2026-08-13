@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { PositionSlot, Player, AttackDirection } from '../types/futsal';
 import { FORMATION_PRESETS } from '../services/initialData';
 import { getUniquePositionConfigs as _getUniquePositionConfigs } from '../types/futsal';
-import { User, X, GripVertical, ChevronUp, Users } from 'lucide-react';
+import { User, X, GripVertical, ChevronUp, Users, Check, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface FutsalPitchProps {
   slots: PositionSlot[];
@@ -105,7 +105,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
   const handleDropMain = (e: React.DragEvent, targetSlotId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const sourcePlayerId = e.dataTransfer.getData('text/player-id');
+    const sourcePlayerId = e.dataTransfer.getData('text/player-id') || e.dataTransfer.getData('text/plain');
     const sourceSlotId = e.dataTransfer.getData('text/slot-id');
 
     if (sourceSlotId && sourceSlotId !== targetSlotId) {
@@ -118,7 +118,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
   const handleDropSub = (e: React.DragEvent, targetSlotId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const sourcePlayerId = e.dataTransfer.getData('text/player-id');
+    const sourcePlayerId = e.dataTransfer.getData('text/player-id') || e.dataTransfer.getData('text/plain');
     if (sourcePlayerId && onAssignSubPlayerToSlot) {
       onAssignSubPlayerToSlot(targetSlotId, sourcePlayerId);
     }
@@ -126,13 +126,17 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
 
   const handleSlotDragStart = (e: React.DragEvent, slotId: string, playerId: string | null) => {
     e.dataTransfer.setData('text/slot-id', slotId);
+    e.dataTransfer.effectAllowed = 'copyMove';
     if (playerId) {
       e.dataTransfer.setData('text/player-id', playerId);
+      e.dataTransfer.setData('text/plain', playerId);
     }
   };
 
   const handleSubPlayerDragStart = (e: React.DragEvent, playerId: string) => {
     e.dataTransfer.setData('text/player-id', playerId);
+    e.dataTransfer.setData('text/plain', playerId);
+    e.dataTransfer.effectAllowed = 'copyMove';
   };
 
   /* Temporarily commented out popover helpers
@@ -158,79 +162,91 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
 
   return (
     <div className="futsal-pitch-container w-full">
-      {/* UI Safe Area: Dedicated Header Bar for Court Controls & Formation / Direction / Sub Visibility Toggle */}
-      <div className="flex flex-wrap items-center justify-between bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl mb-3 border border-slate-200/90 text-slate-800 text-xs font-bold shadow-sm gap-2">
+      {/* Court Header Bar - Monolithic Single Row without border divider */}
+      <div className="flex flex-wrap items-center justify-between pb-1 mb-2 text-slate-800 text-sm font-bold gap-3">
         <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="text-slate-800 font-black uppercase tracking-wider">SÂN THI ĐẤU FUTSAL</span>
+          <span className="w-2.5 h-2.5 bg-emerald-500"></span>
+          <span className="text-slate-900 font-extrabold uppercase tracking-wide text-sm sm:text-base">SÂN THI ĐẤU FUTSAL</span>
         </div>
 
-        {/* Right Controls Group */}
-        <div className="flex flex-wrap items-center space-x-2 sm:space-x-3">
+        {/* Inline Controls Group - Modern Segmented Control Toggle Groups */}
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           {/* Formation Preset Dropdown Selector */}
           {currentFormationId && onSelectFormation && (
-            <>
-              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
-                <span className="text-slate-700 font-extrabold text-[11px] sm:text-xs shrink-0">Sơ đồ:</span>
-                <select
-                  value={currentFormationId}
-                  onChange={(e) => onSelectFormation(e.target.value)}
-                  className="bg-white text-blue-600 font-black text-xs px-2 py-0.5 rounded-md border border-slate-200/90 shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                >
-                  {FORMATION_PRESETS.map((preset) => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.name} ({preset.subName})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="h-4 w-px bg-slate-200"></div>
-            </>
+            <div className="flex items-center space-x-2">
+              <span className="text-slate-500 font-bold text-sm shrink-0">Đội hình:</span>
+              <select
+                value={currentFormationId}
+                onChange={(e) => onSelectFormation(e.target.value)}
+                className="bg-slate-100/90 text-emerald-700 font-black text-sm px-3 py-1.5 rounded-lg border border-slate-200/80 cursor-pointer focus:outline-none focus:border-emerald-500 shadow-2xs hover:bg-slate-200/70 transition-colors"
+              >
+                {FORMATION_PRESETS.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name} ({preset.subName})
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
 
-          {/* Direction Switcher Toggle */}
-          <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
-            <span className="text-slate-700 font-extrabold text-[11px] sm:text-xs">Đổi hướng:</span>
-            <button
-              type="button"
-              onClick={onToggleAttackDirection}
-              className={`relative inline-flex h-5 w-10 sm:h-6 sm:w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
-                attackDirection === 'right' ? 'bg-blue-600' : 'bg-emerald-600'
-              }`}
-              title={`Đổi hướng tấn công (Hiện tại: ${attackDirection === 'right' ? 'Sang phải →' : 'Sang trái ←'})`}
-            >
-              <span className="sr-only">Đổi hướng tấn công</span>
-              <span
-                className={`pointer-events-none inline-flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center transform rounded-full bg-white text-[9px] sm:text-[10px] font-black text-slate-900 shadow-md transition duration-200 ease-in-out ${
-                  attackDirection === 'right' ? 'translate-x-5 sm:translate-x-6' : 'translate-x-0'
-                }`}
-              >
-                {attackDirection === 'right' ? '→' : '←'}
+          {/* Hướng tấn công: Toggle Switch */}
+          <div className="flex items-center space-x-2">
+            <span className="text-slate-500 font-bold text-sm shrink-0">Hướng tấn công:</span>
+            <div className="flex items-center space-x-1.5">
+              <span className={`text-xs font-bold ${attackDirection === 'left' ? 'text-blue-700 font-black' : 'text-slate-400'}`}>
+                Trái
               </span>
-            </button>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={attackDirection === 'right'}
+                onClick={() => onToggleAttackDirection && onToggleAttackDirection()}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  attackDirection === 'right' ? 'bg-blue-600' : 'bg-slate-200'
+                }`}
+                title={`Hướng tấn công hiện tại: ${attackDirection === 'left' ? 'Sang Trái (←)' : 'Sang Phải (→)'}`}
+              >
+                <span
+                  className={`pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                    attackDirection === 'right' ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                >
+                  {attackDirection === 'right' ? (
+                    <ArrowRight className="w-3 h-3 text-blue-600 stroke-[3]" />
+                  ) : (
+                    <ArrowLeft className="w-3 h-3 text-slate-400 stroke-[3]" />
+                  )}
+                </span>
+              </button>
+              <span className={`text-xs font-bold ${attackDirection === 'right' ? 'text-blue-700 font-black' : 'text-slate-400'}`}>
+                Phải
+              </span>
+            </div>
           </div>
 
-          <div className="h-4 w-px bg-slate-200"></div>
-
-          {/* Sub Players Visibility Toggle Switcher (ON / OFF) */}
-          <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200/80">
-            <span className="text-slate-700 font-extrabold text-[11px] sm:text-xs">Hiện dự bị:</span>
+          {/* Dự Bị: Toggle Switch */}
+          <div className="flex items-center space-x-2">
+            <span className="text-slate-500 font-bold text-sm shrink-0">Dự bị:</span>
             <button
               type="button"
+              role="switch"
+              aria-checked={showSubs}
               onClick={() => setShowSubs(!showSubs)}
-              className={`relative inline-flex h-5 w-10 sm:h-6 sm:w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${
-                showSubs ? 'bg-blue-600' : 'bg-slate-400'
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                showSubs ? 'bg-blue-600' : 'bg-slate-200'
               }`}
-              title={showSubs ? 'Tắt để ẩn bớt dàn dự bị trên sân' : 'Bật để hiển thị các cầu thủ dự bị'}
+              title={showSubs ? 'Đang hiện dàn dự bị (Bấm để ẩn)' : 'Đang ẩn dàn dự bị (Bấm để hiện)'}
             >
-              <span className="sr-only">Bật tắt ẩn hiện dự bị</span>
               <span
-                className={`pointer-events-none inline-flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center transform rounded-full bg-white text-[8px] sm:text-[9px] font-black text-slate-900 shadow-md transition duration-200 ease-in-out ${
-                  showSubs ? 'translate-x-5 sm:translate-x-6' : 'translate-x-0'
+                className={`pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  showSubs ? 'translate-x-5' : 'translate-x-0'
                 }`}
               >
-                {showSubs ? 'ON' : 'OFF'}
+                {showSubs ? (
+                  <Check className="w-3 h-3 text-blue-600 stroke-[3]" />
+                ) : (
+                  <X className="w-3 h-3 text-slate-400 stroke-[3]" />
+                )}
               </span>
             </button>
           </div>
@@ -267,21 +283,21 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
               style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
               onClick={() => onSelectSlot(slot.id)}
               className={`pitch-player-card cursor-pointer group ${
-                isSelected ? 'ring-4 ring-yellow-400 ring-offset-2 scale-105 z-30' : ''
+                isSelected ? 'ring-2 ring-yellow-400 z-30' : ''
               }`}
             >
               {/* Position Container Box */}
-              <div className="bg-white rounded-xl shadow-2xl border border-slate-200/90 w-[145px] sm:w-[155px] xl:w-[175px] 2xl:w-[185px] p-2 xl:p-2.5 flex flex-col transition-all relative">
+              <div className="bg-white border border-slate-300 w-[145px] sm:w-[155px] xl:w-[175px] 2xl:w-[185px] p-2 xl:p-2.5 flex flex-col relative">
                 {/* Role Header Badge */}
                 <div
-                  className={`text-[9px] sm:text-[10px] xl:text-xs font-black uppercase py-0.5 px-1.5 rounded-lg flex items-center justify-between mb-1.5 shadow-2xs leading-tight ${getRoleBadgeClass(
+                  className={`text-xs font-black uppercase py-0.5 px-1.5 flex items-center justify-between mb-1.5 leading-tight ${getRoleBadgeClass(
                     slot.role
                   )}`}
                 >
                   <span className="whitespace-normal break-words text-left flex-1 tracking-tight" title={slot.label}>
                     {getEnglishRoleTitle(slot.role)}
                   </span>
-                  <GripVertical className="w-3 h-3 opacity-80 cursor-grab shrink-0 ml-1" />
+                  <GripVertical className="w-3 h-3 opacity-80 cursor-move shrink-0 ml-1" />
                 </div>
 
                 {/* 1. Main Starter Slot Container */}
@@ -290,13 +306,13 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                   onDrop={(e) => handleDropMain(e, slot.id)}
                   draggable={!!mainPlayer}
                   onDragStart={(e) => handleSlotDragStart(e, slot.id, slot.playerId)}
-                  className="relative rounded-lg p-1.5 transition-colors bg-slate-50/80 hover:bg-slate-100/90 border border-slate-200/80"
+                  className="relative p-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200"
                 >
                   {mainPlayer ? (
                     /* Main Starter Player Card - Prominently Styled: [ #5 - Cao Tấn ] */
                     <div className="flex flex-col items-center relative text-center">
                       {/* Synchronized Main Starter Badge: [ #Number - ShortName ] + Inline Remove Button */}
-                      <div className="w-full bg-blue-50/90 border border-blue-200/80 rounded-md py-1 px-1.5 mb-1 flex items-center justify-between shadow-2xs">
+                      <div className="w-full bg-blue-50 border border-blue-200 py-1 px-1.5 mb-1 flex items-center justify-between">
                         <span className="text-xs xl:text-sm font-bold text-slate-900 truncate flex-1 min-w-0 pr-1 text-left" title={mainPlayer.name}>
                           <span className="font-extrabold text-blue-600">#{mainPlayer.number}</span>
                           <span className="text-slate-400 mx-0.5">-</span>
@@ -309,7 +325,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                             e.stopPropagation();
                             onClearSlot(slot.id);
                           }}
-                          className="p-0.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors shrink-0 ml-1 cursor-pointer"
+                          className="p-0.5 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 ml-1 cursor-pointer"
                           title="Bỏ cầu thủ chính khỏi vị trí"
                         >
                           <X className="w-3 h-3" />
@@ -319,65 +335,18 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                       {/* Main Player Note (if present) */}
                       {mainPlayer.notes && mainPlayer.notes.trim() !== '' && (
                         <div
-                          className="w-full px-1 py-0.5 bg-amber-50 border border-amber-200/90 text-amber-900 rounded text-[9px] font-extrabold leading-tight truncate text-left"
+                          className="w-full px-1 py-0.5 bg-amber-50 border border-amber-200/90 text-amber-900 rounded text-xs font-semibold leading-tight truncate text-left"
                           title={mainPlayer.notes}
                         >
                           📝 {mainPlayer.notes}
                         </div>
                       )}
-
-                      {/* Floating Rich Popover Tooltip (Temporarily Commented Out)
-                      <div className={`opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none group-hover:pointer-events-auto absolute ${popoverPosClass} w-[205px] bg-slate-900/95 backdrop-blur-md text-white rounded-xl p-3 shadow-2xl border border-slate-700/80 z-50 flex flex-col gap-1.5 text-left`}>
-                        <div className="flex items-center justify-between border-b border-slate-700 pb-1.5 gap-2">
-                          <span className="font-black text-sm text-yellow-400 truncate flex-1 min-w-0" title={`#${mainPlayer.number} ${mainPlayer.name}`}>
-                            #{mainPlayer.number} {mainPlayer.name}
-                          </span>
-                          <span className="text-[10px] font-extrabold bg-blue-600 px-2 py-0.5 rounded text-white shrink-0 whitespace-nowrap">
-                            {getPlayerAverage(mainPlayer)} đ
-                          </span>
-                        </div>
-                        <div className="text-[10px] font-bold text-slate-300">
-                          {slot.label} (Đá chính)
-                        </div>
-
-                        {mainPlayer.positions && mainPlayer.positions.length > 0 && (
-                          <div className="flex flex-wrap gap-1 my-0.5">
-                            {getUniquePositionConfigs(mainPlayer.positions).map((cfg) => (
-                              <span key={cfg.shortLabel} className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${cfg.bgClass} ${cfg.textClass}`}>
-                                {cfg.shortLabel}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-3 gap-1 text-[10px] font-bold text-center pt-1 border-t border-slate-800">
-                          <div className="bg-slate-800/80 p-1 rounded">
-                            <span className="text-emerald-400 block text-[9px]">TL</span>
-                            <span>{mainPlayer.stamina ?? '-'}</span>
-                          </div>
-                          <div className="bg-slate-800/80 p-1 rounded">
-                            <span className="text-orange-400 block text-[9px]">TC</span>
-                            <span>{mainPlayer.attack ?? '-'}</span>
-                          </div>
-                          <div className="bg-slate-800/80 p-1 rounded">
-                            <span className="text-blue-400 block text-[9px]">PT</span>
-                            <span>{mainPlayer.defense ?? '-'}</span>
-                          </div>
-                        </div>
-
-                        {mainPlayer.notes && (
-                          <div className="text-[10px] text-amber-300 font-medium pt-1 border-t border-slate-800 break-words">
-                            📝 {mainPlayer.notes}
-                          </div>
-                        )}
-                      </div>
-                      */}
                     </div>
                   ) : (
                     /* Empty Main Starter Slot Placeholder */
                     <div className="py-2.5 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center bg-slate-50/90 text-slate-400 hover:border-blue-400 hover:bg-blue-50/50 transition-colors">
                       <User className="w-4 h-4 text-slate-300 mb-0.5" />
-                      <span className="text-[10px] font-extrabold text-slate-400">Chọn đá chính</span>
+                      <span className="text-xs font-extrabold text-slate-400">Chọn đá chính</span>
                     </div>
                   )}
                 </div>
@@ -389,7 +358,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                     onDrop={(e) => handleDropSub(e, slot.id)}
                     className="mt-2 pt-1.5 border-t border-slate-200 text-left"
                   >
-                    <div className="flex items-center justify-between text-[9px] xl:text-[10px] font-black text-slate-500 uppercase mb-1">
+                    <div className="flex items-center justify-between text-xs font-black text-slate-500 uppercase mb-1">
                       <span className="flex items-center space-x-1">
                         <Users className="w-3 h-3 text-slate-400" />
                         <span>Dự bị ({subPlayers.length}/5)</span>
@@ -405,7 +374,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                           onDragStart={(e) => handleSubPlayerDragStart(e, subP.id)}
                           className={`relative group/sub flex items-center justify-between bg-slate-50 hover:bg-slate-100/90 rounded border border-slate-200/90 ${getRoleBorderLeftClass(
                             slot.role
-                          )} border-l-4 py-1 px-1.5 text-[10px] xl:text-xs transition-all shadow-2xs`}
+                          )} border-l-4 py-1 px-1.5 text-xs transition-all shadow-2xs`}
                         >
                           {/* Label: [ #Number - Name ] */}
                           <span
@@ -454,7 +423,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                         <div
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleDropSub(e, slot.id)}
-                          className="py-1 border border-dashed border-slate-200 rounded text-center text-[9px] xl:text-[10px] font-bold text-slate-400 hover:bg-blue-50/60 hover:text-blue-600 hover:border-blue-300 transition-colors"
+                          className="py-1 border border-dashed border-slate-200 rounded text-center text-xs font-semibold text-slate-400 hover:bg-blue-50/60 hover:text-blue-600 hover:border-blue-300 transition-colors"
                         >
                           + Kéo dự bị vào đây
                         </div>

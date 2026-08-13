@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Player, TacticalSquad } from './types/futsal';
 import { storageService } from './services/storageService';
-import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
+import { TopBar } from './components/TopBar';
 import { PlayerManagement } from './components/PlayerManagement';
 import { TacticsBoard } from './components/TacticsBoard';
 import { TacticalDiagram } from './components/TacticalDiagram';
@@ -21,12 +22,27 @@ const getPathFromTab = (tab: TabType): string => {
   return '/plan';
 };
 
+import type { PlayerControlsData, DiagramControlsData } from './components/TopBar';
+
 export const App = () => {
   const [activeTab, setActiveTab] = useState<TabType>(() => getTabFromLocation());
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+
+  // Edit request from TacticsBoard: opens PlayerManagement edit modal for a player
+  const [editRequest, setEditRequest] = useState<{ playerId: string; nonce: number } | null>(null);
+
+  // Player Management TOP Bar Controls State
+  const [playerControls, setPlayerControls] = useState<PlayerControlsData | null>(null);
+
+  // Tactical Diagram TOP Bar Controls State
+  const [diagramControls, setDiagramControls] = useState<DiagramControlsData | null>(null);
 
   // Synchronous initial state load from LocalStorage
   const [players, setPlayers] = useState<Player[]>(() => storageService.getPlayers());
   const [squad, setSquad] = useState<TacticalSquad>(() => storageService.getSquad());
+
+  // Actions registry ref for TopBar dynamic actions
+  const tacticsActionsRef = useRef<{ resetPreset?: () => void; saveSquad?: () => void }>({});
 
   // Function to reload state when reset/imported
   const refreshData = () => {
@@ -52,6 +68,11 @@ export const App = () => {
     if (window.location.pathname !== targetPath) {
       window.history.pushState({}, '', targetPath);
     }
+  };
+
+  const handleEditPlayer = (player: Player) => {
+    setEditRequest({ playerId: player.id, nonce: Date.now() });
+    handleTabChange('players');
   };
 
   const handleSavePlayer = (updatedPlayer: Player) => {
@@ -89,38 +110,59 @@ export const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
-      {/* Top Header Navbar */}
-      <Header
+    <div className="min-h-screen bg-white flex font-sans text-slate-800 antialiased h-screen overflow-hidden">
+      {/* 1. Fixed Left Vertical Sidebar */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         onDataRefresh={refreshData}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
-      {/* Main Tab View Content */}
-      <main className="flex-1 pb-16 md:pb-12 pb-safe">
-        {activeTab === 'tactics' && (
-          <TacticsBoard
-            players={players}
-            squad={squad}
-            onSaveSquad={handleSaveSquad}
-          />
-        )}
+      {/* 2. Main Right Panel (Dynamic pl-64 or pl-[68px]) */}
+      <div className={`flex-1 flex flex-col min-w-0 ${isSidebarCollapsed ? 'pl-[68px]' : 'pl-64'} h-screen overflow-hidden transition-all duration-200`}>
+        {/* 2a. Fixed Dynamic TopBar */}
+        <TopBar
+          activeTab={activeTab}
+          onResetPreset={() => tacticsActionsRef.current.resetPreset?.()}
+          onSaveSquad={() => tacticsActionsRef.current.saveSquad?.()}
+          playerControls={playerControls}
+          diagramControls={diagramControls}
+        />
 
-        {activeTab === 'players' && (
-          <PlayerManagement
-            players={players}
-            onSavePlayer={handleSavePlayer}
-            onDeletePlayer={handleDeletePlayer}
-          />
-        )}
+        {/* 2b. Main Page Content - Only Area Scrollable by User */}
+        <main className="flex-1 overflow-y-auto bg-white">
+          {activeTab === 'tactics' && (
+            <TacticsBoard
+              players={players}
+              squad={squad}
+              onSaveSquad={handleSaveSquad}
+              onEditPlayer={handleEditPlayer}
+              onRegisterActions={(actions) => {
+                tacticsActionsRef.current = actions;
+              }}
+            />
+          )}
 
-        {activeTab === 'presentation' && <TacticalDiagram players={players} />}
-      </main>
+          {activeTab === 'players' && (
+            <PlayerManagement
+              players={players}
+              onSavePlayer={handleSavePlayer}
+              onDeletePlayer={handleDeletePlayer}
+              editRequest={editRequest}
+              onRegisterControls={setPlayerControls}
+            />
+          )}
 
-      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs font-semibold text-slate-500 mb-16 md:mb-0">
-        Một sản phẩm của AI với sự từ chối mọi trách nhiệm từ tuiii - Hải Trần
-      </footer>
+          {activeTab === 'presentation' && (
+            <TacticalDiagram
+              players={players}
+              onRegisterControls={setDiagramControls}
+            />
+          )}
+        </main>
+      </div>
     </div>
   );
 };
