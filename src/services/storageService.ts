@@ -1,9 +1,17 @@
-import type { Player, TacticalSquad, SavedTacticalDiagram } from '../types/futsal';
-import { INITIAL_PLAYERS, INITIAL_TACTICAL_DIAGRAMS, INITIAL_TACTICAL_SQUAD } from './initialData';
+import type {
+  Player,
+  TacticalSquad,
+  SavedTacticalDiagram,
+} from "../types/futsal";
+import {
+  INITIAL_PLAYERS,
+  INITIAL_TACTICAL_DIAGRAMS,
+  INITIAL_TACTICAL_SQUAD,
+} from "./initialData";
 
-const PLAYERS_KEY = 'futsal_planner_players_v1';
-const SQUAD_KEY = 'futsal_planner_squad_v1';
-const DIAGRAMS_KEY = 'futsal_planner_diagrams_v1';
+const PLAYERS_KEY = "futsal_planner_players_v1";
+const SQUAD_KEY = "futsal_planner_squad_v1";
+const DIAGRAMS_KEY = "futsal_planner_diagrams_v1";
 
 export const storageService = {
   getPlayers(): Player[] {
@@ -15,7 +23,7 @@ export const storageService = {
       }
       return JSON.parse(data);
     } catch (e) {
-      console.error('Error reading players from localStorage', e);
+      console.error("Error reading players from localStorage", e);
       return INITIAL_PLAYERS;
     }
   },
@@ -24,7 +32,7 @@ export const storageService = {
     try {
       localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
     } catch (e) {
-      console.error('Error saving players to localStorage', e);
+      console.error("Error saving players to localStorage", e);
     }
   },
 
@@ -34,7 +42,7 @@ export const storageService = {
       let squad: TacticalSquad;
       if (!data) {
         squad = {
-          id: 'default',
+          id: "default",
           formationId: INITIAL_TACTICAL_SQUAD.formationId,
           slots: INITIAL_TACTICAL_SQUAD.slots,
           notes: INITIAL_TACTICAL_SQUAD.notes,
@@ -55,11 +63,14 @@ export const storageService = {
 
       return squad;
     } catch (e) {
-      console.error('Error reading squad from localStorage', e);
+      console.error("Error reading squad from localStorage", e);
       return {
-        id: 'default',
+        id: "default",
         formationId: INITIAL_TACTICAL_SQUAD.formationId,
-        slots: INITIAL_TACTICAL_SQUAD.slots.map((s) => ({ ...s, subPlayerIds: [] })),
+        slots: INITIAL_TACTICAL_SQUAD.slots.map((s) => ({
+          ...s,
+          subPlayerIds: [],
+        })),
         notes: INITIAL_TACTICAL_SQUAD.notes,
         updatedAt: new Date().toISOString(),
       };
@@ -70,14 +81,14 @@ export const storageService = {
     try {
       localStorage.setItem(SQUAD_KEY, JSON.stringify(squad));
     } catch (e) {
-      console.error('Error saving squad to localStorage', e);
+      console.error("Error saving squad to localStorage", e);
     }
   },
 
   resetAllData(): { players: Player[]; squad: TacticalSquad } {
     this.savePlayers(INITIAL_PLAYERS);
     const initialSquad: TacticalSquad = {
-      id: 'default',
+      id: "default",
       formationId: INITIAL_TACTICAL_SQUAD.formationId,
       slots: INITIAL_TACTICAL_SQUAD.slots,
       notes: INITIAL_TACTICAL_SQUAD.notes,
@@ -90,42 +101,54 @@ export const storageService = {
 
   exportBackup(): void {
     const data = {
-      format: 'ftsp-backup',
+      format: "ftsp-backup",
       schemaVersion: 1,
       players: this.getPlayers(),
       squad: this.getSquad(),
       diagrams: this.getDiagrams(),
       exportedAt: new Date().toISOString(),
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `futsal_planner_backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
   },
 
-  async importBackup(file: File): Promise<{ players: Player[]; squad: TacticalSquad; diagrams: SavedTacticalDiagram[] }> {
+  async importBackup(
+    file: File,
+  ): Promise<{
+    players: Player[];
+    squad: TacticalSquad;
+    diagrams: SavedTacticalDiagram[];
+  }> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const json = JSON.parse(e.target?.result as string);
-          if (Array.isArray(json.players) && json.squad && (json.diagrams === undefined || Array.isArray(json.diagrams))) {
+          if (
+            Array.isArray(json.players) &&
+            json.squad &&
+            (json.diagrams === undefined || Array.isArray(json.diagrams))
+          ) {
             const diagrams = Array.isArray(json.diagrams) ? json.diagrams : [];
             this.savePlayers(json.players);
             this.saveSquad(json.squad);
             this.saveDiagrams(diagrams);
             resolve({ players: json.players, squad: json.squad, diagrams });
           } else {
-            reject(new Error('Định dạng file sao lưu JSON không hợp lệ!'));
+            reject(new Error("Định dạng file sao lưu JSON không hợp lệ!"));
           }
         } catch (err) {
           reject(err);
         }
       };
-      reader.onerror = () => reject(new Error('Đọc file thất bại.'));
+      reader.onerror = () => reject(new Error("Đọc file thất bại."));
       reader.readAsText(file);
     });
   },
@@ -139,7 +162,7 @@ export const storageService = {
       }
       return JSON.parse(data);
     } catch (e) {
-      console.error('Error reading diagrams from localStorage', e);
+      console.error("Error reading diagrams from localStorage", e);
       return [];
     }
   },
@@ -157,7 +180,7 @@ export const storageService = {
       }
       localStorage.setItem(DIAGRAMS_KEY, JSON.stringify(updated));
     } catch (e) {
-      console.error('Error saving diagram to localStorage', e);
+      console.error("Error saving diagram to localStorage", e);
     }
   },
 
@@ -167,7 +190,7 @@ export const storageService = {
       const updated = existing.filter((d) => d.id !== id);
       localStorage.setItem(DIAGRAMS_KEY, JSON.stringify(updated));
     } catch (e) {
-      console.error('Error deleting diagram from localStorage', e);
+      console.error("Error deleting diagram from localStorage", e);
     }
   },
 
@@ -175,7 +198,7 @@ export const storageService = {
     try {
       localStorage.setItem(DIAGRAMS_KEY, JSON.stringify(diagrams));
     } catch (e) {
-      console.error('Error saving diagrams to localStorage', e);
+      console.error("Error saving diagrams to localStorage", e);
     }
   },
 };

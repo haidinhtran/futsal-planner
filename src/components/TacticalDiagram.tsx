@@ -1,9 +1,14 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import type { DrawShape, DrawTool, Player, SavedTacticalDiagram } from '../types/futsal';
-import type { DiagramControlsData } from './TopBar';
-import { storageService } from '../services/storageService';
-import { getVietnameseShortName } from './FutsalPitch';
-import { getPositionConfig } from '../types/futsal';
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import type {
+  DrawShape,
+  DrawTool,
+  Player,
+  SavedTacticalDiagram,
+} from "../types/futsal";
+import type { DiagramControlsData } from "./TopBar";
+import { storageService } from "../services/storageService";
+import { getVietnameseShortName } from "./FutsalPitch";
+import { getPositionConfig } from "../types/futsal";
 import {
   ArrowRight,
   XCircle,
@@ -22,7 +27,7 @@ import {
   Maximize,
   Minimize,
   GripVertical,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface TacticalDiagramProps {
   players?: Player[];
@@ -37,17 +42,26 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
-  const toolbarDragLimitsRef = useRef<{ minX: number; maxX: number; minY: number; maxY: number } | null>(null);
-  const [activeTool, setActiveTool] = useState<DrawTool>('select');
+  const toolbarDragLimitsRef = useRef<{
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+  } | null>(null);
+  const [activeTool, setActiveTool] = useState<DrawTool>("select");
   const [shapes, setShapes] = useState<DrawShape[]>([]);
-  const [currentPoints, setCurrentPoints] = useState<Array<{ x: number; y: number }>>([]);
+  const [currentPoints, setCurrentPoints] = useState<
+    Array<{ x: number; y: number }>
+  >([]);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [laserPos, setLaserPos] = useState<{ x: number; y: number } | null>(null);
-  const [textInput] = useState<string>('');
+  const [laserPos, setLaserPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const [textInput] = useState<string>("");
 
   // Team players state
   const [teamPlayers, setTeamPlayers] = useState<Player[]>(
-    () => initialPlayers || storageService.getPlayers()
+    () => initialPlayers || storageService.getPlayers(),
   );
 
   useEffect(() => {
@@ -57,22 +71,28 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   }, [initialPlayers]);
 
   // Saved Diagrams & Storage State
-  const [savedDiagrams, setSavedDiagrams] = useState<SavedTacticalDiagram[]>(() =>
-    storageService.getDiagrams()
+  const [savedDiagrams, setSavedDiagrams] = useState<SavedTacticalDiagram[]>(
+    () => storageService.getDiagrams(),
   );
 
   useEffect(() => {
     setSavedDiagrams(storageService.getDiagrams());
   }, [dataRefreshToken]);
-  const [diagramName, setDiagramName] = useState<string>('Draft-001');
+  const [diagramName, setDiagramName] = useState<string>("Draft-001");
   const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState<boolean>(false);
   const [showLayerPanel, setShowLayerPanel] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isToolbarExpanded, setIsToolbarExpanded] = useState<boolean>(true);
-  const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
   const [isDraggingToolbar, setIsDraggingToolbar] = useState<boolean>(false);
-  const [toolbarDragStartPos, setToolbarDragStartPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [toolbarDragStartPos, setToolbarDragStartPos] = useState<{
+    x: number;
+    y: number;
+  }>({ x: 0, y: 0 });
 
   // Fullscreen toggle handler
   const toggleFullscreen = async () => {
@@ -85,7 +105,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
           await (containerRef.current as any).webkitRequestFullscreen();
         }
       } catch (err) {
-        console.error('Fullscreen request failed:', err);
+        console.error("Fullscreen request failed:", err);
       }
     } else {
       if (document.exitFullscreen) {
@@ -107,11 +127,11 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       setIsFullscreen(!!document.fullscreenElement);
       setToolbarPos({ x: 0, y: 0 });
     };
-    document.addEventListener('fullscreenchange', handleFSChange);
-    document.addEventListener('webkitfullscreenchange', handleFSChange);
+    document.addEventListener("fullscreenchange", handleFSChange);
+    document.addEventListener("webkitfullscreenchange", handleFSChange);
     return () => {
-      document.removeEventListener('fullscreenchange', handleFSChange);
-      document.removeEventListener('webkitfullscreenchange', handleFSChange);
+      document.removeEventListener("fullscreenchange", handleFSChange);
+      document.removeEventListener("webkitfullscreenchange", handleFSChange);
     };
   }, []);
 
@@ -166,11 +186,11 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       setIsDraggingToolbar(false);
     };
 
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
     return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
   }, [isDraggingToolbar, toolbarDragStartPos]);
 
@@ -202,8 +222,14 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   // Selection & Drag & Drop State
   const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null);
   const [draggingShapeId, setDraggingShapeId] = useState<string | null>(null);
-  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
-  const [initialShapePoints, setInitialShapePoints] = useState<Array<{ x: number; y: number }> | null>(null);
+  const [dragStartPos, setDragStartPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [initialShapePoints, setInitialShapePoints] = useState<Array<{
+    x: number;
+    y: number;
+  }> | null>(null);
 
   // Automatically deselect current object on pitch whenever drawing tool changes
   useEffect(() => {
@@ -212,7 +238,9 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
 
   // Player Selector Modal State
   const [showPlayerModal, setShowPlayerModal] = useState(false);
-  const [pendingPt, setPendingPt] = useState<{ x: number; y: number } | null>(null);
+  const [pendingPt, setPendingPt] = useState<{ x: number; y: number } | null>(
+    null,
+  );
   const [editingShapeId, setEditingShapeId] = useState<string | null>(null);
 
   // Generate next draft name (Draft-001, Draft-002, etc.)
@@ -226,7 +254,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       .filter((n) => !isNaN(n));
 
     const maxNum = draftNumbers.length > 0 ? Math.max(...draftNumbers) : 0;
-    const nextNum = (maxNum + 1).toString().padStart(3, '0');
+    const nextNum = (maxNum + 1).toString().padStart(3, "0");
     return `Draft-${nextNum}`;
   };
 
@@ -235,33 +263,37 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty && shapes.length > 0) {
         e.preventDefault();
-        e.returnValue = 'Bạn có thay đổi chưa lưu trên bản vẽ diễn giải chiến thuật. Bạn có chắc chắn muốn rời đi?';
+        e.returnValue =
+          "Bạn có thay đổi chưa lưu trên bản vẽ diễn giải chiến thuật. Bạn có chắc chắn muốn rời đi?";
         return e.returnValue;
       }
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty, shapes.length]);
 
   // Listen for Delete / Backspace keys to remove selected shape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedShapeId) {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedShapeId) {
         setShapes((prev) => prev.filter((s) => s.id !== selectedShapeId));
         setSelectedShapeId(null);
         setIsDirty(true);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedShapeId]);
 
   // Save Diagram to LocalStorage
   const handleSaveDiagram = () => {
-    const inputName = prompt('Nhập tên bản vẽ chiến thuật:', diagramName || 'Draft-001');
+    const inputName = prompt(
+      "Nhập tên bản vẽ chiến thuật:",
+      diagramName || "Draft-001",
+    );
     if (inputName === null) return; // User cancelled
 
-    const finalName = inputName.trim() || diagramName || 'Draft-001';
+    const finalName = inputName.trim() || diagramName || "Draft-001";
     const diagramId = currentDiagramId || Date.now().toString();
 
     const newDiagram: SavedTacticalDiagram = {
@@ -283,14 +315,20 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     if (!diagramId) return;
 
     if (isDirty && shapes.length > 0) {
-      if (!window.confirm('Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn chuyển sang bản vẽ khác?')) {
+      if (
+        !window.confirm(
+          "Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn chuyển sang bản vẽ khác?",
+        )
+      ) {
         return;
       }
     }
 
     const found = savedDiagrams.find((d) => d.id === diagramId);
     if (found) {
-      setShapes([...found.shapes.map((s) => ({ ...s, points: [...s.points] }))]);
+      setShapes([
+        ...found.shapes.map((s) => ({ ...s, points: [...s.points] })),
+      ]);
       setDiagramName(found.name);
       setCurrentDiagramId(found.id);
       setSelectedShapeId(null);
@@ -301,7 +339,11 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   // New Diagram
   const handleNewDiagram = () => {
     if (isDirty && shapes.length > 0) {
-      if (!window.confirm('Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn tạo bản vẽ mới?')) {
+      if (
+        !window.confirm(
+          "Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn tạo bản vẽ mới?",
+        )
+      ) {
         return;
       }
     }
@@ -317,7 +359,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   // Delete Current Saved Diagram
   const handleDeleteCurrentDiagram = () => {
     if (!currentDiagramId) {
-      if (window.confirm('Xóa sạch tất cả các nét vẽ trên màn hình?')) {
+      if (window.confirm("Xóa sạch tất cả các nét vẽ trên màn hình?")) {
         setShapes([]);
         setSelectedShapeId(null);
         setIsDirty(false);
@@ -325,7 +367,11 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       return;
     }
 
-    if (window.confirm(`Bạn có chắc chắn muốn xóa bản vẽ "${diagramName}" khỏi danh sách đã lưu?`)) {
+    if (
+      window.confirm(
+        `Bạn có chắc chắn muốn xóa bản vẽ "${diagramName}" khỏi danh sách đã lưu?`,
+      )
+    ) {
       storageService.deleteDiagram(currentDiagramId);
       const updated = storageService.getDiagrams();
       setSavedDiagrams(updated);
@@ -352,44 +398,176 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
         onDeleteDiagram: handleDeleteCurrentDiagram,
       });
     }
-  }, [onRegisterControls, diagramName, isDirty, currentDiagramId, savedDiagrams]);
+  }, [
+    onRegisterControls,
+    diagramName,
+    isDirty,
+    currentDiagramId,
+    savedDiagrams,
+  ]);
 
   // Sample tactical presets (Updated with full features: Player names, Shirt numbers, Ball, Passes)
-  const loadPresetRun = (presetType: 'side' | 'pivot' | 'defense') => {
+  const loadPresetRun = (presetType: "side" | "pivot" | "defense") => {
     let presetShapes: DrawShape[] = [];
 
-    if (presetType === 'side') {
+    if (presetType === "side") {
       // Chạy biên (Overlap) - Ala di chuyển xé cánh, chuyền bóng xẻ nách
       presetShapes = [
-        { id: '1', tool: 'player-home', points: [{ x: 30, y: 70 }], color: '#16a34a', text: 'Thái Tuấn', number: 4 },
-        { id: '2', tool: 'player-home', points: [{ x: 35, y: 35 }], color: '#16a34a', text: 'Hữu Thành', number: 6 },
-        { id: '3', tool: 'player-home', points: [{ x: 75, y: 35 }], color: '#16a34a', text: 'Cao Tấn', number: 9 },
-        { id: '4', tool: 'player-away', points: [{ x: 50, y: 35 }], color: '#dc2626', text: 'Địch' },
-        { id: '5', tool: 'player-away', points: [{ x: 70, y: 40 }], color: '#dc2626', text: 'Địch' },
-        { id: '6', tool: 'ball', points: [{ x: 30, y: 70 }], color: '#ffffff' },
-        { id: '7', tool: 'dashed-arrow', points: [{ x: 30, y: 70 }, { x: 75, y: 35 }], color: '#facc15' },
-        { id: '8', tool: 'arrow', points: [{ x: 30, y: 70 }, { x: 55, y: 80 }, { x: 80, y: 65 }], color: '#ffffff' },
+        {
+          id: "1",
+          tool: "player-home",
+          points: [{ x: 30, y: 70 }],
+          color: "#16a34a",
+          text: "Thái Tuấn",
+          number: 4,
+        },
+        {
+          id: "2",
+          tool: "player-home",
+          points: [{ x: 35, y: 35 }],
+          color: "#16a34a",
+          text: "Hữu Thành",
+          number: 6,
+        },
+        {
+          id: "3",
+          tool: "player-home",
+          points: [{ x: 75, y: 35 }],
+          color: "#16a34a",
+          text: "Cao Tấn",
+          number: 9,
+        },
+        {
+          id: "4",
+          tool: "player-away",
+          points: [{ x: 50, y: 35 }],
+          color: "#dc2626",
+          text: "Địch",
+        },
+        {
+          id: "5",
+          tool: "player-away",
+          points: [{ x: 70, y: 40 }],
+          color: "#dc2626",
+          text: "Địch",
+        },
+        { id: "6", tool: "ball", points: [{ x: 30, y: 70 }], color: "#ffffff" },
+        {
+          id: "7",
+          tool: "dashed-arrow",
+          points: [
+            { x: 30, y: 70 },
+            { x: 75, y: 35 },
+          ],
+          color: "#facc15",
+        },
+        {
+          id: "8",
+          tool: "arrow",
+          points: [
+            { x: 30, y: 70 },
+            { x: 55, y: 80 },
+            { x: 80, y: 65 },
+          ],
+          color: "#ffffff",
+        },
       ];
-    } else if (presetType === 'pivot') {
+    } else if (presetType === "pivot") {
       // Xoay Dọc Pivot - Fixo chuyền thẳng vào chân Pivot đè hậu vệ
       presetShapes = [
-        { id: '1', tool: 'player-home', points: [{ x: 25, y: 50 }], color: '#16a34a', text: 'Tấn Phong', number: 2 },
-        { id: '2', tool: 'player-home', points: [{ x: 75, y: 50 }], color: '#16a34a', text: 'Bình An', number: 10 },
-        { id: '3', tool: 'player-away', points: [{ x: 70, y: 50 }], color: '#dc2626', text: 'Địch' },
-        { id: '4', tool: 'ball', points: [{ x: 25, y: 50 }], color: '#ffffff' },
-        { id: '5', tool: 'dashed-arrow', points: [{ x: 25, y: 50 }, { x: 75, y: 50 }], color: '#facc15' },
-        { id: '6', tool: 'arrow', points: [{ x: 35, y: 30 }, { x: 65, y: 25 }], color: '#ffffff' },
-        { id: '7', tool: 'player-home', points: [{ x: 35, y: 30 }], color: '#16a34a', text: 'Hữu Thành', number: 6 },
+        {
+          id: "1",
+          tool: "player-home",
+          points: [{ x: 25, y: 50 }],
+          color: "#16a34a",
+          text: "Tấn Phong",
+          number: 2,
+        },
+        {
+          id: "2",
+          tool: "player-home",
+          points: [{ x: 75, y: 50 }],
+          color: "#16a34a",
+          text: "Bình An",
+          number: 10,
+        },
+        {
+          id: "3",
+          tool: "player-away",
+          points: [{ x: 70, y: 50 }],
+          color: "#dc2626",
+          text: "Địch",
+        },
+        { id: "4", tool: "ball", points: [{ x: 25, y: 50 }], color: "#ffffff" },
+        {
+          id: "5",
+          tool: "dashed-arrow",
+          points: [
+            { x: 25, y: 50 },
+            { x: 75, y: 50 },
+          ],
+          color: "#facc15",
+        },
+        {
+          id: "6",
+          tool: "arrow",
+          points: [
+            { x: 35, y: 30 },
+            { x: 65, y: 25 },
+          ],
+          color: "#ffffff",
+        },
+        {
+          id: "7",
+          tool: "player-home",
+          points: [{ x: 35, y: 30 }],
+          color: "#16a34a",
+          text: "Hữu Thành",
+          number: 6,
+        },
       ];
-    } else if (presetType === 'defense') {
+    } else if (presetType === "defense") {
       // Bọc Lót Phòng Thủ - Đóng trung lộ, di chuyển bọc lót chặn đột phá
       presetShapes = [
-        { id: '1', tool: 'player-away', points: [{ x: 65, y: 25 }], color: '#dc2626', text: 'Địch' },
-        { id: '2', tool: 'arrow', points: [{ x: 65, y: 25 }, { x: 40, y: 40 }], color: '#ef4444' },
-        { id: '3', tool: 'player-home', points: [{ x: 40, y: 40 }], color: '#16a34a', text: 'Thái Tuấn', number: 4 },
-        { id: '4', tool: 'player-home', points: [{ x: 25, y: 60 }], color: '#16a34a', text: 'Tấn Phong', number: 2 },
-        { id: '5', tool: 'cross-red', points: [{ x: 50, y: 45 }], color: '#ef4444' },
-        { id: '6', tool: 'ball', points: [{ x: 65, y: 25 }], color: '#ffffff' },
+        {
+          id: "1",
+          tool: "player-away",
+          points: [{ x: 65, y: 25 }],
+          color: "#dc2626",
+          text: "Địch",
+        },
+        {
+          id: "2",
+          tool: "arrow",
+          points: [
+            { x: 65, y: 25 },
+            { x: 40, y: 40 },
+          ],
+          color: "#ef4444",
+        },
+        {
+          id: "3",
+          tool: "player-home",
+          points: [{ x: 40, y: 40 }],
+          color: "#16a34a",
+          text: "Thái Tuấn",
+          number: 4,
+        },
+        {
+          id: "4",
+          tool: "player-home",
+          points: [{ x: 25, y: 60 }],
+          color: "#16a34a",
+          text: "Tấn Phong",
+          number: 2,
+        },
+        {
+          id: "5",
+          tool: "cross-red",
+          points: [{ x: 50, y: 45 }],
+          color: "#ef4444",
+        },
+        { id: "6", tool: "ball", points: [{ x: 65, y: 25 }], color: "#ffffff" },
       ];
     }
 
@@ -426,20 +604,30 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     let padYBottom = 2.6;
 
     if (shape.points.length === 1) {
-      if (shape.tool === 'text') {
+      if (shape.tool === "text") {
         const textLen = shape.text?.length || 4;
         padX = Math.max(2.2, textLen * 0.4);
         padYTop = 2.0;
         padYBottom = 2.0;
-      } else if (shape.tool === 'player-home' && shape.number !== undefined && shape.text && shape.text !== 'Ta') {
+      } else if (
+        shape.tool === "player-home" &&
+        shape.number !== undefined &&
+        shape.text &&
+        shape.text !== "Ta"
+      ) {
         padX = 3.2;
         padYTop = 2.8;
         padYBottom = 5.8; // Tight bottom padding enclosing player name badge
-      } else if (shape.tool === 'player-home' || shape.tool === 'player-away' || shape.tool === 'circle-blue' || shape.tool === 'circle-red') {
+      } else if (
+        shape.tool === "player-home" ||
+        shape.tool === "player-away" ||
+        shape.tool === "circle-blue" ||
+        shape.tool === "circle-red"
+      ) {
         padX = 2.0;
         padYTop = 2.6;
         padYBottom = 2.6;
-      } else if (shape.tool === 'ball' || shape.tool === 'cross-red') {
+      } else if (shape.tool === "ball" || shape.tool === "cross-red") {
         padX = 1.6;
         padYTop = 2.2;
         padYBottom = 2.2;
@@ -466,7 +654,10 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     };
   };
 
-  const handleDeleteSingleShape = (shapeId: string, e?: React.MouseEvent | React.TouchEvent) => {
+  const handleDeleteSingleShape = (
+    shapeId: string,
+    e?: React.MouseEvent | React.TouchEvent,
+  ) => {
     if (e) e.stopPropagation();
     setShapes((prev) => prev.filter((s) => s.id !== shapeId));
     if (selectedShapeId === shapeId) setSelectedShapeId(null);
@@ -478,15 +669,19 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       // Default "Ta"
       if (editingShapeId) {
         setShapes((prev) =>
-          prev.map((s) => (s.id === editingShapeId ? { ...s, text: 'Ta', number: undefined } : s))
+          prev.map((s) =>
+            s.id === editingShapeId
+              ? { ...s, text: "Ta", number: undefined }
+              : s,
+          ),
         );
       } else if (pendingPt) {
         const newShape: DrawShape = {
           id: Date.now().toString(),
-          tool: 'player-home',
+          tool: "player-home",
           points: [pendingPt],
-          color: '#16a34a',
-          text: 'Ta',
+          color: "#16a34a",
+          text: "Ta",
         };
         setShapes((prev) => [...prev, newShape]);
         setSelectedShapeId(newShape.id);
@@ -499,15 +694,15 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
           prev.map((s) =>
             s.id === editingShapeId
               ? { ...s, text: shortName, number: selectedPlayer.number }
-              : s
-          )
+              : s,
+          ),
         );
       } else if (pendingPt) {
         const newShape: DrawShape = {
           id: Date.now().toString(),
-          tool: 'player-home',
+          tool: "player-home",
           points: [pendingPt],
-          color: '#16a34a',
+          color: "#16a34a",
           text: shortName,
           number: selectedPlayer.number,
         };
@@ -530,10 +725,14 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     return [...unselected, ...selected];
   }, [shapes, selectedShapeId]);
 
-  const handleShapeStart = (shapeId: string, pt: { x: number; y: number }, e: React.MouseEvent | React.TouchEvent) => {
+  const handleShapeStart = (
+    shapeId: string,
+    pt: { x: number; y: number },
+    e: React.MouseEvent | React.TouchEvent,
+  ) => {
     e.stopPropagation();
 
-    if (activeTool === 'eraser') {
+    if (activeTool === "eraser") {
       handleDeleteSingleShape(shapeId);
       return;
     }
@@ -550,17 +749,17 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   const handleCanvasMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     const pt = getRelativeCoords(e.clientX, e.clientY);
 
-    if (activeTool === 'pointer') {
+    if (activeTool === "pointer") {
       setLaserPos(pt);
       return;
     }
 
-    if (activeTool === 'select' || activeTool === 'eraser') {
+    if (activeTool === "select" || activeTool === "eraser") {
       setSelectedShapeId(null);
       return;
     }
 
-    if (activeTool === 'player-home' || activeTool === 'circle-blue') {
+    if (activeTool === "player-home" || activeTool === "circle-blue") {
       // Open Player Selector Modal for Cầu Thủ Ta
       setPendingPt(pt);
       setEditingShapeId(null);
@@ -569,17 +768,20 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     }
 
     if (
-      activeTool === 'player-away' ||
-      activeTool === 'circle-red' ||
-      activeTool === 'cross-red' ||
-      activeTool === 'ball'
+      activeTool === "player-away" ||
+      activeTool === "circle-red" ||
+      activeTool === "cross-red" ||
+      activeTool === "ball"
     ) {
-      const toolType = activeTool === 'circle-red' ? 'player-away' : activeTool;
+      const toolType = activeTool === "circle-red" ? "player-away" : activeTool;
       const newShape: DrawShape = {
         id: Date.now().toString(),
         tool: toolType,
         points: [pt],
-        color: toolType === 'player-away' || toolType === 'cross-red' ? '#dc2626' : '#ffffff',
+        color:
+          toolType === "player-away" || toolType === "cross-red"
+            ? "#dc2626"
+            : "#ffffff",
       };
       setShapes((prev) => [...prev, newShape]);
       setSelectedShapeId(newShape.id);
@@ -587,14 +789,17 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       return;
     }
 
-    if (activeTool === 'text') {
-      const text = prompt('Nhập văn bản ghi chú chiến thuật:', textInput || 'Chạy biên');
+    if (activeTool === "text") {
+      const text = prompt(
+        "Nhập văn bản ghi chú chiến thuật:",
+        textInput || "Chạy biên",
+      );
       if (text) {
         const newShape: DrawShape = {
           id: Date.now().toString(),
-          tool: 'text',
+          tool: "text",
           points: [pt],
-          color: '#ffffff',
+          color: "#ffffff",
           text,
         };
         setShapes((prev) => [...prev, newShape]);
@@ -611,7 +816,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   const handleCanvasMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const pt = getRelativeCoords(e.clientX, e.clientY);
 
-    if (activeTool === 'pointer') {
+    if (activeTool === "pointer") {
       setLaserPos(pt);
       return;
     } else {
@@ -631,7 +836,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
             y: Number((p.y + dy).toFixed(2)),
           }));
           return { ...s, points: updatedPoints };
-        })
+        }),
       );
       setIsDirty(true);
       return;
@@ -656,7 +861,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
         id: Date.now().toString(),
         tool: activeTool,
         points: currentPoints,
-        color: activeTool === 'dashed-arrow' ? '#facc15' : '#ffffff',
+        color: activeTool === "dashed-arrow" ? "#facc15" : "#ffffff",
       };
       setShapes((prev) => [...prev, newShape]);
       setSelectedShapeId(newShape.id);
@@ -670,17 +875,17 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     const touch = e.touches[0];
     const pt = getRelativeCoords(touch.clientX, touch.clientY);
 
-    if (activeTool === 'pointer') {
+    if (activeTool === "pointer") {
       setLaserPos(pt);
       return;
     }
 
-    if (activeTool === 'select' || activeTool === 'eraser') {
+    if (activeTool === "select" || activeTool === "eraser") {
       setSelectedShapeId(null);
       return;
     }
 
-    if (activeTool === 'player-home' || activeTool === 'circle-blue') {
+    if (activeTool === "player-home" || activeTool === "circle-blue") {
       setPendingPt(pt);
       setEditingShapeId(null);
       setShowPlayerModal(true);
@@ -688,17 +893,20 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     }
 
     if (
-      activeTool === 'player-away' ||
-      activeTool === 'circle-red' ||
-      activeTool === 'cross-red' ||
-      activeTool === 'ball'
+      activeTool === "player-away" ||
+      activeTool === "circle-red" ||
+      activeTool === "cross-red" ||
+      activeTool === "ball"
     ) {
-      const toolType = activeTool === 'circle-red' ? 'player-away' : activeTool;
+      const toolType = activeTool === "circle-red" ? "player-away" : activeTool;
       const newShape: DrawShape = {
         id: Date.now().toString(),
         tool: toolType,
         points: [pt],
-        color: toolType === 'player-away' || toolType === 'cross-red' ? '#dc2626' : '#ffffff',
+        color:
+          toolType === "player-away" || toolType === "cross-red"
+            ? "#dc2626"
+            : "#ffffff",
       };
       setShapes((prev) => [...prev, newShape]);
       setSelectedShapeId(newShape.id);
@@ -706,14 +914,17 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       return;
     }
 
-    if (activeTool === 'text') {
-      const text = prompt('Nhập văn bản ghi chú chiến thuật:', textInput || 'Chạy biên');
+    if (activeTool === "text") {
+      const text = prompt(
+        "Nhập văn bản ghi chú chiến thuật:",
+        textInput || "Chạy biên",
+      );
       if (text) {
         const newShape: DrawShape = {
           id: Date.now().toString(),
-          tool: 'text',
+          tool: "text",
           points: [pt],
-          color: '#ffffff',
+          color: "#ffffff",
           text,
         };
         setShapes((prev) => [...prev, newShape]);
@@ -732,7 +943,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     const touch = e.touches[0];
     const pt = getRelativeCoords(touch.clientX, touch.clientY);
 
-    if (activeTool === 'pointer') {
+    if (activeTool === "pointer") {
       setLaserPos(pt);
       return;
     } else {
@@ -751,7 +962,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
             y: Number((p.y + dy).toFixed(2)),
           }));
           return { ...s, points: updatedPoints };
-        })
+        }),
       );
       setIsDirty(true);
       return;
@@ -780,14 +991,16 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
     <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 py-4">
       {/* Pitch Container with Embedded Floating Overlay Toolbar & Fullscreen Support */}
       <div
-        className={`futsal-pitch-container w-full relative ${isFullscreen ? 'is-fullscreen' : ''}`}
+        className={`futsal-pitch-container w-full relative ${isFullscreen ? "is-fullscreen" : ""}`}
         ref={containerRef}
       >
         {/* Floating Overlay Toolbar - Anchored Top Right, Draggable with GripVertical (:::), Design Token rounded-lg */}
         <div
           ref={toolbarRef}
           className="absolute top-2 right-2 sm:top-3 sm:right-3 z-30 flex items-start justify-end pointer-events-none gap-2 max-w-[calc(100%-1rem)]"
-          style={{ transform: `translate3d(${toolbarPos.x}px, ${toolbarPos.y}px, 0)` }}
+          style={{
+            transform: `translate3d(${toolbarPos.x}px, ${toolbarPos.y}px, 0)`,
+          }}
         >
           {/* EXPANDED OVERLAY TOOLBAR */}
           {isToolbarExpanded ? (
@@ -803,102 +1016,118 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
 
               {/* Select & Drag */}
               <button
-                onClick={() => setActiveTool('select')}
+                onClick={() => setActiveTool("select")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'select'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "select"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Chọn & Kéo thả di chuyển đối tượng"
               >
-                <Move className={`w-4 h-4 ${activeTool === 'select' ? 'text-white' : 'text-slate-600'}`} />
+                <Move
+                  className={`w-4 h-4 ${activeTool === "select" ? "text-white" : "text-slate-600"}`}
+                />
               </button>
 
               {/* Pointer Laser Tool */}
               <button
-                onClick={() => setActiveTool('pointer')}
+                onClick={() => setActiveTool("pointer")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'pointer'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "pointer"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Laser Con Trỏ Thuyết Trình"
               >
-                <Pointer className={`w-4 h-4 ${activeTool === 'pointer' ? 'text-white' : 'text-amber-500'}`} />
+                <Pointer
+                  className={`w-4 h-4 ${activeTool === "pointer" ? "text-white" : "text-amber-500"}`}
+                />
               </button>
 
               {/* Movement Arrow */}
               <button
-                onClick={() => setActiveTool('arrow')}
+                onClick={() => setActiveTool("arrow")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'arrow'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "arrow"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Mũi tên di chuyển"
               >
-                <ArrowRight className={`w-4 h-4 ${activeTool === 'arrow' ? 'text-white' : 'text-blue-500'}`} />
+                <ArrowRight
+                  className={`w-4 h-4 ${activeTool === "arrow" ? "text-white" : "text-blue-500"}`}
+                />
               </button>
 
               {/* Pass Arrow */}
               <button
-                onClick={() => setActiveTool('dashed-arrow')}
+                onClick={() => setActiveTool("dashed-arrow")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'dashed-arrow'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "dashed-arrow"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Mũi tên đường chuyền bóng (nét đứt)"
               >
-                <span className={`font-mono text-xs font-black ${activeTool === 'dashed-arrow' ? 'text-white' : 'text-blue-600'}`}>--➔</span>
+                <span
+                  className={`font-mono text-xs font-black ${activeTool === "dashed-arrow" ? "text-white" : "text-blue-600"}`}
+                >
+                  --➔
+                </span>
               </button>
 
               {/* Cầu Thủ Ta */}
               <button
-                onClick={() => setActiveTool('player-home')}
+                onClick={() => setActiveTool("player-home")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'player-home'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "player-home"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Đặt vị trí Cầu Thủ Ta"
               >
-                <UserCheck className={`w-4 h-4 ${activeTool === 'player-home' ? 'text-white' : 'text-sky-600'}`} />
+                <UserCheck
+                  className={`w-4 h-4 ${activeTool === "player-home" ? "text-white" : "text-sky-600"}`}
+                />
               </button>
 
               {/* Cầu Thủ Địch */}
               <button
-                onClick={() => setActiveTool('player-away')}
+                onClick={() => setActiveTool("player-away")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'player-away'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "player-away"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Đặt vị trí Cầu Thủ Địch"
               >
-                <UserX className={`w-4 h-4 ${activeTool === 'player-away' ? 'text-white' : 'text-red-500'}`} />
+                <UserX
+                  className={`w-4 h-4 ${activeTool === "player-away" ? "text-white" : "text-red-500"}`}
+                />
               </button>
 
               {/* Dấu X Đỏ */}
               <button
-                onClick={() => setActiveTool('cross-red')}
+                onClick={() => setActiveTool("cross-red")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'cross-red'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "cross-red"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Dấu gạch chéo đỏ"
               >
-                <XCircle className={`w-4 h-4 ${activeTool === 'cross-red' ? 'text-white' : 'text-red-500'}`} />
+                <XCircle
+                  className={`w-4 h-4 ${activeTool === "cross-red" ? "text-white" : "text-red-500"}`}
+                />
               </button>
 
               {/* Bóng Futsal */}
               <button
-                onClick={() => setActiveTool('ball')}
+                onClick={() => setActiveTool("ball")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'ball'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "ball"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Đặt Bóng Futsal"
               >
@@ -907,28 +1136,32 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
 
               {/* Text Note */}
               <button
-                onClick={() => setActiveTool('text')}
+                onClick={() => setActiveTool("text")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'text'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "text"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Thêm ghi chú văn bản"
               >
-                <Type className={`w-4 h-4 ${activeTool === 'text' ? 'text-white' : 'text-slate-600'}`} />
+                <Type
+                  className={`w-4 h-4 ${activeTool === "text" ? "text-white" : "text-slate-600"}`}
+                />
               </button>
 
               {/* Eraser */}
               <button
-                onClick={() => setActiveTool('eraser')}
+                onClick={() => setActiveTool("eraser")}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer border shrink-0 ${
-                  activeTool === 'eraser'
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  activeTool === "eraser"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Cục Tẩy"
               >
-                <Eraser className={`w-4 h-4 ${activeTool === 'eraser' ? 'text-white' : 'text-amber-600'}`} />
+                <Eraser
+                  className={`w-4 h-4 ${activeTool === "eraser" ? "text-white" : "text-amber-600"}`}
+                />
               </button>
 
               {/* Separator */}
@@ -938,15 +1171,19 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
               <select
                 onChange={(e) => {
                   if (e.target.value) {
-                    loadPresetRun(e.target.value as 'side' | 'pivot' | 'defense');
-                    e.target.value = '';
+                    loadPresetRun(
+                      e.target.value as "side" | "pivot" | "defense",
+                    );
+                    e.target.value = "";
                   }
                 }}
                 defaultValue=""
                 className="h-9 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs px-2.5 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer transition-colors shadow-2xs shrink-0"
                 title="Nạp mẫu bài đánh chiến thuật"
               >
-                <option value="" disabled>-- Mẫu bài --</option>
+                <option value="" disabled>
+                  -- Mẫu bài --
+                </option>
                 <option value="side">🏃 Chạy biên</option>
                 <option value="pivot">🛡️ Đè Pivot</option>
                 <option value="defense">🔄 Bọc lót</option>
@@ -957,8 +1194,8 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
                 onClick={() => setShowLayerPanel(!showLayerPanel)}
                 className={`h-9 flex items-center space-x-1 px-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer border shrink-0 ${
                   showLayerPanel
-                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-2xs'
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
                 title="Quản Lý Lớp Đối Tượng"
               >
@@ -991,10 +1228,22 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
               <button
                 onClick={toggleFullscreen}
                 className="h-9 flex items-center space-x-1.5 px-3 rounded-lg text-xs font-extrabold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 transition-all cursor-pointer shadow-2xs shrink-0"
-                title={isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình (ESC)' : 'Toàn Màn Hình'}
+                title={
+                  isFullscreen
+                    ? "Thoát Chế Độ Toàn Màn Hình (ESC)"
+                    : "Toàn Màn Hình"
+                }
               >
-                {isFullscreen ? <Minimize className="w-3.5 h-3.5 text-slate-600" /> : <Maximize className="w-3.5 h-3.5 text-slate-600" />}
-                <span>{isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình' : 'Toàn Màn Hình'}</span>
+                {isFullscreen ? (
+                  <Minimize className="w-3.5 h-3.5 text-slate-600" />
+                ) : (
+                  <Maximize className="w-3.5 h-3.5 text-slate-600" />
+                )}
+                <span>
+                  {isFullscreen
+                    ? "Thoát Chế Độ Toàn Màn Hình"
+                    : "Toàn Màn Hình"}
+                </span>
               </button>
 
               {/* Collapse Button */}
@@ -1022,10 +1271,20 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
               <button
                 onClick={toggleFullscreen}
                 className="h-9 flex items-center space-x-1.5 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-lg text-xs font-extrabold transition-all cursor-pointer shadow-2xs shrink-0"
-                title={isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình' : 'Toàn Màn Hình'}
+                title={
+                  isFullscreen ? "Thoát Chế Độ Toàn Màn Hình" : "Toàn Màn Hình"
+                }
               >
-                {isFullscreen ? <Minimize className="w-3.5 h-3.5 text-slate-600" /> : <Maximize className="w-3.5 h-3.5 text-slate-600" />}
-                <span>{isFullscreen ? 'Thoát Chế Độ Toàn Màn Hình' : 'Toàn Màn Hình'}</span>
+                {isFullscreen ? (
+                  <Minimize className="w-3.5 h-3.5 text-slate-600" />
+                ) : (
+                  <Maximize className="w-3.5 h-3.5 text-slate-600" />
+                )}
+                <span>
+                  {isFullscreen
+                    ? "Thoát Chế Độ Toàn Màn Hình"
+                    : "Toàn Màn Hình"}
+                </span>
               </button>
 
               {/* Expand Toolbar Button */}
@@ -1042,139 +1301,169 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
         </div>
 
         <div className="futsal-pitch-floor relative overflow-hidden min-h-[480px]">
-            {/* Standard pitch markings */}
-            <div className="pitch-line pitch-center-line"></div>
-            <div className="pitch-line pitch-center-circle"></div>
-            <div className="pitch-line pitch-center-spot"></div>
-            <div className="pitch-line pitch-penalty-left"></div>
-            <div className="pitch-line pitch-penalty-right"></div>
-            <div className="pitch-line pitch-penalty-spot-left"></div>
-            <div className="pitch-line pitch-penalty-spot-right"></div>
-            <div className="pitch-line pitch-corner-tl"></div>
-            <div className="pitch-line pitch-corner-tr"></div>
-            <div className="pitch-line pitch-corner-bl"></div>
-            <div className="pitch-line pitch-corner-br"></div>
-            <div className="pitch-goal-left"></div>
-            <div className="pitch-goal-right"></div>
+          {/* Standard pitch markings */}
+          <div className="pitch-line pitch-center-line"></div>
+          <div className="pitch-line pitch-center-circle"></div>
+          <div className="pitch-line pitch-center-spot"></div>
+          <div className="pitch-line pitch-penalty-left"></div>
+          <div className="pitch-line pitch-penalty-right"></div>
+          <div className="pitch-line pitch-penalty-spot-left"></div>
+          <div className="pitch-line pitch-penalty-spot-right"></div>
+          <div className="pitch-line pitch-corner-tl"></div>
+          <div className="pitch-line pitch-corner-tr"></div>
+          <div className="pitch-line pitch-corner-bl"></div>
+          <div className="pitch-line pitch-corner-br"></div>
+          <div className="pitch-goal-left"></div>
+          <div className="pitch-goal-right"></div>
 
-            {/* SVG Drawing Canvas Overlay */}
-            <svg
-              className={`absolute inset-0 w-full h-full z-20 touch-none-canvas ${
-                activeTool === 'select'
-                  ? 'cursor-default'
-                  : activeTool === 'eraser'
-                  ? 'cursor-pointer'
-                  : 'cursor-crosshair'
-              }`}
-              onMouseDown={handleCanvasMouseDown}
-              onMouseMove={handleCanvasMouseMove}
-              onMouseUp={handleCanvasMouseUp}
-              onTouchStart={handleCanvasTouchStart}
-              onTouchMove={handleCanvasTouchMove}
-              onTouchEnd={handleCanvasTouchEnd}
-            >
-              <defs>
-                <marker
-                  id="arrowhead-white"
-                  markerWidth="8"
-                  markerHeight="8"
-                  refX="6"
-                  refY="4"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 8 4, 0 8" fill="#ffffff" />
-                </marker>
-                <marker
-                  id="arrowhead-yellow"
-                  markerWidth="8"
-                  markerHeight="8"
-                  refX="6"
-                  refY="4"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 8 4, 0 8" fill="#facc15" />
-                </marker>
-                <filter id="laser-neon-glow" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur stdDeviation="6" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
+          {/* SVG Drawing Canvas Overlay */}
+          <svg
+            className={`absolute inset-0 w-full h-full z-20 touch-none-canvas ${
+              activeTool === "select"
+                ? "cursor-default"
+                : activeTool === "eraser"
+                  ? "cursor-pointer"
+                  : "cursor-crosshair"
+            }`}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            onTouchStart={handleCanvasTouchStart}
+            onTouchMove={handleCanvasTouchMove}
+            onTouchEnd={handleCanvasTouchEnd}
+          >
+            <defs>
+              <marker
+                id="arrowhead-white"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <polygon points="0 0, 8 4, 0 8" fill="#ffffff" />
+              </marker>
+              <marker
+                id="arrowhead-yellow"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <polygon points="0 0, 8 4, 0 8" fill="#facc15" />
+              </marker>
+              <filter
+                id="laser-neon-glow"
+                x="-100%"
+                y="-100%"
+                width="300%"
+                height="300%"
+              >
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-              {/* Render Saved Shapes (sortedShapes ensures selected shape is rendered at the top Z-index layer) */}
-              {sortedShapes.map((shape: DrawShape) => {
-                const isSelected = selectedShapeId === shape.id;
-                const anchorPt = shape.points[0] || { x: 50, y: 50 };
-                const shapeBounds = getShapeBounds(shape);
-                const bounds = isSelected ? shapeBounds : null;
+            {/* Render Saved Shapes (sortedShapes ensures selected shape is rendered at the top Z-index layer) */}
+            {sortedShapes.map((shape: DrawShape) => {
+              const isSelected = selectedShapeId === shape.id;
+              const anchorPt = shape.points[0] || { x: 50, y: 50 };
+              const shapeBounds = getShapeBounds(shape);
+              const bounds = isSelected ? shapeBounds : null;
 
-                return (
-                  <g
-                    key={shape.id}
-                    className={`group ${
-                      activeTool === 'select' || activeTool === 'eraser' ? 'cursor-grab active:cursor-grabbing' : ''
-                    }`}
-                    onMouseDown={(e) => {
-                      const pt = getRelativeCoords(e.clientX, e.clientY);
+              return (
+                <g
+                  key={shape.id}
+                  className={`group ${
+                    activeTool === "select" || activeTool === "eraser"
+                      ? "cursor-grab active:cursor-grabbing"
+                      : ""
+                  }`}
+                  onMouseDown={(e) => {
+                    const pt = getRelativeCoords(e.clientX, e.clientY);
+                    handleShapeStart(shape.id, pt, e);
+                  }}
+                  onTouchStart={(e) => {
+                    if (e.touches.length > 0) {
+                      const pt = getRelativeCoords(
+                        e.touches[0].clientX,
+                        e.touches[0].clientY,
+                      );
                       handleShapeStart(shape.id, pt, e);
-                    }}
-                    onTouchStart={(e) => {
-                      if (e.touches.length > 0) {
-                        const pt = getRelativeCoords(e.touches[0].clientX, e.touches[0].clientY);
-                        handleShapeStart(shape.id, pt, e);
-                      }
-                    }}
-                    onDoubleClick={() => {
-                      if (shape.tool === 'player-home') {
-                        setEditingShapeId(shape.id);
-                        setShowPlayerModal(true);
-                      }
-                    }}
-                  >
-                    {/* Transparent Hit Target Box (Only for Single-Point Shapes to prevent multi-point arrows from stealing pitch clicks) */}
-                    {shape.points.length === 1 && (
-                      <rect
-                        x={`${shapeBounds.x}%`}
-                        y={`${shapeBounds.y}%`}
-                        width={`${shapeBounds.width}%`}
-                        height={`${shapeBounds.height}%`}
-                        fill="rgba(0,0,0,0.001)"
-                        className="cursor-pointer"
-                      />
-                    )}
+                    }
+                  }}
+                  onDoubleClick={() => {
+                    if (shape.tool === "player-home") {
+                      setEditingShapeId(shape.id);
+                      setShowPlayerModal(true);
+                    }
+                  }}
+                >
+                  {/* Transparent Hit Target Box (Only for Single-Point Shapes to prevent multi-point arrows from stealing pitch clicks) */}
+                  {shape.points.length === 1 && (
+                    <rect
+                      x={`${shapeBounds.x}%`}
+                      y={`${shapeBounds.y}%`}
+                      width={`${shapeBounds.width}%`}
+                      height={`${shapeBounds.height}%`}
+                      fill="rgba(0,0,0,0.001)"
+                      className="cursor-pointer"
+                    />
+                  )}
 
-                    {/* Atomic Local SVG Frame for Single-Point Shapes (Ensures 100% rigid lockstep drag with zero offset/drift) */}
-                    {shape.points.length === 1 && (
-                      <svg x={`${anchorPt.x}%`} y={`${anchorPt.y}%`} overflow="visible" className="pointer-events-none">
-                        {(shape.tool === 'player-home' || shape.tool === 'circle-blue') && (
-                          <g style={isSelected ? { filter: 'drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))' } : undefined}>
-                            {/* Outer Green Circle */}
-                            <circle
-                              cx="0"
-                              cy="0"
-                              r="18"
-                              fill="#16a34a"
-                              stroke={isSelected ? '#facc15' : '#ffffff'}
-                              strokeWidth={isSelected ? '4' : '3'}
-                              className="drop-shadow-md transition-all"
-                            />
-                            {/* Shirt Number `#` inside Circle */}
-                            <text
-                              x="0"
-                              y="0"
-                              fill="#ffffff"
-                              fontSize={shape.number !== undefined ? '13' : '12'}
-                              fontWeight="900"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                            >
-                              {shape.number !== undefined ? `#${shape.number}` : shape.text || 'Ta'}
-                            </text>
+                  {/* Atomic Local SVG Frame for Single-Point Shapes (Ensures 100% rigid lockstep drag with zero offset/drift) */}
+                  {shape.points.length === 1 && (
+                    <svg
+                      x={`${anchorPt.x}%`}
+                      y={`${anchorPt.y}%`}
+                      overflow="visible"
+                      className="pointer-events-none"
+                    >
+                      {(shape.tool === "player-home" ||
+                        shape.tool === "circle-blue") && (
+                        <g
+                          style={
+                            isSelected
+                              ? {
+                                  filter:
+                                    "drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))",
+                                }
+                              : undefined
+                          }
+                        >
+                          {/* Outer Green Circle */}
+                          <circle
+                            cx="0"
+                            cy="0"
+                            r="18"
+                            fill="#16a34a"
+                            stroke={isSelected ? "#facc15" : "#ffffff"}
+                            strokeWidth={isSelected ? "4" : "3"}
+                            className="drop-shadow-md transition-all"
+                          />
+                          {/* Shirt Number `#` inside Circle */}
+                          <text
+                            x="0"
+                            y="0"
+                            fill="#ffffff"
+                            fontSize={shape.number !== undefined ? "13" : "12"}
+                            fontWeight="900"
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                          >
+                            {shape.number !== undefined
+                              ? `#${shape.number}`
+                              : shape.text || "Ta"}
+                          </text>
 
-                            {/* Player Short Name Badge Below Circle */}
-                            {shape.number !== undefined && shape.text && shape.text !== 'Ta' && (
+                          {/* Player Short Name Badge Below Circle */}
+                          {shape.number !== undefined &&
+                            shape.text &&
+                            shape.text !== "Ta" && (
                               <g>
                                 <rect
                                   x="-36"
@@ -1201,494 +1490,595 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
                                 </text>
                               </g>
                             )}
-                          </g>
-                        )}
+                        </g>
+                      )}
 
-                        {(shape.tool === 'player-away' || shape.tool === 'circle-red') && (
-                          <g style={isSelected ? { filter: 'drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))' } : undefined}>
-                            <circle
-                              cx="0"
-                              cy="0"
-                              r="18"
-                              fill="#dc2626"
-                              stroke={isSelected ? '#facc15' : '#ffffff'}
-                              strokeWidth={isSelected ? '4' : '3'}
-                              className="drop-shadow-md transition-all"
-                            />
-                            <text
-                              x="0"
-                              y="0"
-                              fill="#ffffff"
-                              fontSize="11"
-                              fontWeight="900"
-                              textAnchor="middle"
-                              dominantBaseline="central"
-                            >
-                              {shape.text || 'Địch'}
-                            </text>
-                          </g>
-                        )}
-
-                        {shape.tool === 'cross-red' && (
-                          <g stroke={isSelected ? '#facc15' : '#ef4444'} strokeWidth="4" strokeLinecap="round" style={isSelected ? { filter: 'drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))' } : undefined}>
-                            <line x1="-12" y1="-12" x2="12" y2="12" />
-                            <line x1="12" y1="-12" x2="-12" y2="12" />
-                          </g>
-                        )}
-
-                        {shape.tool === 'ball' && (
-                          <text
-                            x="0"
-                            y="0"
-                            fontSize="28"
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            style={isSelected ? { filter: 'drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))' } : undefined}
-                          >
-                            ⚽
-                          </text>
-                        )}
-
-                        {shape.tool === 'text' && (
+                      {(shape.tool === "player-away" ||
+                        shape.tool === "circle-red") && (
+                        <g
+                          style={
+                            isSelected
+                              ? {
+                                  filter:
+                                    "drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))",
+                                }
+                              : undefined
+                          }
+                        >
+                          <circle
+                            cx="0"
+                            cy="0"
+                            r="18"
+                            fill="#dc2626"
+                            stroke={isSelected ? "#facc15" : "#ffffff"}
+                            strokeWidth={isSelected ? "4" : "3"}
+                            className="drop-shadow-md transition-all"
+                          />
                           <text
                             x="0"
                             y="0"
                             fill="#ffffff"
-                            fontSize="14"
-                            fontWeight="bold"
+                            fontSize="11"
+                            fontWeight="900"
                             textAnchor="middle"
-                            className="drop-shadow-md"
-                            style={isSelected ? { filter: 'drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))' } : undefined}
+                            dominantBaseline="central"
                           >
-                            {shape.text}
+                            {shape.text || "Địch"}
                           </text>
-                        )}
-                      </svg>
-                    )}
+                        </g>
+                      )}
 
-                    {shape.points.length > 1 && (
-                      <g style={isSelected ? { filter: 'drop-shadow(0 0 8px rgba(250, 204, 21, 0.9))' } : undefined}>
-                        <line
-                          x1={`${shape.points[0].x}%`}
-                          y1={`${shape.points[0].y}%`}
-                          x2={`${shape.points[shape.points.length - 1].x}%`}
-                          y2={`${shape.points[shape.points.length - 1].y}%`}
-                          stroke={isSelected ? '#facc15' : shape.color}
-                          strokeWidth={isSelected ? '5' : '3.5'}
-                          strokeDasharray={shape.tool === 'dashed-arrow' ? '6,6' : undefined}
-                          markerEnd={shape.tool === 'dashed-arrow' ? 'url(#arrowhead-yellow)' : 'url(#arrowhead-white)'}
-                          className="transition-all"
-                        />
-                        {/* Expanded invisible thick line for comfortable touch/click target (28px) */}
-                        <line
-                          x1={`${shape.points[0].x}%`}
-                          y1={`${shape.points[0].y}%`}
-                          x2={`${shape.points[shape.points.length - 1].x}%`}
-                          y2={`${shape.points[shape.points.length - 1].y}%`}
-                          stroke="transparent"
-                          strokeWidth="28"
-                          className="cursor-pointer"
-                        />
-                      </g>
-                    )}
+                      {shape.tool === "cross-red" && (
+                        <g
+                          stroke={isSelected ? "#facc15" : "#ef4444"}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          style={
+                            isSelected
+                              ? {
+                                  filter:
+                                    "drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))",
+                                }
+                              : undefined
+                          }
+                        >
+                          <line x1="-12" y1="-12" x2="12" y2="12" />
+                          <line x1="12" y1="-12" x2="-12" y2="12" />
+                        </g>
+                      )}
 
-                    {/* Selection Indicator & Delete Button (Shown when Selected) */}
-                    {isSelected && (
-                      <g key={`selection-frame-${shape.id}`}>
-                        {shape.points.length === 1 && bounds && (
-                          <>
-                            {/* Single-point shapes: Translucent Box with Dashed Border around Node */}
-                            <rect
-                              x={`${bounds.x}%`}
-                              y={`${bounds.y}%`}
-                              width={`${bounds.width}%`}
-                              height={`${bounds.height}%`}
-                              fill="rgba(250, 204, 21, 0.16)"
-                              stroke="#facc15"
+                      {shape.tool === "ball" && (
+                        <text
+                          x="0"
+                          y="0"
+                          fontSize="28"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          style={
+                            isSelected
+                              ? {
+                                  filter:
+                                    "drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))",
+                                }
+                              : undefined
+                          }
+                        >
+                          ⚽
+                        </text>
+                      )}
+
+                      {shape.tool === "text" && (
+                        <text
+                          x="0"
+                          y="0"
+                          fill="#ffffff"
+                          fontSize="14"
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          className="drop-shadow-md"
+                          style={
+                            isSelected
+                              ? {
+                                  filter:
+                                    "drop-shadow(0 0 10px rgba(250, 204, 21, 0.95))",
+                                }
+                              : undefined
+                          }
+                        >
+                          {shape.text}
+                        </text>
+                      )}
+                    </svg>
+                  )}
+
+                  {shape.points.length > 1 && (
+                    <g
+                      style={
+                        isSelected
+                          ? {
+                              filter:
+                                "drop-shadow(0 0 8px rgba(250, 204, 21, 0.9))",
+                            }
+                          : undefined
+                      }
+                    >
+                      <line
+                        x1={`${shape.points[0].x}%`}
+                        y1={`${shape.points[0].y}%`}
+                        x2={`${shape.points[shape.points.length - 1].x}%`}
+                        y2={`${shape.points[shape.points.length - 1].y}%`}
+                        stroke={isSelected ? "#facc15" : shape.color}
+                        strokeWidth={isSelected ? "5" : "3.5"}
+                        strokeDasharray={
+                          shape.tool === "dashed-arrow" ? "6,6" : undefined
+                        }
+                        markerEnd={
+                          shape.tool === "dashed-arrow"
+                            ? "url(#arrowhead-yellow)"
+                            : "url(#arrowhead-white)"
+                        }
+                        className="transition-all"
+                      />
+                      {/* Expanded invisible thick line for comfortable touch/click target (28px) */}
+                      <line
+                        x1={`${shape.points[0].x}%`}
+                        y1={`${shape.points[0].y}%`}
+                        x2={`${shape.points[shape.points.length - 1].x}%`}
+                        y2={`${shape.points[shape.points.length - 1].y}%`}
+                        stroke="transparent"
+                        strokeWidth="28"
+                        className="cursor-pointer"
+                      />
+                    </g>
+                  )}
+
+                  {/* Selection Indicator & Delete Button (Shown when Selected) */}
+                  {isSelected && (
+                    <g key={`selection-frame-${shape.id}`}>
+                      {shape.points.length === 1 && bounds && (
+                        <>
+                          {/* Single-point shapes: Translucent Box with Dashed Border around Node */}
+                          <rect
+                            x={`${bounds.x}%`}
+                            y={`${bounds.y}%`}
+                            width={`${bounds.width}%`}
+                            height={`${bounds.height}%`}
+                            fill="rgba(250, 204, 21, 0.16)"
+                            stroke="#facc15"
+                            strokeWidth="2"
+                            strokeDasharray="4,4"
+                            rx="8"
+                            className="pointer-events-none transition-all"
+                          />
+                          {/* Fixed Delete Button at Top-Right Corner of Node Box */}
+                          <g
+                            onClick={(e) =>
+                              handleDeleteSingleShape(shape.id, e)
+                            }
+                            onTouchStart={(e) =>
+                              handleDeleteSingleShape(shape.id, e)
+                            }
+                            className="cursor-pointer group/btn"
+                            style={{ pointerEvents: "all" }}
+                          >
+                            <circle
+                              cx={`${bounds.maxX}%`}
+                              cy={`${bounds.minY}%`}
+                              r="11"
+                              fill="#ef4444"
+                              stroke="#ffffff"
                               strokeWidth="2"
-                              strokeDasharray="4,4"
-                              rx="8"
-                              className="pointer-events-none transition-all"
+                              className="shadow-md transition-colors group-hover/btn:fill-red-600"
                             />
-                            {/* Fixed Delete Button at Top-Right Corner of Node Box */}
                             <g
-                              onClick={(e) => handleDeleteSingleShape(shape.id, e)}
-                              onTouchStart={(e) => handleDeleteSingleShape(shape.id, e)}
-                              className="cursor-pointer group/btn"
-                              style={{ pointerEvents: 'all' }}
+                              stroke="#ffffff"
+                              strokeWidth="2.2"
+                              strokeLinecap="round"
+                            >
+                              <line
+                                x1={`${bounds.maxX - 0.6}%`}
+                                y1={`${bounds.minY - 1.0}%`}
+                                x2={`${bounds.maxX + 0.6}%`}
+                                y2={`${bounds.minY + 1.0}%`}
+                              />
+                              <line
+                                x1={`${bounds.maxX + 0.6}%`}
+                                y1={`${bounds.minY - 1.0}%`}
+                                x2={`${bounds.maxX - 0.6}%`}
+                                y2={`${bounds.minY + 1.0}%`}
+                              />
+                            </g>
+                          </g>
+                        </>
+                      )}
+
+                      {shape.points.length > 1 && (
+                        <>
+                          {/* Multi-point Lines/Arrows: Compact Glowing Line Highlight along Arrow Path */}
+                          <line
+                            x1={`${shape.points[0].x}%`}
+                            y1={`${shape.points[0].y}%`}
+                            x2={`${shape.points[shape.points.length - 1].x}%`}
+                            y2={`${shape.points[shape.points.length - 1].y}%`}
+                            stroke="#facc15"
+                            strokeWidth="9"
+                            opacity="0.35"
+                            strokeLinecap="round"
+                            className="pointer-events-none"
+                          />
+                          {/* Start Handle Dot */}
+                          <circle
+                            cx={`${shape.points[0].x}%`}
+                            cy={`${shape.points[0].y}%`}
+                            r="5"
+                            fill="#facc15"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                            className="shadow-sm pointer-events-none"
+                          />
+                          {/* End Handle Dot */}
+                          <circle
+                            cx={`${shape.points[shape.points.length - 1].x}%`}
+                            cy={`${shape.points[shape.points.length - 1].y}%`}
+                            r="5"
+                            fill="#facc15"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                            className="shadow-sm pointer-events-none"
+                          />
+                          {/* Compact Delete Button at Arrow Head (End Point) */}
+                          <g
+                            onClick={(e) =>
+                              handleDeleteSingleShape(shape.id, e)
+                            }
+                            onTouchStart={(e) =>
+                              handleDeleteSingleShape(shape.id, e)
+                            }
+                            className="cursor-pointer group/btn"
+                            style={{ pointerEvents: "all" }}
+                          >
+                            <svg
+                              x={`${shape.points[shape.points.length - 1].x}%`}
+                              y={`${shape.points[shape.points.length - 1].y}%`}
+                              overflow="visible"
                             >
                               <circle
-                                cx={`${bounds.maxX}%`}
-                                cy={`${bounds.minY}%`}
+                                cx="14"
+                                cy="-14"
                                 r="11"
                                 fill="#ef4444"
                                 stroke="#ffffff"
                                 strokeWidth="2"
                                 className="shadow-md transition-colors group-hover/btn:fill-red-600"
                               />
-                              <g stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round">
-                                <line x1={`${bounds.maxX - 0.6}%`} y1={`${bounds.minY - 1.0}%`} x2={`${bounds.maxX + 0.6}%`} y2={`${bounds.minY + 1.0}%`} />
-                                <line x1={`${bounds.maxX + 0.6}%`} y1={`${bounds.minY - 1.0}%`} x2={`${bounds.maxX - 0.6}%`} y2={`${bounds.minY + 1.0}%`} />
-                              </g>
-                            </g>
-                          </>
-                        )}
-
-                        {shape.points.length > 1 && (
-                          <>
-                            {/* Multi-point Lines/Arrows: Compact Glowing Line Highlight along Arrow Path */}
-                            <line
-                              x1={`${shape.points[0].x}%`}
-                              y1={`${shape.points[0].y}%`}
-                              x2={`${shape.points[shape.points.length - 1].x}%`}
-                              y2={`${shape.points[shape.points.length - 1].y}%`}
-                              stroke="#facc15"
-                              strokeWidth="9"
-                              opacity="0.35"
-                              strokeLinecap="round"
-                              className="pointer-events-none"
-                            />
-                            {/* Start Handle Dot */}
-                            <circle
-                              cx={`${shape.points[0].x}%`}
-                              cy={`${shape.points[0].y}%`}
-                              r="5"
-                              fill="#facc15"
-                              stroke="#ffffff"
-                              strokeWidth="2"
-                              className="shadow-sm pointer-events-none"
-                            />
-                            {/* End Handle Dot */}
-                            <circle
-                              cx={`${shape.points[shape.points.length - 1].x}%`}
-                              cy={`${shape.points[shape.points.length - 1].y}%`}
-                              r="5"
-                              fill="#facc15"
-                              stroke="#ffffff"
-                              strokeWidth="2"
-                              className="shadow-sm pointer-events-none"
-                            />
-                            {/* Compact Delete Button at Arrow Head (End Point) */}
-                            <g
-                              onClick={(e) => handleDeleteSingleShape(shape.id, e)}
-                              onTouchStart={(e) => handleDeleteSingleShape(shape.id, e)}
-                              className="cursor-pointer group/btn"
-                              style={{ pointerEvents: 'all' }}
-                            >
-                              <svg
-                                x={`${shape.points[shape.points.length - 1].x}%`}
-                                y={`${shape.points[shape.points.length - 1].y}%`}
-                                overflow="visible"
+                              <g
+                                stroke="#ffffff"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
                               >
-                                <circle
-                                  cx="14"
-                                  cy="-14"
-                                  r="11"
-                                  fill="#ef4444"
-                                  stroke="#ffffff"
-                                  strokeWidth="2"
-                                  className="shadow-md transition-colors group-hover/btn:fill-red-600"
-                                />
-                                <g stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round">
-                                  <line x1="8.5" y1="-19.5" x2="19.5" y2="-8.5" />
-                                  <line x1="19.5" y1="-19.5" x2="8.5" y2="-8.5" />
-                                </g>
-                              </svg>
-                            </g>
-                          </>
-                        )}
-                      </g>
-                    )}
-                  </g>
-                );
-              })}
-
-              {/* Render Current Line while drawing */}
-              {isDrawing && currentPoints.length > 1 && (
-                <line
-                  x1={`${currentPoints[0].x}%`}
-                  y1={`${currentPoints[0].y}%`}
-                  x2={`${currentPoints[currentPoints.length - 1].x}%`}
-                  y2={`${currentPoints[currentPoints.length - 1].y}%`}
-                  stroke={activeTool === 'dashed-arrow' ? '#facc15' : '#ffffff'}
-                  strokeWidth="3.5"
-                  strokeDasharray={activeTool === 'dashed-arrow' ? '6,6' : undefined}
-                />
-              )}
-
-              {/* Render Glowing Yellow Neon Laser Pointer Cursor (Without lagging CSS scaling artifacts) */}
-              {laserPos && (
-                <g className="pointer-events-none">
-                  {/* Soft Outer Neon Halo */}
-                  <circle
-                    cx={`${laserPos.x}%`}
-                    cy={`${laserPos.y}%`}
-                    r="18"
-                    fill="rgba(250, 204, 21, 0.25)"
-                    filter="url(#laser-neon-glow)"
-                  />
-                  {/* Neon Glow Ring */}
-                  <circle
-                    cx={`${laserPos.x}%`}
-                    cy={`${laserPos.y}%`}
-                    r="12"
-                    fill="rgba(250, 204, 21, 0.6)"
-                    filter="url(#laser-neon-glow)"
-                  />
-                  {/* Core Yellow Circle */}
-                  <circle
-                    cx={`${laserPos.x}%`}
-                    cy={`${laserPos.y}%`}
-                    r="7"
-                    fill="#facc15"
-                    stroke="#ffffff"
-                    strokeWidth="2"
-                  />
-                  {/* Center White Core Spot */}
-                  <circle
-                    cx={`${laserPos.x}%`}
-                    cy={`${laserPos.y}%`}
-                    r="2.5"
-                    fill="#ffffff"
-                  />
+                                <line x1="8.5" y1="-19.5" x2="19.5" y2="-8.5" />
+                                <line x1="19.5" y1="-19.5" x2="8.5" y2="-8.5" />
+                              </g>
+                            </svg>
+                          </g>
+                        </>
+                      )}
+                    </g>
+                  )}
                 </g>
-              )}
-            </svg>
-          </div>
+              );
+            })}
 
-      {/* Player Selector Modal Dialog */}
-      {showPlayerModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
-            {/* Modal Header */}
-            <div className="bg-white p-5 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 text-emerald-600 shadow-2xs">
-                  <UserCheck className="w-5 h-5" />
+            {/* Render Current Line while drawing */}
+            {isDrawing && currentPoints.length > 1 && (
+              <line
+                x1={`${currentPoints[0].x}%`}
+                y1={`${currentPoints[0].y}%`}
+                x2={`${currentPoints[currentPoints.length - 1].x}%`}
+                y2={`${currentPoints[currentPoints.length - 1].y}%`}
+                stroke={activeTool === "dashed-arrow" ? "#facc15" : "#ffffff"}
+                strokeWidth="3.5"
+                strokeDasharray={
+                  activeTool === "dashed-arrow" ? "6,6" : undefined
+                }
+              />
+            )}
+
+            {/* Render Glowing Yellow Neon Laser Pointer Cursor (Without lagging CSS scaling artifacts) */}
+            {laserPos && (
+              <g className="pointer-events-none">
+                {/* Soft Outer Neon Halo */}
+                <circle
+                  cx={`${laserPos.x}%`}
+                  cy={`${laserPos.y}%`}
+                  r="18"
+                  fill="rgba(250, 204, 21, 0.25)"
+                  filter="url(#laser-neon-glow)"
+                />
+                {/* Neon Glow Ring */}
+                <circle
+                  cx={`${laserPos.x}%`}
+                  cy={`${laserPos.y}%`}
+                  r="12"
+                  fill="rgba(250, 204, 21, 0.6)"
+                  filter="url(#laser-neon-glow)"
+                />
+                {/* Core Yellow Circle */}
+                <circle
+                  cx={`${laserPos.x}%`}
+                  cy={`${laserPos.y}%`}
+                  r="7"
+                  fill="#facc15"
+                  stroke="#ffffff"
+                  strokeWidth="2"
+                />
+                {/* Center White Core Spot */}
+                <circle
+                  cx={`${laserPos.x}%`}
+                  cy={`${laserPos.y}%`}
+                  r="2.5"
+                  fill="#ffffff"
+                />
+              </g>
+            )}
+          </svg>
+        </div>
+
+        {/* Player Selector Modal Dialog */}
+        {showPlayerModal && (
+          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
+              {/* Modal Header */}
+              <div className="bg-white p-5 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 text-emerald-600 shadow-2xs">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="w-2.5 h-2.5 bg-amber-500 rounded-xs shrink-0"></span>
+                      <h3 className="font-black text-base sm:text-lg text-slate-900 tracking-tight">
+                        CHỌN CẦU THỦ THI ĐẤU (CẦU THỦ TA)
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      Gán tên & số áo cầu thủ lên sơ đồ chiến thuật
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowPlayerModal(false);
+                    setPendingPt(null);
+                    setEditingShapeId(null);
+                  }}
+                  className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Content / Player List */}
+              <div className="p-5 overflow-y-auto space-y-3 flex-1">
+                {/* Option 0: Default "Ta" */}
+                <button
+                  onClick={() => handleSelectPlayerForShape(null)}
+                  className="w-full p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all text-left flex items-center justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                      Ta
+                    </div>
+                    <div>
+                      <span className="font-extrabold text-sm text-slate-800 group-hover:text-emerald-700 block">
+                        Mặc định (Nhãn "Ta")
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">
+                        Icon hình tròn xanh lá mặc định
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-lg">
+                    Chọn
+                  </span>
+                </button>
+
+                <div className="h-px bg-slate-100 my-2"></div>
+
+                {/* Team Players List */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {teamPlayers.map((player) => (
+                    <button
+                      key={player.id}
+                      onClick={() => handleSelectPlayerForShape(player)}
+                      className="p-3 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex items-center justify-between group cursor-pointer shadow-2xs"
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-blue-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
+                          #{player.number}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-extrabold text-xs text-slate-900 group-hover:text-blue-600 truncate block">
+                            {player.name}
+                          </span>
+                          {player.positions && player.positions.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-0.5">
+                              {player.positions.map((p) => {
+                                const cfg = getPositionConfig(p);
+                                return (
+                                  <span
+                                    key={p}
+                                    className={`text-xs font-black px-1.5 py-0.5 rounded-lg border ${cfg.bgClass} ${cfg.textClass}`}
+                                  >
+                                    {cfg.shortLabel}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Floating Layer Panel */}
+        {showLayerPanel && (
+          <div className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 z-40 bg-white/95 backdrop-blur-md rounded-lg border border-slate-200 shadow-2xl w-80 sm:w-96 overflow-hidden flex flex-col max-h-[460px] animate-in slide-in-from-bottom-4 duration-200">
+            {/* Header */}
+            <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100 shadow-2xs">
+                  <Layers className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="w-2.5 h-2.5 bg-amber-500 rounded-xs shrink-0"></span>
-                    <h3 className="font-black text-base sm:text-lg text-slate-900 tracking-tight">
-                      CHỌN CẦU THỦ THI ĐẤU (CẦU THỦ TA)
-                    </h3>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
-                    Gán tên & số áo cầu thủ lên sơ đồ chiến thuật
+                  <h4 className="font-black text-sm text-slate-900 flex items-center space-x-1.5">
+                    <span className="w-2 h-2 bg-amber-500 rounded-xs shrink-0"></span>
+                    <span>Quản Lý Lớp (Layer)</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 font-extrabold px-2 py-0.5 rounded-lg">
+                      {shapes.length}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Chọn & chỉnh thứ tự lớp đối tượng bị chồng lên nhau
                   </p>
                 </div>
               </div>
               <button
-                onClick={() => {
-                  setShowPlayerModal(false);
-                  setPendingPt(null);
-                  setEditingShapeId(null);
-                }}
-                className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+                onClick={() => setShowLayerPanel(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-full border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+                title="Đóng bảng Layer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modal Content / Player List */}
-            <div className="p-5 overflow-y-auto space-y-3 flex-1">
-
-              {/* Option 0: Default "Ta" */}
-              <button
-                onClick={() => handleSelectPlayerForShape(null)}
-                className="w-full p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 transition-all text-left flex items-center justify-between group cursor-pointer"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                    Ta
-                  </div>
-                  <div>
-                    <span className="font-extrabold text-sm text-slate-800 group-hover:text-emerald-700 block">
-                      Mặc định (Nhãn "Ta")
-                    </span>
-                    <span className="text-xs text-slate-500 font-medium">Icon hình tròn xanh lá mặc định</span>
-                  </div>
+            {/* List of shapes */}
+            <div className="p-3 overflow-y-auto space-y-1.5 flex-1 divide-y divide-slate-100">
+              {shapes.length === 0 ? (
+                <div className="p-6 text-center text-slate-400 space-y-2">
+                  <Layers className="w-8 h-8 mx-auto text-slate-300" />
+                  <p className="text-xs font-semibold">
+                    Chưa có đối tượng nào trên sân
+                  </p>
                 </div>
-                <span className="text-xs font-bold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-lg">Chọn</span>
-              </button>
+              ) : (
+                shapes.map((s, idx) => {
+                  const isSelected = selectedShapeId === s.id;
+                  let label = "Đối tượng";
+                  let icon = <Layers className="w-4 h-4 text-slate-500" />;
 
-              <div className="h-px bg-slate-100 my-2"></div>
-
-              {/* Team Players List */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {teamPlayers.map((player) => (
-                  <button
-                    key={player.id}
-                    onClick={() => handleSelectPlayerForShape(player)}
-                    className="p-3 rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 transition-all text-left flex items-center justify-between group cursor-pointer shadow-2xs"
-                  >
-                    <div className="flex items-center space-x-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-lg bg-blue-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
-                        #{player.number}
+                  if (s.tool === "player-home" || s.tool === "circle-blue") {
+                    label =
+                      s.number !== undefined
+                        ? `#${s.number} ${s.text || "Cầu Thủ Ta"}`
+                        : s.text || "Cầu Thủ Ta";
+                    icon = (
+                      <div className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                        {s.number !== undefined ? `#${s.number}` : "Ta"}
                       </div>
-                      <div className="min-w-0">
-                        <span className="font-extrabold text-xs text-slate-900 group-hover:text-blue-600 truncate block">
-                          {player.name}
-                        </span>
-                        {player.positions && player.positions.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-0.5">
-                            {player.positions.map((p) => {
-                              const cfg = getPositionConfig(p);
-                              return (
-                                <span key={p} className={`text-xs font-black px-1.5 py-0.5 rounded-lg border ${cfg.bgClass} ${cfg.textClass}`}>
-                                  {cfg.shortLabel}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
+                    );
+                  } else if (
+                    s.tool === "player-away" ||
+                    s.tool === "circle-red"
+                  ) {
+                    label = s.text || "Cầu Thủ Địch";
+                    icon = (
+                      <div className="w-6 h-6 rounded-full bg-red-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                        Địch
                       </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Floating Layer Panel */}
-      {showLayerPanel && (
-        <div className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 z-40 bg-white/95 backdrop-blur-md rounded-lg border border-slate-200 shadow-2xl w-80 sm:w-96 overflow-hidden flex flex-col max-h-[460px] animate-in slide-in-from-bottom-4 duration-200">
-          {/* Header */}
-          <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div className="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100 shadow-2xs">
-                <Layers className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="font-black text-sm text-slate-900 flex items-center space-x-1.5">
-                  <span className="w-2 h-2 bg-amber-500 rounded-xs shrink-0"></span>
-                  <span>Quản Lý Lớp (Layer)</span>
-                  <span className="text-xs bg-blue-100 text-blue-700 font-extrabold px-2 py-0.5 rounded-lg">
-                    {shapes.length}
-                  </span>
-                </h4>
-                <p className="text-xs text-slate-500 font-medium">
-                  Chọn & chỉnh thứ tự lớp đối tượng bị chồng lên nhau
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowLayerPanel(false)}
-              className="p-1.5 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-full border border-slate-200 shadow-2xs transition-colors cursor-pointer"
-              title="Đóng bảng Layer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+                    );
+                  } else if (s.tool === "arrow") {
+                    label = "Mũi tên di chuyển";
+                    icon = (
+                      <ArrowRight className="w-4 h-4 text-blue-500 shrink-0" />
+                    );
+                  } else if (s.tool === "dashed-arrow") {
+                    label = "Đường chuyền bóng";
+                    icon = (
+                      <span className="font-mono text-xs font-black text-yellow-600 shrink-0">
+                        --➔
+                      </span>
+                    );
+                  } else if (s.tool === "ball") {
+                    label = "Bóng Futsal ⚽";
+                    icon = <span className="text-sm shrink-0">⚽</span>;
+                  } else if (s.tool === "cross-red") {
+                    label = "Dấu X Đỏ";
+                    icon = (
+                      <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    );
+                  } else if (s.tool === "text") {
+                    label = `Văn bản: "${s.text || ""}"`;
+                    icon = <Type className="w-4 h-4 text-slate-600 shrink-0" />;
+                  }
 
-          {/* List of shapes */}
-          <div className="p-3 overflow-y-auto space-y-1.5 flex-1 divide-y divide-slate-100">
-            {shapes.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 space-y-2">
-                <Layers className="w-8 h-8 mx-auto text-slate-300" />
-                <p className="text-xs font-semibold">Chưa có đối tượng nào trên sân</p>
-              </div>
-            ) : (
-              shapes.map((s, idx) => {
-                const isSelected = selectedShapeId === s.id;
-                let label = 'Đối tượng';
-                let icon = <Layers className="w-4 h-4 text-slate-500" />;
+                  return (
+                    <div
+                      key={s.id}
+                      onClick={() => {
+                        setSelectedShapeId(s.id);
+                        setActiveTool("select");
+                      }}
+                      className={`p-2.5 rounded-lg border transition-all flex items-center justify-between group cursor-pointer ${
+                        isSelected
+                          ? "bg-blue-50/90 border-blue-300 text-blue-900 shadow-2xs font-extrabold"
+                          : "bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700 font-semibold"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0 pr-2">
+                        {icon}
+                        <span className="text-xs truncate">{label}</span>
+                      </div>
 
-                if (s.tool === 'player-home' || s.tool === 'circle-blue') {
-                  label = s.number !== undefined ? `#${s.number} ${s.text || 'Cầu Thủ Ta'}` : (s.text || 'Cầu Thủ Ta');
-                  icon = (
-                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                      {s.number !== undefined ? `#${s.number}` : 'Ta'}
+                      {/* Layer Actions (Re-order Z-Index & Delete) */}
+                      <div className="flex items-center space-x-1 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveLayerUp(idx);
+                          }}
+                          disabled={idx === 0}
+                          className="p-1 hover:bg-slate-200/70 disabled:opacity-30 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                          title="Đưa lên lớp phía trên"
+                        >
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMoveLayerDown(idx);
+                          }}
+                          disabled={idx === shapes.length - 1}
+                          className="p-1 hover:bg-slate-200/70 disabled:opacity-30 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                          title="Hạ xuống lớp phía dưới"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteSingleShape(s.id, e);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Xóa đối tượng này"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
-                } else if (s.tool === 'player-away' || s.tool === 'circle-red') {
-                  label = s.text || 'Cầu Thủ Địch';
-                  icon = (
-                    <div className="w-6 h-6 rounded-full bg-red-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                      Địch
-                    </div>
-                  );
-                } else if (s.tool === 'arrow') {
-                  label = 'Mũi tên di chuyển';
-                  icon = <ArrowRight className="w-4 h-4 text-blue-500 shrink-0" />;
-                } else if (s.tool === 'dashed-arrow') {
-                  label = 'Đường chuyền bóng';
-                  icon = <span className="font-mono text-xs font-black text-yellow-600 shrink-0">--➔</span>;
-                } else if (s.tool === 'ball') {
-                  label = 'Bóng Futsal ⚽';
-                  icon = <span className="text-sm shrink-0">⚽</span>;
-                } else if (s.tool === 'cross-red') {
-                  label = 'Dấu X Đỏ';
-                  icon = <XCircle className="w-4 h-4 text-red-500 shrink-0" />;
-                } else if (s.tool === 'text') {
-                  label = `Văn bản: "${s.text || ''}"`;
-                  icon = <Type className="w-4 h-4 text-slate-600 shrink-0" />;
-                }
-
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => {
-                      setSelectedShapeId(s.id);
-                      setActiveTool('select');
-                    }}
-                    className={`p-2.5 rounded-lg border transition-all flex items-center justify-between group cursor-pointer ${
-                      isSelected
-                        ? 'bg-blue-50/90 border-blue-300 text-blue-900 shadow-2xs font-extrabold'
-                        : 'bg-white hover:bg-slate-50 border-slate-200/80 text-slate-700 font-semibold'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2.5 min-w-0 pr-2">
-                      {icon}
-                      <span className="text-xs truncate">{label}</span>
-                    </div>
-
-                    {/* Layer Actions (Re-order Z-Index & Delete) */}
-                    <div className="flex items-center space-x-1 shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveLayerUp(idx);
-                        }}
-                        disabled={idx === 0}
-                        className="p-1 hover:bg-slate-200/70 disabled:opacity-30 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-                        title="Đưa lên lớp phía trên"
-                      >
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveLayerDown(idx);
-                        }}
-                        disabled={idx === shapes.length - 1}
-                        className="p-1 hover:bg-slate-200/70 disabled:opacity-30 rounded-lg text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-                        title="Hạ xuống lớp phía dưới"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSingleShape(s.id, e);
-                        }}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                        title="Xóa đối tượng này"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
+                })
+              )}
+            </div>
           </div>
-        </div>
-      )}
-        </div>
+        )}
+      </div>
     </div>
   );
 };

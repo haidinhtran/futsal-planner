@@ -1,7 +1,7 @@
-import React from 'react';
-import type { Player } from '../types/futsal';
-import { getUniquePositionConfigs } from '../types/futsal';
-import { Edit2, Trash2, Star, FileText } from 'lucide-react';
+import React from "react";
+import type { Player } from "../types/futsal";
+import { getUniquePositionConfigs } from "../types/futsal";
+import { Edit2, Trash2, Star, FileText } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -9,11 +9,15 @@ interface PlayerCardProps {
   onDelete?: (id: string) => void;
 }
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete }) => {
-  const formatStat = (val: number | null) => (val !== null ? val : '-');
+export const PlayerCard: React.FC<PlayerCardProps> = ({
+  player,
+  onEdit,
+  onDelete,
+}) => {
+  const formatStat = (val: number | null) => (val !== null ? val : "-");
 
   const getBarWidth = (val: number | null) => {
-    if (val === null) return '0%';
+    if (val === null) return "0%";
     const pct = Math.min(Math.max((val / 10) * 100, 0), 100);
     return `${pct}%`;
   };
@@ -32,7 +36,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
   const starCount = getStarRating(player);
   const positionConfigs = getUniquePositionConfigs(player.positions);
-  const hasNotes = player.notes && player.notes.trim() !== '';
+  const hasNotes = player.notes && player.notes.trim() !== "";
 
   return (
     <div className="relative bg-white border border-slate-200 rounded-lg p-4 shadow-2xs hover:shadow-md transition-all group overflow-hidden">
@@ -52,7 +56,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
               <FileText className="w-3 h-3" />
               <span>Ghi chú đặc điểm:</span>
             </div>
-            <p className="leading-snug whitespace-normal break-words text-slate-200">{player.notes}</p>
+            <p className="leading-snug whitespace-normal break-words text-slate-200">
+              {player.notes}
+            </p>
           </div>
         </div>
       )}
@@ -90,12 +96,17 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
           #{player.number}
         </span>
 
-        <h3 className="text-sm sm:text-base font-extrabold text-slate-800 text-center line-clamp-1">{player.name}</h3>
+        <h3 className="text-sm sm:text-base font-extrabold text-slate-800 text-center line-clamp-1">
+          {player.name}
+        </h3>
 
         {/* Star Rating Section - Monochrome Stars */}
         <div className="mt-1.5 flex items-center justify-center">
           {starCount !== null ? (
-            <div className="flex items-center space-x-1" title={`Đánh giá: ${starCount}/5 sao (Tổng ${player.stamina! + player.attack! + player.defense!} điểm)`}>
+            <div
+              className="flex items-center space-x-1"
+              title={`Đánh giá: ${starCount}/5 sao (Tổng ${player.stamina! + player.attack! + player.defense!} điểm)`}
+            >
               {[1, 2, 3, 4, 5].slice(0, starCount).map((index) => (
                 <Star
                   key={index}
@@ -109,7 +120,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
             </span>
           )}
         </div>
-
       </div>
 
       {/* Monolithic Greyscale Pattern Stat Bars */}
@@ -123,7 +133,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
               style={{ width: getBarWidth(player.stamina) }}
             />
           </div>
-          <span className="w-6 text-right font-extrabold text-slate-800">{formatStat(player.stamina)}</span>
+          <span className="w-6 text-right font-extrabold text-slate-800">
+            {formatStat(player.stamina)}
+          </span>
         </div>
 
         {/* Công (Tấn Công) - Medium Graphite Fill */}
@@ -135,7 +147,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
               style={{ width: getBarWidth(player.attack) }}
             />
           </div>
-          <span className="w-6 text-right font-extrabold text-slate-700">{formatStat(player.attack)}</span>
+          <span className="w-6 text-right font-extrabold text-slate-700">
+            {formatStat(player.attack)}
+          </span>
         </div>
 
         {/* Thủ (Phòng Thủ) - Slate Gray Fill */}
@@ -147,7 +161,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
               style={{ width: getBarWidth(player.defense) }}
             />
           </div>
-          <span className="w-6 text-right font-extrabold text-slate-600">{formatStat(player.defense)}</span>
+          <span className="w-6 text-right font-extrabold text-slate-600">
+            {formatStat(player.defense)}
+          </span>
         </div>
 
         {/* Minimalist Color-Coded Position Tags */}
@@ -163,11 +179,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
               </span>
             ))
           ) : (
-            <span className="text-xs font-semibold text-slate-400">Chưa xếp vị trí</span>
+            <span className="text-xs font-semibold text-slate-400">
+              Chưa xếp vị trí
+            </span>
           )}
         </div>
       </div>
-
     </div>
   );
 };
