@@ -1,16 +1,14 @@
-import type { Player, FormationPreset } from '../types/futsal';
+import type { Player, FormationPreset, SavedTacticalDiagram } from '../types/futsal';
 
 export const INITIAL_PLAYERS: Player[] = [
-  { id: '1', number: 1, name: 'Hồ Đắc Thạnh', stamina: 6, attack: 6, defense: 9, positions: ['GK', 'FI', 'AL_L'] },
   { id: '2', number: 2, name: 'Huỳnh Tấn Phong', stamina: 8, attack: 7, defense: 7.5, positions: ['AL_R', 'PI', 'FI'], notes: 'Dễ Cọc' },
   { id: '3', number: 3, name: 'Mai Thanh', stamina: 6, attack: 7.5, defense: 6.5, positions: ['GK', 'FI'], notes: 'Dễ thiếu tập trung' },
   { id: '4', number: 4, name: 'Ngô Thái Tuấn', stamina: 8.5, attack: 8.5, defense: 7.5, positions: ['GK', 'AL_L', 'PI', 'FI'] },
   { id: '5', number: 5, name: 'Nguyễn Bình An', stamina: 6.5, attack: 7, defense: 6.5, positions: ['PI', 'AL_R'] },
   { id: '6', number: 6, name: 'Nguyễn Cao Tấn', stamina: 7.5, attack: 9, defense: 6, positions: ['PI', 'AL_L'], notes: 'Dễ Tâm Lý' },
   { id: '7', number: 7, name: 'Nguyen Minh Tan', stamina: null, attack: null, defense: null, positions: [] },
-  { id: '8', number: 8, name: 'Nguyễn Tiến Đạt', stamina: 7, attack: 6, defense: 6, positions: ['GK', 'FI', 'AL_R', 'PI'] },
   { id: '9', number: 9, name: 'Phạm Hữu Thành', stamina: 5, attack: 6, defense: 6, positions: ['GK', 'FI', 'AL_L'], notes: 'Mau mệt' },
-  { id: '10', number: 10, name: 'Trần Hoàng Hiệp', stamina: 10, attack: null, defense: null, positions: ['AL_R'], notes: 'Thể Lực Phi Thường' },
+  { id: '10', number: 10, name: 'Trần Hoàng Hiệp', stamina: 10, attack: 9, defense: 8, positions: ['AL_R'], notes: 'Thể Lực Phi Thường' },
   { id: '11', number: 11, name: 'Vo Hoang Ha', stamina: null, attack: null, defense: null, positions: ['AL_L', 'PI'] },
   { id: '12', number: 12, name: 'Vũ Đức Mạnh', stamina: 9, attack: null, defense: null, positions: ['PI'] },
   { id: '13', number: 13, name: 'Vũ Trọng Phúc', stamina: 7.5, attack: 6, defense: 7, positions: ['GK', 'FI'], notes: '666' },
@@ -117,7 +115,7 @@ export const INITIAL_TACTICAL_SQUAD = {
       x: 35,
       y: 50,
       playerId: null,
-      subPlayerIds: ['8'],
+      subPlayerIds: [],
     },
     {
       id: 'slot-2',
@@ -150,3 +148,34 @@ export const INITIAL_TACTICAL_SQUAD = {
   notes: '',
   attackDirection: 'right' as const,
 };
+
+export const INITIAL_TACTICAL_DIAGRAMS: SavedTacticalDiagram[] = [
+  {
+    id: '1786610631847',
+    name: 'Chạy biên',
+    shapes: [
+      { id: '1', tool: 'player-home', points: [{ x: 30, y: 70 }], color: '#16a34a', text: 'Thái Tuấn', number: 4 },
+      { id: '2', tool: 'player-home', points: [{ x: 35, y: 35 }], color: '#16a34a', text: 'Hữu Thành', number: 6 },
+      { id: '3', tool: 'player-home', points: [{ x: 75, y: 35 }], color: '#16a34a', text: 'Cao Tấn', number: 9 },
+      { id: '4', tool: 'player-away', points: [{ x: 50, y: 35 }], color: '#dc2626', text: 'Địch' },
+      { id: '5', tool: 'player-away', points: [{ x: 70, y: 40 }], color: '#dc2626', text: 'Địch' },
+      { id: '6', tool: 'ball', points: [{ x: 30, y: 70 }], color: '#ffffff' },
+      { id: '7', tool: 'dashed-arrow', points: [{ x: 30, y: 70 }, { x: 75, y: 35 }], color: '#facc15' },
+      { id: '8', tool: 'arrow', points: [{ x: 30, y: 70 }, { x: 55, y: 80 }, { x: 80, y: 65 }], color: '#ffffff' },
+    ],
+    updatedAt: '2026-08-13T08:43:58.349Z',
+  },
+  {
+    id: '1786378593962',
+    name: 'Draft-001',
+    shapes: [
+      { id: '1', tool: 'player-away', points: [{ x: 65, y: 25 }], color: '#dc2626', text: 'Địch' },
+      { id: '2', tool: 'arrow', points: [{ x: 65, y: 25 }, { x: 40, y: 40 }], color: '#ef4444' },
+      { id: '3', tool: 'player-home', points: [{ x: 40, y: 40 }], color: '#16a34a', text: 'Thái Tuấn', number: 4 },
+      { id: '4', tool: 'player-home', points: [{ x: 25, y: 60 }], color: '#16a34a', text: 'Tấn Phong', number: 2 },
+      { id: '5', tool: 'cross-red', points: [{ x: 50, y: 45 }], color: '#ef4444' },
+      { id: '6', tool: 'ball', points: [{ x: 65, y: 25 }], color: '#ffffff' },
+    ],
+    updatedAt: '2026-08-13T08:45:22.434Z',
+  },
+];

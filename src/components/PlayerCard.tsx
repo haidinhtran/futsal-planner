@@ -82,36 +82,38 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
       )}
 
       {/* Card Body: Big Unframed Centered Shirt Number & Player Name */}
-      <div className="flex flex-col items-center mb-3 pt-1">
+      <div className="flex flex-col items-center mb-2.5 pt-1">
         <span
-          className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none mb-2 select-none"
+          className="text-3xl sm:text-4xl font-black text-slate-950 tracking-tight leading-none mb-2 select-none"
           title={`Số áo: #${player.number}`}
         >
           #{player.number}
         </span>
 
-        <h3 className="text-sm sm:text-base font-extrabold text-slate-900 text-center line-clamp-1">{player.name}</h3>
+        <h3 className="text-sm sm:text-base font-extrabold text-slate-800 text-center line-clamp-1">{player.name}</h3>
 
-        {/* Minimalist Color-Coded Position Tags */}
-        <div className="flex flex-wrap items-center justify-center gap-1 mt-1.5">
-          {positionConfigs.length > 0 ? (
-            positionConfigs.map((cfg) => (
-              <span
-                key={cfg.shortLabel}
-                className={`text-[11px] font-extrabold px-2 py-0.5 rounded-lg border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} hover:opacity-90 transition-opacity cursor-help shadow-2xs`}
-                title={`Vị trí: ${cfg.fullLabel}`}
-              >
-                {cfg.shortLabel}
-              </span>
-            ))
+        {/* Star Rating Section - Monochrome Stars */}
+        <div className="mt-1.5 flex items-center justify-center">
+          {starCount !== null ? (
+            <div className="flex items-center space-x-1" title={`Đánh giá: ${starCount}/5 sao (Tổng ${player.stamina! + player.attack! + player.defense!} điểm)`}>
+              {[1, 2, 3, 4, 5].slice(0, starCount).map((index) => (
+                <Star
+                  key={index}
+                  className="w-3.5 h-3.5 fill-slate-500 text-slate-500"
+                />
+              ))}
+            </div>
           ) : (
-            <span className="text-xs font-semibold text-slate-400">Chưa xếp vị trí</span>
+            <span className="text-xs font-medium text-slate-400 italic">
+              Chưa đủ chỉ số để đánh giá
+            </span>
           )}
         </div>
+
       </div>
 
       {/* Monolithic Greyscale Pattern Stat Bars */}
-      <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
+      <div className="space-y-2.5 text-xs">
         {/* Bền (Thể Lực) - Dark Charcoal Fill */}
         <div className="flex items-center space-x-2 font-semibold">
           <span className="w-10 text-slate-500 font-bold">Bền</span>
@@ -147,29 +149,25 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
           </div>
           <span className="w-6 text-right font-extrabold text-slate-600">{formatStat(player.defense)}</span>
         </div>
+
+        {/* Minimalist Color-Coded Position Tags */}
+        <div className="pt-3 flex flex-wrap items-center justify-end gap-1">
+          {positionConfigs.length > 0 ? (
+            positionConfigs.map((cfg) => (
+              <span
+                key={cfg.shortLabel}
+                className={`text-[11px] font-extrabold px-2 py-0.5 rounded-lg border opacity-80 ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} hover:opacity-90 transition-opacity cursor-help shadow-2xs`}
+                title={`Vị trí: ${cfg.fullLabel}`}
+              >
+                {cfg.shortLabel === "ALA" ? "AL" : cfg.shortLabel}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs font-semibold text-slate-400">Chưa xếp vị trí</span>
+          )}
+        </div>
       </div>
 
-      {/* Star Rating Section - Monochrome Stars */}
-      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-center">
-        {starCount !== null ? (
-          <div className="flex items-center space-x-1" title={`Đánh giá: ${starCount}/5 sao (Tổng ${player.stamina! + player.attack! + player.defense!} điểm)`}>
-            {[1, 2, 3, 4, 5].map((index) => (
-              <Star
-                key={index}
-                className={`w-3.5 h-3.5 ${
-                  index <= starCount
-                    ? 'fill-slate-700 text-slate-700'
-                    : 'fill-slate-100 text-slate-200'
-                }`}
-              />
-            ))}
-          </div>
-        ) : (
-          <span className="text-xs font-medium text-slate-400 italic">
-            Chưa đủ chỉ số để đánh giá
-          </span>
-        )}
-      </div>
     </div>
   );
 };

@@ -26,10 +26,15 @@ import {
 
 interface TacticalDiagramProps {
   players?: Player[];
+  dataRefreshToken?: number;
   onRegisterControls?: (controls: DiagramControlsData) => void;
 }
 
-export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initialPlayers, onRegisterControls }) => {
+export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
+  players: initialPlayers,
+  dataRefreshToken,
+  onRegisterControls,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const toolbarDragLimitsRef = useRef<{ minX: number; maxX: number; minY: number; maxY: number } | null>(null);
@@ -55,6 +60,10 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({ players: initi
   const [savedDiagrams, setSavedDiagrams] = useState<SavedTacticalDiagram[]>(() =>
     storageService.getDiagrams()
   );
+
+  useEffect(() => {
+    setSavedDiagrams(storageService.getDiagrams());
+  }, [dataRefreshToken]);
   const [diagramName, setDiagramName] = useState<string>('Draft-001');
   const [currentDiagramId, setCurrentDiagramId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState<boolean>(false);

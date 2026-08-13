@@ -24,8 +24,8 @@
 ### 💾 Dữ liệu & Sao lưu
 
 - Toàn bộ dữ liệu lưu cục bộ trong `localStorage` (cầu thủ, đội hình, sơ đồ).
-- Xuất / nhập tệp sao lưu `.json`.
-- Khôi phục dữ liệu về mặc định (14 cầu thủ + đội hình ban đầu).
+- Xuất / nhập tệp sao lưu `.json` bao gồm cầu thủ, đội hình, ghi chú và các sơ đồ chiến thuật.
+- Khôi phục dữ liệu về mặc định (12 cầu thủ, đội hình ban đầu và 2 sơ đồ mô phỏng).
 
 ## 🛠️ Công nghệ
 
@@ -101,6 +101,8 @@ Dữ liệu được lưu trong `localStorage` với các khóa:
 | `futsal_planner_diagrams_v1` | Các sơ đồ chiến thuật đã lưu |
 
 > ⚠️ Dữ liệu gắn liền với từng trình duyệt/thiết bị. Nên sử dụng tính năng **Xuất tệp sao lưu (.json)** thường xuyên để tránh mất dữ liệu.
+
+Tệp sao lưu JSON sử dụng định dạng có version và bao gồm các trường `players`, `squad` và `diagrams`. Các file cũ không có trường `diagrams` vẫn có thể được nhập; khi đó danh sách sơ đồ được xem là rỗng.
 
 ## 🚢 Triển khai
 

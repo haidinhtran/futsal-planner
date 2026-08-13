@@ -40,6 +40,7 @@ export const App = () => {
   // Synchronous initial state load from LocalStorage
   const [players, setPlayers] = useState<Player[]>(() => storageService.getPlayers());
   const [squad, setSquad] = useState<TacticalSquad>(() => storageService.getSquad());
+  const [dataRefreshToken, setDataRefreshToken] = useState<number>(0);
 
   // Actions registry ref for TopBar dynamic actions
   const tacticsActionsRef = useRef<{ resetPreset?: () => void; saveSquad?: () => void }>({});
@@ -48,6 +49,7 @@ export const App = () => {
   const refreshData = () => {
     setPlayers(storageService.getPlayers());
     setSquad(storageService.getSquad());
+    setDataRefreshToken((token) => token + 1);
   };
 
   // Sync route and handle browser Back/Forward (popstate)
@@ -158,6 +160,7 @@ export const App = () => {
           {activeTab === 'presentation' && (
             <TacticalDiagram
               players={players}
+              dataRefreshToken={dataRefreshToken}
               onRegisterControls={setDiagramControls}
             />
           )}

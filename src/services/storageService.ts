@@ -1,8 +1,9 @@
 import type { Player, TacticalSquad, SavedTacticalDiagram } from '../types/futsal';
-import { INITIAL_PLAYERS, INITIAL_TACTICAL_SQUAD } from './initialData';
+import { INITIAL_PLAYERS, INITIAL_TACTICAL_DIAGRAMS, INITIAL_TACTICAL_SQUAD } from './initialData';
 
 const PLAYERS_KEY = 'futsal_planner_players_v1';
 const SQUAD_KEY = 'futsal_planner_squad_v1';
+const DIAGRAMS_KEY = 'futsal_planner_diagrams_v1';
 
 export const storageService = {
   getPlayers(): Player[] {
@@ -83,13 +84,17 @@ export const storageService = {
       updatedAt: new Date().toISOString(),
     };
     this.saveSquad(initialSquad);
+    this.saveDiagrams(INITIAL_TACTICAL_DIAGRAMS);
     return { players: INITIAL_PLAYERS, squad: initialSquad };
   },
 
   exportBackup(): void {
     const data = {
+      format: 'ftsp-backup',
+      schemaVersion: 1,
       players: this.getPlayers(),
       squad: this.getSquad(),
+      diagrams: this.getDiagrams(),
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -101,16 +106,18 @@ export const storageService = {
     URL.revokeObjectURL(url);
   },
 
-  async importBackup(file: File): Promise<{ players: Player[]; squad: TacticalSquad }> {
+  async importBackup(file: File): Promise<{ players: Player[]; squad: TacticalSquad; diagrams: SavedTacticalDiagram[] }> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const json = JSON.parse(e.target?.result as string);
-          if (Array.isArray(json.players) && json.squad) {
+          if (Array.isArray(json.players) && json.squad && (json.diagrams === undefined || Array.isArray(json.diagrams))) {
+            const diagrams = Array.isArray(json.diagrams) ? json.diagrams : [];
             this.savePlayers(json.players);
             this.saveSquad(json.squad);
-            resolve({ players: json.players, squad: json.squad });
+            this.saveDiagrams(diagrams);
+            resolve({ players: json.players, squad: json.squad, diagrams });
           } else {
             reject(new Error('Định dạng file sao lưu JSON không hợp lệ!'));
           }
@@ -125,8 +132,11 @@ export const storageService = {
 
   getDiagrams(): SavedTacticalDiagram[] {
     try {
-      const data = localStorage.getItem('futsal_planner_diagrams_v1');
-      if (!data) return [];
+      const data = localStorage.getItem(DIAGRAMS_KEY);
+      if (!data) {
+        this.saveDiagrams(INITIAL_TACTICAL_DIAGRAMS);
+        return INITIAL_TACTICAL_DIAGRAMS;
+      }
       return JSON.parse(data);
     } catch (e) {
       console.error('Error reading diagrams from localStorage', e);
@@ -145,7 +155,7 @@ export const storageService = {
       } else {
         updated = [diagram, ...existing];
       }
-      localStorage.setItem('futsal_planner_diagrams_v1', JSON.stringify(updated));
+      localStorage.setItem(DIAGRAMS_KEY, JSON.stringify(updated));
     } catch (e) {
       console.error('Error saving diagram to localStorage', e);
     }
@@ -155,9 +165,17 @@ export const storageService = {
     try {
       const existing = this.getDiagrams();
       const updated = existing.filter((d) => d.id !== id);
-      localStorage.setItem('futsal_planner_diagrams_v1', JSON.stringify(updated));
+      localStorage.setItem(DIAGRAMS_KEY, JSON.stringify(updated));
     } catch (e) {
       console.error('Error deleting diagram from localStorage', e);
+    }
+  },
+
+  saveDiagrams(diagrams: SavedTacticalDiagram[]): void {
+    try {
+      localStorage.setItem(DIAGRAMS_KEY, JSON.stringify(diagrams));
+    } catch (e) {
+      console.error('Error saving diagrams to localStorage', e);
     }
   },
 };
