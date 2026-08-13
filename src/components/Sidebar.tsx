@@ -96,29 +96,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <button
         key={id}
         onClick={() => setActiveTab(id)}
-        className={`w-full flex items-center rounded-lg text-sm transition-all cursor-pointer group ${
-          isActive
-            ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20'
-            : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/80'
-        }`}
+        className={`w-full flex items-center rounded-lg text-sm transition-all cursor-pointer group ${isActive
+          ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/20'
+          : 'text-slate-600 hover:text-slate-900 font-semibold hover:bg-slate-200/80'
+          }`}
         title={!isExpanded ? label : undefined}
       >
         {/* Icon wrapper - Seamless single block without separate inner background */}
         <div
-          className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-            isActive
-              ? 'text-white bg-transparent'
-              : 'bg-transparent text-slate-500 group-hover:text-blue-700'
-          }`}
+          className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all ${isActive
+            ? 'text-white bg-transparent'
+            : 'bg-transparent text-slate-500 group-hover:text-blue-700'
+            }`}
         >
           <IconComponent className="w-4 h-4" />
         </div>
 
         {/* Text Label */}
         <span
-          className={`transition-all duration-200 overflow-hidden whitespace-nowrap ${
-            isExpanded ? 'opacity-100 max-w-xs ml-2 pr-3' : 'opacity-0 max-w-0 ml-0 pointer-events-none'
-          }`}
+          className={`transition-all duration-200 overflow-hidden whitespace-nowrap ${isExpanded ? 'opacity-100 max-w-xs ml-2 pr-3' : 'opacity-0 max-w-0 ml-0 pointer-events-none'
+            }`}
         >
           {label}
         </span>
@@ -128,9 +125,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`${
-        isExpanded ? 'w-64' : 'w-16'
-      } fixed top-0 bottom-0 left-0 bg-slate-50 border-r border-slate-200 z-40 flex flex-col justify-between py-4 select-none transition-all duration-200 overflow-y-auto overflow-x-hidden`}
+      className={`${isExpanded ? 'w-64' : 'w-16'
+        } fixed top-0 bottom-0 left-0 bg-slate-50 border-r border-slate-200 z-40 flex flex-col justify-between py-4 select-none transition-all duration-200 overflow-y-auto overflow-x-hidden`}
     >
       {/* Floating Collapse Arrow Button - Fixed position avoids overflow clipping */}
       <button
@@ -152,13 +148,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </svg>
           </div>
           <div
-            className={`transition-all duration-200 overflow-hidden ${
-              isExpanded ? 'opacity-100 max-w-xs ml-2.5' : 'opacity-0 max-w-0 ml-0 pointer-events-none'
-            }`}
+            className={`transition-all duration-200 overflow-hidden ${isExpanded ? 'opacity-100 max-w-xs ml-2.5' : 'opacity-0 max-w-0 ml-0 pointer-events-none'
+              }`}
           >
             <h1 className="text-lg font-black text-slate-900 leading-none tracking-tight whitespace-nowrap">FTSP</h1>
             <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5 whitespace-nowrap tracking-tight">
-              Futsal Tactics & Strategic Planner
+              ftsp.haitran.dev
             </p>
           </div>
         </div>
@@ -182,11 +177,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <button
             onClick={() => setShowSettingsMenu(!showSettingsMenu)}
-            className={`w-full flex items-center justify-between rounded-lg text-sm font-semibold transition-all cursor-pointer group ${
-              showSettingsMenu && isExpanded
-                ? 'text-blue-700 font-bold bg-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
-            }`}
+            className={`w-full flex items-center justify-between rounded-lg text-sm font-semibold transition-all cursor-pointer group ${showSettingsMenu && isExpanded
+              ? 'text-blue-700 font-bold bg-slate-200/80'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
+              }`}
             title={!isExpanded ? 'Cài đặt hệ thống' : undefined}
           >
             {/* Left Content Container: Flex row holding Icon + Label Text */}
@@ -217,9 +211,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isExpanded && (
               <div className="shrink-0 flex items-center justify-center pr-2">
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-transform duration-200 ${
-                    showSettingsMenu ? 'rotate-180 text-blue-600' : ''
-                  }`}
+                  className={`w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-transform duration-200 ${showSettingsMenu ? 'rotate-180 text-blue-600' : ''
+                    }`}
                 />
               </div>
             )}
@@ -310,11 +303,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Footer Credit - Hidden in Collapsed state */}
         <div
-          className={`px-1 text-xs font-semibold text-slate-400 leading-tight transition-all duration-200 overflow-hidden whitespace-nowrap ${
-            isExpanded ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0 pointer-events-none'
-          }`}
+          className={`px-1 text-xs font-semibold text-slate-400 leading-tight transition-all duration-200 overflow-hidden whitespace-nowrap ${isExpanded ? 'opacity-100 max-h-10' : 'opacity-0 max-h-0 pointer-events-none'
+            }`}
         >
-          Sản phẩm AI từ tuiii - Hải Trần
+          by AI - hẹ hẹ
         </div>
       </div>
     </aside>
