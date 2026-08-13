@@ -1,19 +1,33 @@
-import React, { useState } from 'react';
-import type { PositionTag, SavedTacticalDiagram } from '../types/futsal';
-import { RefreshCw, Save, Plus, Search, Download, FileText, ChevronDown, Sparkles, Edit3, FolderOpen, FilePlus, Trash2 } from 'lucide-react';
+import React, { useState } from "react";
+import type { PositionTag, SavedTacticalDiagram } from "../types/futsal";
+import {
+  RefreshCw,
+  Save,
+  Plus,
+  Search,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  ChevronDown,
+  Sparkles,
+  Edit3,
+  FolderOpen,
+  FilePlus,
+  Trash2,
+} from "lucide-react";
 
 export interface PlayerControlsData {
   searchTerm: string;
   onSearchChange: (val: string) => void;
-  filterPosition: 'all' | PositionTag;
-  onPositionChange: (pos: 'all' | PositionTag) => void;
-  sortBy: 'number' | 'name' | 'total' | 'stamina' | 'attack' | 'defense';
+  filterPosition: "all" | PositionTag;
+  onPositionChange: (pos: "all" | PositionTag) => void;
+  sortBy: "number" | "name" | "total" | "stamina" | "attack" | "defense";
   onSortByChange: (sortBy: any) => void;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: "asc" | "desc";
   onToggleSortOrder: () => void;
-  viewMode: 'grid' | 'list';
-  onViewModeChange: (mode: 'grid' | 'list') => void;
-  onExportCSV: () => void;
+  viewMode: "grid" | "list";
+  onViewModeChange: (mode: "grid" | "list") => void;
+  onExportXLSX: () => void;
   onExportPDF: () => void;
   onAddPlayer: () => void;
 }
@@ -30,32 +44,38 @@ export interface DiagramControlsData {
 }
 
 interface TopBarProps {
-  activeTab: 'tactics' | 'players' | 'presentation';
+  activeTab: "tactics" | "players" | "presentation";
   onResetPreset?: () => void;
   onSaveSquad?: () => void;
   playerControls?: PlayerControlsData | null;
   diagramControls?: DiagramControlsData | null;
 }
 
-export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSaveSquad, playerControls, diagramControls }) => {
+export const TopBar: React.FC<TopBarProps> = ({
+  activeTab,
+  onResetPreset,
+  onSaveSquad,
+  playerControls,
+  diagramControls,
+}) => {
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
   const getTabMeta = () => {
     switch (activeTab) {
-      case 'tactics':
+      case "tactics":
         return {
-          title: 'QUẢN LÝ ĐỘI HÌNH',
-          subtitle: '',
+          title: "QUẢN LÝ ĐỘI HÌNH",
+          subtitle: "",
         };
-      case 'players':
+      case "players":
         return {
-          title: 'QUẢN LÝ CẦU THỦ',
-          subtitle: '',
+          title: "QUẢN LÝ CẦU THỦ",
+          subtitle: "",
         };
-      case 'presentation':
+      case "presentation":
         return {
-          title: 'MÔ PHỎNG CHIẾN THUẬT',
-          subtitle: '',
+          title: "MÔ PHỎNG CHIẾN THUẬT",
+          subtitle: "",
         };
     }
   };
@@ -80,7 +100,7 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
       </div>
 
       {/* Dynamic Actions for Tactics Tab */}
-      {activeTab === 'tactics' && (
+      {activeTab === "tactics" && (
         <div className="flex items-center space-x-2 shrink-0">
           {onResetPreset && (
             <button
@@ -105,7 +125,7 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
       )}
 
       {/* TOP Dynamic Actions for Players Tab */}
-      {activeTab === 'players' && playerControls && (
+      {activeTab === "players" && playerControls && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Search Input */}
           <div className="relative w-48 sm:w-60 xl:w-72">
@@ -125,7 +145,7 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
               type="button"
               onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
               className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-r border-slate-200 rounded-l-lg"
-              title="Xuất danh sách (.csv / .pdf)"
+              title="Xuất danh sách (.xlsx / .pdf)"
             >
               <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
               <span>Xuất Danh Sách</span>
@@ -135,7 +155,7 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
               type="button"
               onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
               className="px-2 py-1.5 sm:py-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer rounded-r-lg"
-              title="Tùy chọn xuất file (.csv / .pdf)"
+              title="Tùy chọn xuất file (.xlsx / .pdf)"
             >
               <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
@@ -151,12 +171,12 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
                     type="button"
                     onClick={() => {
                       setIsExportMenuOpen(false);
-                      playerControls.onExportCSV();
+                      playerControls.onExportXLSX();
                     }}
-                    className="w-full flex items-center space-x-2 px-3 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center space-x-2 px-3 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:bg-green-50 hover:text-green-700 transition-colors cursor-pointer text-left"
                   >
-                    <FileText className="w-4 h-4 text-emerald-600" />
-                    <span>Xuất File CSV (.csv)</span>
+                    <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                    <span>Xuất File XLSX (.xlsx)</span>
                   </button>
                   <button
                     type="button"
@@ -186,12 +206,15 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
       )}
 
       {/* TOP Dynamic Actions for Presentation (Diagram Simulation) Tab */}
-      {activeTab === 'presentation' && diagramControls && (
+      {activeTab === "presentation" && diagramControls && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
           {/* Diagram Name Badge & Rename Action */}
           <div className="flex items-center space-x-2 bg-slate-50 border border-slate-300 px-3 py-1.5 sm:py-2 rounded-lg text-sm font-medium">
             <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
-            <span className="font-extrabold text-slate-800 max-w-[140px] sm:max-w-[180px] truncate" title={diagramControls.diagramName}>
+            <span
+              className="font-extrabold text-slate-800 max-w-[140px] sm:max-w-[180px] truncate"
+              title={diagramControls.diagramName}
+            >
               {diagramControls.diagramName}
             </span>
             <button
@@ -217,18 +240,22 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
           <div className="relative flex items-center bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 sm:py-2 text-sm min-w-[180px] sm:min-w-[210px]">
             <FolderOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 mr-1.5 shrink-0" />
             <select
-              value={diagramControls.currentDiagramId || ''}
+              value={diagramControls.currentDiagramId || ""}
               onChange={(e) => diagramControls.onLoadDiagram(e.target.value)}
               className="bg-transparent font-extrabold focus:outline-none cursor-pointer text-slate-800 text-sm w-full min-w-0 pr-4 appearance-none"
             >
-              <option value="">-- Bản vẽ đã lưu ({diagramControls.savedDiagrams.length}) --</option>
+              <option value="">
+                -- Bản vẽ đã lưu ({diagramControls.savedDiagrams.length}) --
+              </option>
               {diagramControls.savedDiagrams.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.name} ({new Date(d.updatedAt).toLocaleDateString('vi-VN')})
+                  {d.name} ({new Date(d.updatedAt).toLocaleDateString("vi-VN")})
                 </option>
               ))}
             </select>
-            <span className="absolute right-2.5 pointer-events-none text-slate-400 text-xs">▼</span>
+            <span className="absolute right-2.5 pointer-events-none text-slate-400 text-xs">
+              ▼
+            </span>
           </div>
 
           {/* New Diagram Button - Design Token matching Đặt lại sơ đồ */}
@@ -252,15 +279,16 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab, onResetPreset, onSave
           </button>
 
           {/* Delete Saved Diagram Button */}
-          {diagramControls.onDeleteDiagram && diagramControls.currentDiagramId && (
-            <button
-              onClick={diagramControls.onDeleteDiagram}
-              className="p-1.5 sm:p-2 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg border border-slate-200 hover:border-red-200 transition-all cursor-pointer shadow-2xs shrink-0 flex items-center justify-center"
-              title="Xóa bản vẽ này"
-            >
-              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            </button>
-          )}
+          {diagramControls.onDeleteDiagram &&
+            diagramControls.currentDiagramId && (
+              <button
+                onClick={diagramControls.onDeleteDiagram}
+                className="p-1.5 sm:p-2 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg border border-slate-200 hover:border-red-200 transition-all cursor-pointer shadow-2xs shrink-0 flex items-center justify-center"
+                title="Xóa bản vẽ này"
+              >
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            )}
         </div>
       )}
     </header>

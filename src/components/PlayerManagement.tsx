@@ -1,44 +1,142 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import type { Player, PositionTag } from '../types/futsal';
-import { getPositionConfig, getUniquePositionConfigs } from '../types/futsal';
-import { PlayerCard } from './PlayerCard';
-import { X, Check, AlertCircle, Filter, ArrowUpDown, LayoutGrid, List } from 'lucide-react';
-import { removeVietnameseTones } from '../utils/vietnamese';
+import React, { useState, useMemo, useEffect } from "react";
+import ExcelJS from "exceljs";
+import type { Player, PositionTag } from "../types/futsal";
+import { getPositionConfig, getUniquePositionConfigs } from "../types/futsal";
+import { PlayerCard } from "./PlayerCard";
+import {
+  X,
+  Check,
+  AlertCircle,
+  Filter,
+  ArrowUpDown,
+  LayoutGrid,
+  List,
+} from "lucide-react";
+import { removeVietnameseTones } from "../utils/vietnamese";
 
 const getFullPositionLabel = (positions?: PositionTag[]): string => {
-  if (!positions || positions.length === 0) return 'Chưa phân vị trí';
-  return positions.map((p) => getPositionConfig(p).fullLabel).join(', ');
+  if (!positions || positions.length === 0) return "Chưa phân vị trí";
+  return positions.map((p) => getPositionConfig(p).fullLabel).join(", ");
 };
 
 const getFormattedDateCode = (): string => {
   const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
   const year = String(now.getFullYear()).slice(-2);
   return `${day}${month}${year}`;
 };
 
-const exportPlayersToCSV = (players: Player[]) => {
+const exportPlayersToXLSX = async (players: Player[]) => {
   const dateCode = getFormattedDateCode();
-  const filename = `danh_sach_cau_thu_${dateCode}.csv`;
+  const nowStr = new Date().toLocaleDateString("vi-VN");
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "FTSP";
+  workbook.created = new Date();
 
-  // UTF-8 BOM so Excel & Sheets open Vietnamese characters flawlessly
-  let csvContent = '\uFEFF';
-  csvContent += 'Danh sách cầu thủ\n\n';
-  csvContent += 'Số áo,Họ và tên cầu thủ,Vị trí\n';
+  const worksheet = workbook.addWorksheet("Danh sách cầu thủ", {
+    views: [{ showGridLines: false }],
+  });
+  worksheet.columns = [
+    { key: "number", width: 12 },
+    { key: "name", width: 32 },
+    { key: "positions", width: 52 },
+  ];
 
-  players.forEach((p) => {
-    const number = p.number;
-    const name = `"${(p.name || '').replace(/"/g, '""')}"`;
-    const positions = `"${getFullPositionLabel(p.positions).replace(/"/g, '""')}"`;
-    csvContent += `${number},${name},${positions}\n`;
+  worksheet.mergeCells("A1:C1");
+  const titleCell = worksheet.getCell("A1");
+  titleCell.value = "DANH SÁCH CẦU THỦ";
+  titleCell.font = {
+    name: "Arial",
+    size: 16,
+    bold: true,
+    color: { argb: "FFFFFFFF" },
+  };
+  titleCell.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF2563EB" },
+  };
+  titleCell.alignment = { horizontal: "center", vertical: "middle" };
+  worksheet.getRow(1).height = 30;
+
+  worksheet.mergeCells("A2:C2");
+  const subtitleCell = worksheet.getCell("A2");
+  subtitleCell.value = `Ngày xuất: ${nowStr} | Tổng số: ${players.length} cầu thủ`;
+  subtitleCell.font = {
+    name: "Arial",
+    size: 10,
+    italic: true,
+    color: { argb: "FF475569" },
+  };
+  subtitleCell.alignment = { horizontal: "center", vertical: "middle" };
+  worksheet.getRow(2).height = 20;
+
+  const headerRow = worksheet.getRow(4);
+  headerRow.values = ["Số áo", "Họ và tên cầu thủ", "Vị trí"];
+  headerRow.height = 24;
+  headerRow.eachCell((cell) => {
+    cell.font = {
+      name: "Arial",
+      size: 11,
+      bold: true,
+      color: { argb: "FFFFFFFF" },
+    };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF0F766E" },
+    };
+    cell.alignment = { horizontal: "center", vertical: "middle" };
+    cell.border = {
+      top: { style: "thin", color: { argb: "FF0F766E" } },
+      left: { style: "thin", color: { argb: "FF0F766E" } },
+      bottom: { style: "thin", color: { argb: "FF0F766E" } },
+      right: { style: "thin", color: { argb: "FF0F766E" } },
+    };
   });
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  players.forEach((player, index) => {
+    const row = worksheet.addRow({
+      number: player.number,
+      name: player.name,
+      positions: getFullPositionLabel(player.positions),
+    });
+    row.height = 21;
+    row.eachCell((cell, columnNumber) => {
+      cell.font = { name: "Arial", size: 11, bold: columnNumber === 2 };
+      cell.alignment = {
+        horizontal: columnNumber === 1 ? "center" : "left",
+        vertical: "middle",
+        wrapText: columnNumber === 3,
+      };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: index % 2 === 0 ? "FFF8FAFC" : "FFFFFFFF" },
+      };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+    });
+  });
+
+  worksheet.autoFilter = {
+    from: "A4",
+    to: `C${Math.max(4, players.length + 4)}`,
+  };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `danh_sach_cau_thu_${dateCode}.xlsx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -48,7 +146,7 @@ const exportPlayersToCSV = (players: Player[]) => {
 const exportPlayersToPDF = (players: Player[]) => {
   const dateCode = getFormattedDateCode();
   const filename = `danh_sach_cau_thu_${dateCode}_pdf`;
-  const nowStr = new Date().toLocaleDateString('vi-VN');
+  const nowStr = new Date().toLocaleDateString("vi-VN");
 
   const rowsHtml = players
     .map(
@@ -58,9 +156,9 @@ const exportPlayersToPDF = (players: Player[]) => {
       <td style="font-weight: bold; padding: 10px; border-bottom: 1px solid #e2e8f0;">${p.name}</td>
       <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${getFullPositionLabel(p.positions)}</td>
     </tr>
-  `
+  `,
     )
-    .join('');
+    .join("");
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -104,7 +202,7 @@ const exportPlayersToPDF = (players: Player[]) => {
     </html>
   `;
 
-  const printWindow = window.open('', '_blank');
+  const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.open();
     printWindow.document.write(htmlContent);
@@ -112,7 +210,7 @@ const exportPlayersToPDF = (players: Player[]) => {
   }
 };
 
-import type { PlayerControlsData } from './TopBar';
+import type { PlayerControlsData } from "./TopBar";
 
 interface PlayerManagementProps {
   players: Player[];
@@ -129,23 +227,38 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   editRequest,
   onRegisterControls,
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterPosition, setFilterPosition] = useState<'all' | PositionTag>('all');
-  const [sortBy, setSortBy] = useState<'number' | 'name' | 'total' | 'stamina' | 'attack' | 'defense'>('number');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterPosition, setFilterPosition] = useState<"all" | PositionTag>(
+    "all",
+  );
+  const [sortBy, setSortBy] = useState<
+    "number" | "name" | "total" | "stamina" | "attack" | "defense"
+  >("number");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPlayer, setEditingPlayer] = useState<Partial<Player> | null>(null);
+  const [editingPlayer, setEditingPlayer] = useState<Partial<Player> | null>(
+    null,
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const calculateTotal = (p: Player) => {
     let sum = 0;
     let count = 0;
-    if (p.stamina !== null) { sum += p.stamina; count++; }
-    if (p.attack !== null) { sum += p.attack; count++; }
-    if (p.defense !== null) { sum += p.defense; count++; }
+    if (p.stamina !== null) {
+      sum += p.stamina;
+      count++;
+    }
+    if (p.attack !== null) {
+      sum += p.attack;
+      count++;
+    }
+    if (p.defense !== null) {
+      sum += p.defense;
+      count++;
+    }
     return count > 0 ? sum : -1;
   };
 
@@ -154,7 +267,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       .filter((p) => {
         const normalizedTerm = removeVietnameseTones(searchTerm);
         const normalizedName = removeVietnameseTones(p.name);
-        const normalizedNotes = removeVietnameseTones(p.notes || '');
+        const normalizedNotes = removeVietnameseTones(p.notes || "");
 
         const matchesSearch =
           !normalizedTerm ||
@@ -164,7 +277,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
         if (!matchesSearch) return false;
 
-        if (filterPosition !== 'all') {
+        if (filterPosition !== "all") {
           if (!p.positions || !p.positions.includes(filterPosition)) {
             return false;
           }
@@ -176,16 +289,18 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
         let valA: any = a[sortBy as keyof Player];
         let valB: any = b[sortBy as keyof Player];
 
-        if (sortBy === 'total') {
+        if (sortBy === "total") {
           valA = calculateTotal(a);
           valB = calculateTotal(b);
         }
 
-        if (valA === null || valA === undefined || valA === -1) valA = sortOrder === 'asc' ? 999 : -999;
-        if (valB === null || valB === undefined || valB === -1) valB = sortOrder === 'asc' ? 999 : -999;
+        if (valA === null || valA === undefined || valA === -1)
+          valA = sortOrder === "asc" ? 999 : -999;
+        if (valB === null || valB === undefined || valB === -1)
+          valB = sortOrder === "asc" ? 999 : -999;
 
-        if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
-        if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+        if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+        if (valA > valB) return sortOrder === "asc" ? 1 : -1;
         return 0;
       });
   }, [players, searchTerm, filterPosition, sortBy, sortOrder]);
@@ -200,7 +315,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
     setEditingPlayer({
       id: Date.now().toString(),
       number: nextNumber,
-      name: '',
+      name: "",
       stamina: null,
       attack: null,
       defense: null,
@@ -225,10 +340,11 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
         sortBy,
         onSortByChange: setSortBy,
         sortOrder,
-        onToggleSortOrder: () => setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc')),
+        onToggleSortOrder: () =>
+          setSortOrder((prev) => (prev === "asc" ? "desc" : "asc")),
         viewMode,
         onViewModeChange: setViewMode,
-        onExportCSV: () => exportPlayersToCSV(filteredAndSortedPlayers),
+        onExportXLSX: () => exportPlayersToXLSX(filteredAndSortedPlayers),
         onExportPDF: () => exportPlayersToPDF(filteredAndSortedPlayers),
         onAddPlayer: handleOpenAddModal,
       });
@@ -259,17 +375,19 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
     const targetNumber = Number(editingPlayer.number);
     if (!targetNumber || targetNumber < 1) {
-      setErrorMsg('Vui lòng nhập số áo hợp lệ (lớn hơn 0)!');
+      setErrorMsg("Vui lòng nhập số áo hợp lệ (lớn hơn 0)!");
       return;
     }
 
     // Check for duplicate shirt number
     const duplicate = players.find(
-      (p) => p.number === targetNumber && p.id !== editingPlayer.id
+      (p) => p.number === targetNumber && p.id !== editingPlayer.id,
     );
 
     if (duplicate) {
-      setErrorMsg(`⚠️ Số áo #${targetNumber} đã trùng với cầu thủ "${duplicate.name}"! Vui lòng chọn số áo khác.`);
+      setErrorMsg(
+        `⚠️ Số áo #${targetNumber} đã trùng với cầu thủ "${duplicate.name}"! Vui lòng chọn số áo khác.`,
+      );
       return;
     }
 
@@ -278,11 +396,26 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       number: targetNumber,
       name: editingPlayer.name,
       avatar: editingPlayer.avatar,
-      stamina: editingPlayer.stamina !== null && editingPlayer.stamina !== undefined && editingPlayer.stamina !== ('' as any) ? Number(editingPlayer.stamina) : null,
-      attack: editingPlayer.attack !== null && editingPlayer.attack !== undefined && editingPlayer.attack !== ('' as any) ? Number(editingPlayer.attack) : null,
-      defense: editingPlayer.defense !== null && editingPlayer.defense !== undefined && editingPlayer.defense !== ('' as any) ? Number(editingPlayer.defense) : null,
+      stamina:
+        editingPlayer.stamina !== null &&
+        editingPlayer.stamina !== undefined &&
+        editingPlayer.stamina !== ("" as any)
+          ? Number(editingPlayer.stamina)
+          : null,
+      attack:
+        editingPlayer.attack !== null &&
+        editingPlayer.attack !== undefined &&
+        editingPlayer.attack !== ("" as any)
+          ? Number(editingPlayer.attack)
+          : null,
+      defense:
+        editingPlayer.defense !== null &&
+        editingPlayer.defense !== undefined &&
+        editingPlayer.defense !== ("" as any)
+          ? Number(editingPlayer.defense)
+          : null,
       positions: editingPlayer.positions || [],
-      notes: editingPlayer.notes || '',
+      notes: editingPlayer.notes || "",
     });
 
     setIsModalOpen(false);
@@ -291,7 +424,6 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
   return (
     <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 py-6">
-
       {/* Filters & View Mode Toolbar Strip (Unframed / Floating) */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         {/* Left Side: Filters (Position & Sorting) */}
@@ -332,11 +464,13 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             </select>
 
             <button
-              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
               className="ml-1 p-0.5 hover:bg-slate-200 rounded text-slate-800 font-black cursor-pointer text-xs transition-colors"
-              title={sortOrder === 'asc' ? 'Thứ tự tăng dần' : 'Thứ tự giảm dần'}
+              title={
+                sortOrder === "asc" ? "Thứ tự tăng dần" : "Thứ tự giảm dần"
+              }
             >
-              {sortOrder === 'asc' ? '↑' : '↓'}
+              {sortOrder === "asc" ? "↑" : "↓"}
             </button>
           </div>
         </div>
@@ -344,9 +478,11 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
         {/* Right Side: View Mode Toggle (Grid vs List) */}
         <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
           <button
-            onClick={() => setViewMode('grid')}
+            onClick={() => setViewMode("grid")}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'grid' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+              viewMode === "grid"
+                ? "bg-white text-blue-600 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
             title="Hiển thị dạng thẻ (Grid)"
           >
@@ -354,9 +490,11 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             <span>Thẻ</span>
           </button>
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode("list")}
             className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              viewMode === 'list' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+              viewMode === "list"
+                ? "bg-white text-blue-600 shadow-2xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
             title="Hiển thị dạng danh sách (List)"
           >
@@ -367,7 +505,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       </div>
 
       {/* Main Content Area */}
-      {viewMode === 'grid' ? (
+      {viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {filteredAndSortedPlayers.map((player) => (
             <PlayerCard
@@ -399,9 +537,16 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                 const total = calculateTotal(p);
                 const posConfigs = getUniquePositionConfigs(p.positions);
                 return (
-                  <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-5 text-center font-black text-slate-900">{p.number}</td>
-                    <td className="py-3.5 px-5 font-bold text-slate-900">{p.name}</td>
+                  <tr
+                    key={p.id}
+                    className="hover:bg-slate-50/80 transition-colors"
+                  >
+                    <td className="py-3.5 px-5 text-center font-black text-slate-900">
+                      {p.number}
+                    </td>
+                    <td className="py-3.5 px-5 font-bold text-slate-900">
+                      {p.name}
+                    </td>
                     <td className="py-3.5 px-5">
                       {posConfigs.length > 0 ? (
                         <div className="flex flex-wrap items-center gap-1">
@@ -416,20 +561,22 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                           ))}
                         </div>
                       ) : (
-                        <span className="text-xs text-slate-400 font-normal">Chưa chọn</span>
+                        <span className="text-xs text-slate-400 font-normal">
+                          Chưa chọn
+                        </span>
                       )}
                     </td>
                     <td className="py-3.5 px-5 text-center font-extrabold text-emerald-600">
-                      {p.stamina !== null ? p.stamina : '-'}
+                      {p.stamina !== null ? p.stamina : "-"}
                     </td>
                     <td className="py-3.5 px-5 text-center font-extrabold text-orange-600">
-                      {p.attack !== null ? p.attack : '-'}
+                      {p.attack !== null ? p.attack : "-"}
                     </td>
                     <td className="py-3.5 px-5 text-center font-extrabold text-blue-600">
-                      {p.defense !== null ? p.defense : '-'}
+                      {p.defense !== null ? p.defense : "-"}
                     </td>
                     <td className="py-3.5 px-5 text-center font-black text-slate-900">
-                      {total !== -1 ? total : '-'}
+                      {total !== -1 ? total : "-"}
                     </td>
                     <td className="py-3.5 px-5 text-right space-x-2">
                       <button
@@ -463,7 +610,9 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
               <div className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 bg-amber-500 rounded-xs shrink-0"></span>
                 <h3 className="font-black text-base sm:text-lg text-slate-900 uppercase tracking-wide">
-                  {players.some((p) => p.id === editingPlayer.id) ? 'CHỈNH SỬA CẦU THỦ' : 'THÊM CẦU THỦ MỚI'}
+                  {players.some((p) => p.id === editingPlayer.id)
+                    ? "CHỈNH SỬA CẦU THỦ"
+                    : "THÊM CẦU THỦ MỚI"}
                 </h3>
               </div>
               <button
@@ -487,31 +636,41 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
               {/* Basic Info: Shirt Number & Name */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="col-span-1">
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">SỐ ÁO (#)</label>
+                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">
+                    SỐ ÁO (#)
+                  </label>
                   <input
                     type="number"
                     required
                     min={1}
                     max={99}
                     placeholder="10"
-                    value={editingPlayer.number || ''}
+                    value={editingPlayer.number || ""}
                     onChange={(e) => {
                       setErrorMsg(null);
-                      setEditingPlayer({ ...editingPlayer, number: parseInt(e.target.value) || 0 });
+                      setEditingPlayer({
+                        ...editingPlayer,
+                        number: parseInt(e.target.value) || 0,
+                      });
                     }}
                     className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-black text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900"
                   />
                 </div>
                 <div className="col-span-3">
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">TÊN CẦU THỦ</label>
+                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">
+                    TÊN CẦU THỦ
+                  </label>
                   <input
                     type="text"
                     required
                     placeholder="Nhập họ và tên cầu thủ..."
-                    value={editingPlayer.name || ''}
+                    value={editingPlayer.name || ""}
                     onChange={(e) => {
                       setErrorMsg(null);
-                      setEditingPlayer({ ...editingPlayer, name: e.target.value });
+                      setEditingPlayer({
+                        ...editingPlayer,
+                        name: e.target.value,
+                      });
                     }}
                     className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-900"
                   />
@@ -526,8 +685,13 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                 <textarea
                   rows={2}
                   placeholder="Ví dụ: Tốc độ cao, sút xa tốt, khả năng tranh chấp mạnh..."
-                  value={editingPlayer.notes || ''}
-                  onChange={(e) => setEditingPlayer({ ...editingPlayer, notes: e.target.value })}
+                  value={editingPlayer.notes || ""}
+                  onChange={(e) =>
+                    setEditingPlayer({
+                      ...editingPlayer,
+                      notes: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800"
                 />
               </div>
@@ -539,13 +703,35 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                 </label>
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
                   {[
-                    { pos: 'GK' as PositionTag, label: 'Goalkeeper', tooltip: 'Thủ Môn' },
-                    { pos: 'FI' as PositionTag, label: 'Fixo', tooltip: 'Hậu Vệ Thòng' },
-                    { pos: 'AL_L' as PositionTag, label: 'Ala (Trái)', tooltip: 'Tiền Vệ Cánh Trái' },
-                    { pos: 'AL_R' as PositionTag, label: 'Ala (Phải)', tooltip: 'Tiền Vệ Cánh Phải' },
-                    { pos: 'PI' as PositionTag, label: 'Pivot', tooltip: 'Tiền Đạo Cắm' },
+                    {
+                      pos: "GK" as PositionTag,
+                      label: "Goalkeeper",
+                      tooltip: "Thủ Môn",
+                    },
+                    {
+                      pos: "FI" as PositionTag,
+                      label: "Fixo",
+                      tooltip: "Hậu Vệ Thòng",
+                    },
+                    {
+                      pos: "AL_L" as PositionTag,
+                      label: "Ala (Trái)",
+                      tooltip: "Tiền Vệ Cánh Trái",
+                    },
+                    {
+                      pos: "AL_R" as PositionTag,
+                      label: "Ala (Phải)",
+                      tooltip: "Tiền Vệ Cánh Phải",
+                    },
+                    {
+                      pos: "PI" as PositionTag,
+                      label: "Pivot",
+                      tooltip: "Tiền Đạo Cắm",
+                    },
                   ].map((item) => {
-                    const isSelected = editingPlayer.positions?.includes(item.pos);
+                    const isSelected = editingPlayer.positions?.includes(
+                      item.pos,
+                    );
                     return (
                       <label
                         key={item.pos}
@@ -560,7 +746,10 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                             const updated = isSelected
                               ? currentPos.filter((p) => p !== item.pos)
                               : [...currentPos, item.pos];
-                            setEditingPlayer({ ...editingPlayer, positions: updated });
+                            setEditingPlayer({
+                              ...editingPlayer,
+                              positions: updated,
+                            });
                           }}
                           className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20 cursor-pointer"
                         />
@@ -578,7 +767,12 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     CHỈ SỐ KỸ NĂNG (0 - 10)
                   </span>
                   <span className="text-xs font-bold text-slate-500">
-                    Tổng điểm: <strong className="text-blue-700 font-black">{calculateTotal(editingPlayer as Player) !== -1 ? `${calculateTotal(editingPlayer as Player)}đ` : '-'}</strong>
+                    Tổng điểm:{" "}
+                    <strong className="text-blue-700 font-black">
+                      {calculateTotal(editingPlayer as Player) !== -1
+                        ? `${calculateTotal(editingPlayer as Player)}đ`
+                        : "-"}
+                    </strong>
                   </span>
                 </div>
 
@@ -590,7 +784,10 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                       <span>Thể Lực (Bền)</span>
                     </span>
                     <span className="font-black text-slate-800">
-                      {editingPlayer.stamina !== null && editingPlayer.stamina !== undefined ? `${editingPlayer.stamina} / 10` : 'Chưa đánh giá'}
+                      {editingPlayer.stamina !== null &&
+                      editingPlayer.stamina !== undefined
+                        ? `${editingPlayer.stamina} / 10`
+                        : "Chưa đánh giá"}
                     </span>
                   </div>
                   <input
@@ -599,7 +796,12 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     max={10}
                     step={0.5}
                     value={editingPlayer.stamina ?? 0}
-                    onChange={(e) => setEditingPlayer({ ...editingPlayer, stamina: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setEditingPlayer({
+                        ...editingPlayer,
+                        stamina: parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full accent-emerald-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
                   />
                 </div>
@@ -612,7 +814,10 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                       <span>Tấn Công (Công)</span>
                     </span>
                     <span className="font-black text-slate-800">
-                      {editingPlayer.attack !== null && editingPlayer.attack !== undefined ? `${editingPlayer.attack} / 10` : 'Chưa đánh giá'}
+                      {editingPlayer.attack !== null &&
+                      editingPlayer.attack !== undefined
+                        ? `${editingPlayer.attack} / 10`
+                        : "Chưa đánh giá"}
                     </span>
                   </div>
                   <input
@@ -621,7 +826,12 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     max={10}
                     step={0.5}
                     value={editingPlayer.attack ?? 0}
-                    onChange={(e) => setEditingPlayer({ ...editingPlayer, attack: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setEditingPlayer({
+                        ...editingPlayer,
+                        attack: parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full accent-amber-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
                   />
                 </div>
@@ -634,7 +844,10 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                       <span>Phòng Thủ (Thủ)</span>
                     </span>
                     <span className="font-black text-slate-800">
-                      {editingPlayer.defense !== null && editingPlayer.defense !== undefined ? `${editingPlayer.defense} / 10` : 'Chưa đánh giá'}
+                      {editingPlayer.defense !== null &&
+                      editingPlayer.defense !== undefined
+                        ? `${editingPlayer.defense} / 10`
+                        : "Chưa đánh giá"}
                     </span>
                   </div>
                   <input
@@ -643,7 +856,12 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     max={10}
                     step={0.5}
                     value={editingPlayer.defense ?? 0}
-                    onChange={(e) => setEditingPlayer({ ...editingPlayer, defense: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      setEditingPlayer({
+                        ...editingPlayer,
+                        defense: parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full accent-blue-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
                   />
                 </div>
