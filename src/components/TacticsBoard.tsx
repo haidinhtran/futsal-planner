@@ -447,7 +447,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                         <span className={`font-extrabold text-xs xl:text-sm truncate ${
                           isAssigned ? 'text-slate-400' : 'text-slate-900'
                         }`} title={p.name}>
-                          {p.jerseyName || p.name}
+                          {p.name}
                         </span>
                       </div>
 
