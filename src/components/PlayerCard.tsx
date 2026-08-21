@@ -99,6 +99,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         <h3 className="text-sm sm:text-base font-extrabold text-slate-800 text-center line-clamp-1">
           {player.name}
         </h3>
+        
+        {player.jerseyName && (
+          <p className="text-[11px] font-bold text-slate-500 text-center tracking-wider -mt-0.5">
+            {player.jerseyName}
+          </p>
+        )}
 
         {/* Star Rating Section - Monochrome Stars */}
         <div className="mt-1.5 flex items-center justify-center">

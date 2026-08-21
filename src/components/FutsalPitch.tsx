@@ -316,7 +316,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                         <span className="text-xs xl:text-sm font-bold text-slate-900 truncate flex-1 min-w-0 pr-1 text-left" title={mainPlayer.name}>
                           <span className="font-extrabold text-blue-600">#{mainPlayer.number}</span>
                           <span className="text-slate-400 mx-0.5">-</span>
-                          <span>{getVietnameseShortName(mainPlayer.name)}</span>
+                          <span>{mainPlayer.jerseyName || getVietnameseShortName(mainPlayer.name)}</span>
                         </span>
                         <button
                           type="button"
@@ -383,7 +383,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
                           >
                             <span className="font-extrabold text-blue-600">#{subP.number}</span>
                             <span className="text-slate-400 mx-0.5">-</span>
-                            <span>{getVietnameseShortName(subP.name)}</span>
+                            <span>{subP.jerseyName || getVietnameseShortName(subP.name)}</span>
                           </span>
 
                           {/* Quick Action Buttons: Promote ↑ / Remove × */}

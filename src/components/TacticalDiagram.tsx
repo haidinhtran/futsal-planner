@@ -689,12 +689,12 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       }
     } else {
       // Real player assigned
-      const shortName = getVietnameseShortName(selectedPlayer.name);
+      const shortName = selectedPlayer.jerseyName || getVietnameseShortName(selectedPlayer.name);
       if (editingShapeId) {
         setShapes((prev) =>
           prev.map((s) =>
             s.id === editingShapeId
-              ? { ...s, text: shortName, number: selectedPlayer.number }
+              ? { ...s, text: shortName, number: selectedPlayer.number, playerId: selectedPlayer.id }
               : s,
           ),
         );
@@ -706,6 +706,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
           color: "#16a34a",
           text: shortName,
           number: selectedPlayer.number,
+          playerId: selectedPlayer.id,
         };
         setShapes((prev) => [...prev, newShape]);
         setSelectedShapeId(newShape.id);
@@ -1889,7 +1890,9 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
 
                 {/* Team Players List */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {teamPlayers.map((player) => (
+                  {teamPlayers
+                    .filter((p) => !shapes.some((s) => s.tool === "player-home" && s.playerId === p.id))
+                    .map((player) => (
                     <button
                       key={player.id}
                       onClick={() => handleSelectPlayerForShape(player)}
@@ -1903,6 +1906,11 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
                           <span className="font-extrabold text-xs text-slate-900 group-hover:text-blue-600 truncate block">
                             {player.name}
                           </span>
+                          {player.jerseyName && (
+                            <span className="font-bold text-[10px] text-slate-500 truncate block mt-0.5">
+                              {player.jerseyName}
+                            </span>
+                          )}
                           {player.positions && player.positions.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-0.5">
                               {player.positions.map((p) => {

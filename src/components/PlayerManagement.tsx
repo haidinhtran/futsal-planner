@@ -97,9 +97,10 @@ const exportPlayersToXLSX = async (players: Player[]) => {
   });
 
   players.forEach((player, index) => {
+    const nameToDisplay = player.jerseyName ? `${player.name} (${player.jerseyName})` : player.name;
     const row = worksheet.addRow({
       number: player.number,
-      name: player.name,
+      name: nameToDisplay,
       positions: getFullPositionLabel(player.positions),
     });
     row.height = 21;
@@ -153,7 +154,7 @@ const exportPlayersToPDF = (players: Player[]) => {
       (p) => `
     <tr>
       <td style="text-align: center; font-weight: bold; padding: 10px; border-bottom: 1px solid #e2e8f0;">${p.number}</td>
-      <td style="font-weight: bold; padding: 10px; border-bottom: 1px solid #e2e8f0;">${p.name}</td>
+      <td style="font-weight: bold; padding: 10px; border-bottom: 1px solid #e2e8f0;">${p.jerseyName ? `${p.name} (${p.jerseyName})` : p.name}</td>
       <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${getFullPositionLabel(p.positions)}</td>
     </tr>
   `,
@@ -374,20 +375,8 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
     if (!editingPlayer || !editingPlayer.name) return;
 
     const targetNumber = Number(editingPlayer.number);
-    if (!targetNumber || targetNumber < 1) {
-      setErrorMsg("Vui lòng nhập số áo hợp lệ (lớn hơn 0)!");
-      return;
-    }
-
-    // Check for duplicate shirt number
-    const duplicate = players.find(
-      (p) => p.number === targetNumber && p.id !== editingPlayer.id,
-    );
-
-    if (duplicate) {
-      setErrorMsg(
-        `⚠️ Số áo #${targetNumber} đã trùng với cầu thủ "${duplicate.name}"! Vui lòng chọn số áo khác.`,
-      );
+    if (editingPlayer.number === undefined || editingPlayer.number === null || isNaN(targetNumber) || targetNumber < 0) {
+      setErrorMsg("Vui lòng nhập số áo hợp lệ (lớn hơn hoặc bằng 0)!");
       return;
     }
 
@@ -395,6 +384,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       id: editingPlayer.id || Date.now().toString(),
       number: targetNumber,
       name: editingPlayer.name,
+      jerseyName: editingPlayer.jerseyName,
       avatar: editingPlayer.avatar,
       stamina:
         editingPlayer.stamina !== null &&
@@ -642,15 +632,15 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                   <input
                     type="number"
                     required
-                    min={1}
+                    min={0}
                     max={99}
                     placeholder="10"
-                    value={editingPlayer.number || ""}
+                    value={editingPlayer.number !== undefined && editingPlayer.number !== null ? editingPlayer.number : ""}
                     onChange={(e) => {
                       setErrorMsg(null);
                       setEditingPlayer({
                         ...editingPlayer,
-                        number: parseInt(e.target.value) || 0,
+                        number: e.target.value === "" ? (undefined as any) : parseInt(e.target.value) || 0,
                       });
                     }}
                     className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-black text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900"
@@ -675,6 +665,25 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-900"
                   />
                 </div>
+              </div>
+
+              {/* Tên In Áo */}
+              <div>
+                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">
+                  TÊN IN ÁO (TÙY CHỌN)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nhập tên in trên áo (ví dụ: A. NGUYEN)..."
+                  value={editingPlayer.jerseyName || ""}
+                  onChange={(e) =>
+                    setEditingPlayer({
+                      ...editingPlayer,
+                      jerseyName: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-900"
+                />
               </div>
 
               {/* Individual Player Notes */}

@@ -43,6 +43,7 @@ export interface Player {
   id: string;
   number: number;
   name: string;
+  jerseyName?: string;
   avatar?: string;
   stamina: number | null; // Thể lực (0-10)
   attack: number | null;  // Tấn công (0-10)
@@ -97,6 +98,7 @@ export interface DrawShape {
   text?: string;
   number?: number;
   size?: number;
+  playerId?: string;
 }
 
 export interface SavedTacticalDiagram {
