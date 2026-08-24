@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Download, Upload, RotateCcw } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { dialogService } from '../services/dialogService';
 
 interface SettingsPageProps {
   onDataRefresh: () => void;
@@ -22,17 +23,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onDataRefresh }) => 
     if (file) {
       try {
         await storageService.importBackup(file);
-        alert('Nhập dữ liệu thành công!');
+        await dialogService.alert('Nhập dữ liệu thành công!');
         onDataRefresh();
       } catch (err: any) {
-        alert(err.message || 'Lỗi nhập dữ liệu!');
+        await dialogService.alert(err.message || 'Lỗi nhập dữ liệu!');
       }
       e.target.value = '';
     }
   };
 
-  const handleReset = () => {
-    if (window.confirm('Bạn có chắc chắn muốn khôi phục dữ liệu 14 cầu thủ & đội hình về mặc định?')) {
+  const handleReset = async () => {
+    if (await dialogService.confirm('Bạn có chắc chắn muốn khôi phục dữ liệu 14 cầu thủ & đội hình về mặc định?', "danger")) {
       storageService.resetAllData();
       onDataRefresh();
     }

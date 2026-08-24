@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import type { DrawShape, DrawTool, Player, SavedTacticalDiagram } from "@/types/futsal";
 import { storageService } from "@/services/storageService";
+import { dialogService } from "@/services/dialogService";
 import { generateNextDraftName, resolvePlayerShortName, getRelativeCoords } from "@/utils/diagramHelpers";
 
 export function useDiagramState(
@@ -66,8 +67,8 @@ export function useDiagramState(
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedShapeId]);
 
-  const handleSaveDiagram = () => {
-    const inputName = prompt("Nhập tên bản vẽ chiến thuật:", diagramName || "Draft-001");
+  const handleSaveDiagram = async () => {
+    const inputName = await dialogService.prompt("Nhập tên bản vẽ chiến thuật:", diagramName || "Draft-001");
     if (inputName === null) return;
     const finalName = inputName.trim() || diagramName || "Draft-001";
     const diagramId = currentDiagramId || Date.now().toString();
@@ -81,9 +82,9 @@ export function useDiagramState(
     setIsDirty(false);
   };
 
-  const handleLoadDiagram = (diagramId: string) => {
+  const handleLoadDiagram = async (diagramId: string) => {
     if (!diagramId) return;
-    if (isDirty && shapes.length > 0 && !window.confirm("Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn chuyển sang bản vẽ khác?")) return;
+    if (isDirty && shapes.length > 0 && !(await dialogService.confirm("Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn chuyển sang bản vẽ khác?"))) return;
     const found = savedDiagrams.find((d) => d.id === diagramId);
     if (found) {
       setShapes([...found.shapes.map((s) => ({ ...s, points: [...s.points] }))]);
@@ -94,8 +95,8 @@ export function useDiagramState(
     }
   };
 
-  const handleNewDiagram = () => {
-    if (isDirty && shapes.length > 0 && !window.confirm("Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn tạo bản vẽ mới?")) return;
+  const handleNewDiagram = async () => {
+    if (isDirty && shapes.length > 0 && !(await dialogService.confirm("Bản vẽ hiện tại chưa được lưu. Bạn có chắc chắn muốn tạo bản vẽ mới?"))) return;
     setShapes([]);
     setDiagramName(generateNextDraftName());
     setCurrentDiagramId(null);
@@ -103,16 +104,16 @@ export function useDiagramState(
     setIsDirty(false);
   };
 
-  const handleDeleteCurrentDiagram = () => {
+  const handleDeleteCurrentDiagram = async () => {
     if (!currentDiagramId) {
-      if (window.confirm("Xóa sạch tất cả các nét vẽ trên màn hình?")) {
+      if (await dialogService.confirm("Xóa sạch tất cả các nét vẽ trên màn hình?", "danger")) {
         setShapes([]);
         setSelectedShapeId(null);
         setIsDirty(false);
       }
       return;
     }
-    if (window.confirm(`Bạn có chắc chắn muốn xóa bản vẽ "${diagramName}" khỏi danh sách đã lưu?`)) {
+    if (await dialogService.confirm(`Bạn có chắc chắn muốn xóa bản vẽ "${diagramName}" khỏi danh sách đã lưu?`, "danger")) {
       storageService.deleteDiagram(currentDiagramId);
       setSavedDiagrams(storageService.getDiagrams());
       setShapes([]);
@@ -239,7 +240,7 @@ export function useDiagramState(
     }
   };
 
-  const handleCanvasStart = (clientX: number, clientY: number) => {
+  const handleCanvasStart = async (clientX: number, clientY: number) => {
     if (!canvasRef) return;
     const pt = getRelativeCoords(clientX, clientY, canvasRef);
     if (activeTool === "pointer") {
@@ -270,7 +271,7 @@ export function useDiagramState(
       return;
     }
     if (activeTool === "text") {
-      const text = prompt("Nhập văn bản ghi chú chiến thuật:", textInput || "Chạy biên");
+      const text = await dialogService.prompt("Nhập văn bản ghi chú chiến thuật:", textInput || "Chạy biên");
       if (text) {
         const newShape: DrawShape = { id: Date.now().toString(), tool: "text", points: [pt], color: "#ffffff", text };
         setShapes((prev) => [...prev, newShape]);

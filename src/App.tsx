@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import type { Player, TacticalSquad } from "./types/futsal";
 import { storageService } from "./services/storageService";
 import { Sidebar } from "./components/Sidebar";
@@ -8,6 +8,8 @@ import { TacticsBoard } from "./components/TacticsBoard";
 import { TacticalDiagram } from "./components/TacticalDiagram";
 import { BottomNavbar } from "./components/BottomNavbar";
 import { SettingsPage } from "./components/SettingsPage";
+import { GlobalDialog } from "./components/common/GlobalDialog";
+import { dialogService } from "./services/dialogService";
 
 type TabType = "tactics" | "players" | "presentation" | "settings";
 
@@ -26,10 +28,7 @@ const getPathFromTab = (tab: TabType): string => {
   return "/plan";
 };
 
-import type {
-  PlayerControlsData,
-  DiagramControlsData,
-} from "./components/TopBar";
+// TopBar controls removed as per UI refactor
 
 export const App = () => {
   const [activeTab, setActiveTab] = useState<TabType>(() =>
@@ -43,14 +42,6 @@ export const App = () => {
     nonce: number;
   } | null>(null);
 
-  // Player Management TOP Bar Controls State
-  const [playerControls, setPlayerControls] =
-    useState<PlayerControlsData | null>(null);
-
-  // Tactical Diagram TOP Bar Controls State
-  const [diagramControls, setDiagramControls] =
-    useState<DiagramControlsData | null>(null);
-
   // Synchronous initial state load from LocalStorage
   const [players, setPlayers] = useState<Player[]>(() =>
     storageService.getPlayers(),
@@ -59,12 +50,6 @@ export const App = () => {
     storageService.getSquad(),
   );
   const [dataRefreshToken, setDataRefreshToken] = useState<number>(0);
-
-  // Actions registry ref for TopBar dynamic actions
-  const tacticsActionsRef = useRef<{
-    resetPreset?: () => void;
-    saveSquad?: () => void;
-  }>({});
 
   // Function to reload state when reset/imported
   const refreshData = () => {
@@ -111,8 +96,8 @@ export const App = () => {
     storageService.savePlayers(newPlayers);
   };
 
-  const handleDeletePlayer = (id: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa cầu thủ này?")) {
+  const handleDeletePlayer = async (id: string) => {
+    if (await dialogService.confirm("Bạn có chắc chắn muốn xóa cầu thủ này?", "danger")) {
       const newPlayers = players.filter((p) => p.id !== id);
       setPlayers(newPlayers);
       storageService.savePlayers(newPlayers);
@@ -153,23 +138,16 @@ export const App = () => {
         {/* 2a. Fixed Dynamic TopBar */}
         <TopBar
           activeTab={activeTab}
-          onResetPreset={() => tacticsActionsRef.current.resetPreset?.()}
-          onSaveSquad={() => tacticsActionsRef.current.saveSquad?.()}
-          playerControls={playerControls}
-          diagramControls={diagramControls}
         />
 
         {/* 2b. Main Page Content - Only Area Scrollable by User */}
-        <main className="flex-1 overflow-y-auto bg-white pb-safe md:pb-0">
+        <main id="main-scroll-container" className="flex-1 overflow-y-auto bg-white pb-safe md:pb-0 relative">
           {activeTab === "tactics" && (
             <TacticsBoard
               players={players}
               squad={squad}
               onSaveSquad={handleSaveSquad}
               onEditPlayer={handleEditPlayer}
-              onRegisterActions={(actions) => {
-                tacticsActionsRef.current = actions;
-              }}
             />
           )}
 
@@ -179,7 +157,6 @@ export const App = () => {
               onSavePlayer={handleSavePlayer}
               onDeletePlayer={handleDeletePlayer}
               editRequest={editRequest}
-              onRegisterControls={setPlayerControls}
             />
           )}
 
@@ -187,7 +164,6 @@ export const App = () => {
             <TacticalDiagram
               players={players}
               dataRefreshToken={dataRefreshToken}
-              onRegisterControls={setDiagramControls}
             />
           )}
 
@@ -201,6 +177,8 @@ export const App = () => {
       <div className="md:hidden">
         <BottomNavbar activeTab={activeTab} setActiveTab={handleTabChange} />
       </div>
+
+      <GlobalDialog />
     </div>
   );
 };

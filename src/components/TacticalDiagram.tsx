@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import type { Player } from "@/types/futsal";
-import type { DiagramControlsData } from "./TopBar";
+import { FilePlus, Save } from "lucide-react";
 
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { useDiagramState } from "@/hooks/useDiagramState";
@@ -14,13 +14,11 @@ import { PlayerModal } from "./TacticalDiagram/PlayerModal";
 interface TacticalDiagramProps {
   players?: Player[];
   dataRefreshToken?: number;
-  onRegisterControls?: (controls: DiagramControlsData) => void;
 }
 
 export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   players: initialPlayers,
   dataRefreshToken,
-  onRegisterControls,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<SVGSVGElement>(null);
@@ -29,23 +27,24 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
   const state = useDiagramState(initialPlayers, dataRefreshToken, canvasRef);
 
-  useEffect(() => {
-    if (onRegisterControls) {
-      onRegisterControls({
-        onSaveDiagram: state.handleSaveDiagram,
-        onLoadDiagram: state.handleLoadDiagram,
-        onNewDiagram: state.handleNewDiagram,
-      });
-    }
-  }, [
-    onRegisterControls,
-    state.handleSaveDiagram,
-    state.handleLoadDiagram,
-    state.handleNewDiagram,
-  ]);
+  // Removed onRegisterControls useEffect as per UI refactor
 
   return (
     <div className="w-full max-w-[1920px] mx-auto layout-page-container layout-section">
+      {/* Primary Action Row */}
+      {!isFullscreen && (
+        <div className="flex items-center justify-end gap-3 mb-3">
+          <button onClick={state.handleNewDiagram} className="btn-outline flex-1 sm:flex-none justify-center py-2.5 text-sm">
+            <FilePlus className="w-4 h-4 text-blue-600" />
+            <span>Bản vẽ mới</span>
+          </button>
+          <button onClick={state.handleSaveDiagram} className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm">
+            <Save className="w-4 h-4" />
+            <span>Lưu bản vẽ</span>
+          </button>
+        </div>
+      )}
+
       <Header
         isFullscreen={isFullscreen}
         diagramName={state.diagramName}

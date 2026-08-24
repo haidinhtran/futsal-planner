@@ -1,15 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useStickyActions } from '../hooks/useStickyActions';
 import type { Player, TacticalSquad, PositionSlot, AttackDirection } from '../types/futsal';
 import { getUniquePositionConfigs } from '../types/futsal';
 import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
-import { Trash2, ArrowLeftRight, Info, GripVertical, Filter } from 'lucide-react';
+import { Trash2, ArrowLeftRight, Info, GripVertical, Filter, RefreshCw, Save } from 'lucide-react';
+import { dialogService } from '../services/dialogService';
 
 interface TacticsBoardProps {
   players: Player[];
   squad: TacticalSquad;
   onSaveSquad: (squad: TacticalSquad) => void;
-  onRegisterActions?: (actions: { resetPreset: () => void; saveSquad: () => void }) => void;
   onEditPlayer?: (player: Player) => void;
 }
 
@@ -20,12 +22,14 @@ const getVietnameseShortName = (fullName: string): string => {
   return `${parts[0]} ${parts[parts.length - 1]}`;
 };
 
-export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSaveSquad, onRegisterActions }) => {
+export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSaveSquad }) => {
   const [currentFormationId, setCurrentFormationId] = useState<string>(squad.formationId || '3-1');
   const [slots, setSlots] = useState<PositionSlot[]>(squad.slots);
   const [notes, setNotes] = useState<string>(squad.notes || '');
   const [attackDirection, setAttackDirection] = useState<AttackDirection>(squad.attackDirection || 'right');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+
+  const { isSticky, sentinelRef } = useStickyActions();
 
   // Filter 5 starting players with notes
   const startingPlayersWithNotes = useMemo(() => {
@@ -256,8 +260,10 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     );
   };
 
-  const handleClearAllSlots = () => {
-    setSlots((prev) => prev.map((s) => ({ ...s, playerId: null, subPlayerIds: [] })));
+  const handleClearAllSlots = async () => {
+    if (await dialogService.confirm('Bạn có chắc chắn muốn xóa tất cả cầu thủ khỏi sân?', 'danger')) {
+      setSlots((prev) => prev.map((s) => ({ ...s, playerId: null, subPlayerIds: [] })));
+    }
   };
 
   const handleSwapSlots = (slotIdA: string, slotIdB: string) => {
@@ -297,7 +303,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     handleSwapSlots(slots[1].id, slots[2].id);
   };
 
-  const handleSidebarPlayerClick = (playerId: string) => {
+  const handleSidebarPlayerClick = async (playerId: string) => {
     if (selectedSlotId) {
       handleAssignPlayerToSlot(selectedSlotId, playerId);
     } else {
@@ -305,7 +311,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
       if (emptySlot) {
         handleAssignPlayerToSlot(emptySlot.id, playerId);
       } else {
-        alert('Cả 5 vị trí trên sân đã có cầu thủ! Nhấp chọn 1 vị trí trên sân trước khi chọn thay thế.');
+        await dialogService.alert('Cả 5 vị trí trên sân đã có cầu thủ! Nhấp chọn 1 vị trí trên sân trước khi chọn thay thế.');
       }
     }
   };
@@ -317,50 +323,74 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
     e.dataTransfer.effectAllowed = 'copyMove';
   };
 
-  useEffect(() => {
-    if (onRegisterActions) {
-      onRegisterActions({
-        resetPreset: () => {
-          const preset = FORMATION_PRESETS.find((f) => f.id === currentFormationId);
-          if (!preset) return;
-          if (currentFormationId === INITIAL_TACTICAL_SQUAD.formationId) {
-            setSlots(
-              INITIAL_TACTICAL_SQUAD.slots.map((s) => ({
-                ...s,
-                x: Number((attackDirection === 'left' ? 100 - s.x : s.x).toFixed(2)),
-                y: Number((attackDirection === 'left' ? 100 - s.y : s.y).toFixed(2)),
-              }))
-            );
-          } else {
-            setSlots(
-              preset.positions.map((pos, idx) => ({
-                id: `slot-${idx}`,
-                role: pos.role,
-                label: pos.label,
-                x: Number((attackDirection === 'left' ? 100 - pos.x : pos.x).toFixed(2)),
-                y: Number((attackDirection === 'left' ? 100 - pos.y : pos.y).toFixed(2)),
-                playerId: null,
-              }))
-            );
-          }
-        },
-        saveSquad: () => {
-          onSaveSquad({
-            id: squad.id || 'default',
-            formationId: currentFormationId,
-            slots,
-            notes,
-            attackDirection,
-            updatedAt: new Date().toISOString(),
-          });
-          alert('Đã lưu sơ đồ thế trận futsal thành công!');
-        },
-      });
+  const handleResetPreset = () => {
+    const preset = FORMATION_PRESETS.find((f) => f.id === currentFormationId);
+    if (!preset) return;
+    if (currentFormationId === INITIAL_TACTICAL_SQUAD.formationId) {
+      setSlots(
+        INITIAL_TACTICAL_SQUAD.slots.map((s) => ({
+          ...s,
+          x: Number((attackDirection === 'left' ? 100 - s.x : s.x).toFixed(2)),
+          y: Number((attackDirection === 'left' ? 100 - s.y : s.y).toFixed(2)),
+        }))
+      );
+    } else {
+      setSlots(
+        preset.positions.map((pos, idx) => ({
+          id: `slot-${idx}`,
+          role: pos.role,
+          label: pos.label,
+          x: Number((attackDirection === 'left' ? 100 - pos.x : pos.x).toFixed(2)),
+          y: Number((attackDirection === 'left' ? 100 - pos.y : pos.y).toFixed(2)),
+          playerId: null,
+        }))
+      );
     }
-  }, [onRegisterActions, currentFormationId, slots, notes, attackDirection, squad.id, onSaveSquad]);
+  };
+
+  const handleSaveSquadAction = async () => {
+    onSaveSquad({
+      id: squad.id || 'default',
+      formationId: currentFormationId,
+      slots,
+      notes,
+      attackDirection,
+      updatedAt: new Date().toISOString(),
+    });
+    await dialogService.alert('Đã lưu sơ đồ thế trận futsal thành công!');
+  };
 
   return (
     <div className="w-full bg-white">
+      {/* Sticky Compact Actions Portal */}
+      {isSticky && document.getElementById('topbar-actions-portal') && createPortal(
+        <>
+          <button onClick={handleResetPreset} className="btn-outline p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm" title="Đặt lại sơ đồ">
+            <RefreshCw className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline text-xs">Đặt lại</span>
+          </button>
+          <button onClick={handleSaveSquadAction} className="btn-primary p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm" title="Lưu đội hình">
+            <Save className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline text-xs">Lưu</span>
+          </button>
+        </>,
+        document.getElementById('topbar-actions-portal')!
+      )}
+
+      {/* Primary Action Row */}
+      <div ref={sentinelRef} className="w-full max-w-[1920px] mx-auto layout-page-container pt-3 pb-1 border-b border-slate-100 mb-2">
+        <div className="flex items-center justify-end gap-3">
+          <button onClick={handleResetPreset} className="btn-outline flex-1 sm:flex-none justify-center py-2.5 text-sm">
+            <RefreshCw className="w-4 h-4" />
+            <span>Đặt lại sơ đồ</span>
+          </button>
+          <button onClick={handleSaveSquadAction} className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm">
+            <Save className="w-4 h-4" />
+            <span>Lưu đội hình</span>
+          </button>
+        </div>
+      </div>
+
       {/* Monolithic Main Grid: Left Sidebar (4 Cols on lg, 3 Cols on xl) | Right Pitch Panel (8 Cols on lg, 9 Cols on xl) */}
       <div className="w-full max-w-[1920px] mx-auto layout-page-container grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
         {/* Left Sidebar: Player List & Filters */}
