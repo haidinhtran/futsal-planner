@@ -399,18 +399,18 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       {/* Sticky Compact Actions Portal (Mobile) & Desktop Always-Visible Portal */}
       {document.getElementById('topbar-actions-portal') && createPortal(
         <div className={`items-center justify-end gap-1.5 sm:gap-2 w-full ${isSticky ? 'flex' : 'hidden md:flex'}`}>
-          <button onClick={() => setIsFilterModalOpen(true)} className="btn-outline !px-2 md:!px-2.5" title="Lọc">
+          <button onClick={() => setIsFilterModalOpen(true)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Lọc">
             <Filter className="btn-icon" />
           </button>
           
-          <button onClick={() => setIsStickySearchOpen(!isStickySearchOpen)} className="btn-outline !px-2 md:!px-2.5" title="Tìm kiếm">
+          <button onClick={() => setIsStickySearchOpen(!isStickySearchOpen)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Tìm kiếm">
             <Search className="btn-icon" />
           </button>
 
           <div className="relative">
             <button
               onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-              className="btn-outline !px-2 md:!px-2.5"
+              className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors"
               title="Xuất Dữ Liệu"
             >
               <MoreVertical className="btn-icon text-slate-500" />

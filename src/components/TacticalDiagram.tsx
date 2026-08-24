@@ -29,7 +29,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   const state = useDiagramState(initialPlayers, dataRefreshToken, canvasRef);
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto layout-page-container pb-6 md:pb-8">
+    <div className="w-full max-w-[1920px] mx-auto layout-page-container pt-3 pb-6 md:pt-4 md:pb-8">
       {/* Desktop Always-Visible Portal */}
       {document.getElementById('topbar-actions-portal') && !isFullscreen && createPortal(
         <div className="hidden md:flex items-center justify-end gap-1.5 sm:gap-2 w-full">

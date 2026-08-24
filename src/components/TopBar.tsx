@@ -33,13 +33,13 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab }) => {
   const meta = getTabMeta();
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-slate-200 select-none shrink-0 min-h-[61px] flex flex-col">
+    <header className="sticky top-0 z-30 bg-transparent select-none shrink-0 min-h-[61px] flex flex-col">
       <div className="layout-page-container py-2.5 flex items-center w-full">
         {/* Title & Subtitle */}
         <div className="flex items-center space-x-2.5">
-          <span className="w-3 h-3 bg-blue-600 rounded-xs shrink-0"></span>
+          <span className="w-3 h-3 bg-primary rounded-xs shrink-0"></span>
           <div>
-            <h2 className="text-h2 text-slate-900 leading-tight">
+            <h2 className="text-h2 text-slate-700 uppercase leading-tight">
               {meta.title}
             </h2>
             {meta.subtitle ? (

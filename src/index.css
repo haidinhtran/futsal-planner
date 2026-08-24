@@ -5,10 +5,10 @@
 /* --- Base & Mobile Default (< 768px) --- */
 :root {
   /* Tactical Position Role Tokens */
-  --color-role-gk: #16a34a;    /* Green */
-  --color-role-fixo: #9333ea;  /* Purple */
-  --color-role-ala: #0284c7;   /* Blue */
-  --color-role-pivot: #ea580c; /* Orange */
+  --color-role-gk: #94a3b8;    /* slate-400 */
+  --color-role-fixo: #94a3b8;  
+  --color-role-ala: #94a3b8;   
+  --color-role-pivot: #94a3b8; 
 
   /* Spacing Tokens */
   --spacing-page-x: 1rem;       /* 16px */
@@ -31,6 +31,7 @@
   --color-pt: #2563eb;
 
   /* Layout & Surface Tokens */
+  --bg-page: #f1f5f9; /* slate-100 */
   --bg-app: #ffffff;
   --border-card: #e2e8f0;
   --radius-ui: 0.5rem;
@@ -72,7 +73,7 @@
 }
 
 body {
-  background-color: #ffffff;
+  background-color: var(--bg-page);
   color: #0f172a;
   min-height: 100vh;
   overflow-x: clip;

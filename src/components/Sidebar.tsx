@@ -57,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       className={`${isExpanded ? 'w-64' : 'w-16'
-        } fixed top-0 bottom-0 left-0 bg-slate-50 border-r border-slate-200 z-40 flex flex-col justify-between py-4 select-none transition-all duration-200 overflow-y-auto overflow-x-hidden`}
+        } fixed top-0 bottom-0 left-0 bg-white border-r border-slate-200 z-40 flex flex-col justify-between py-4 select-none transition-all duration-200 overflow-y-auto overflow-x-hidden`}
     >
       {/* Floating Collapse Arrow Button - Fixed position avoids overflow clipping */}
       <button

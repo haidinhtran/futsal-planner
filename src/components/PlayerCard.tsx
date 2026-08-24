@@ -1,7 +1,7 @@
 import React from "react";
 import type { Player } from "../types/futsal";
 import { getUniquePositionConfigs } from "../types/futsal";
-import { Edit2, Trash2, Star, FileText } from "lucide-react";
+import { Edit2, Trash2, Star, FileText, MoreHorizontal } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -72,7 +72,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-[13px] sm:text-[14px] font-black text-slate-500 shrink-0 select-none">#{player.number}</span>
+              <span className="text-sm font-black text-slate-700 shrink-0 select-none">#{player.number}</span>
               <h3 className="text-sm sm:text-base font-extrabold text-slate-800 line-clamp-1 truncate" title={player.name}>
                 {player.name}
               </h3>
@@ -163,8 +163,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
         {/* Bottom Section: Stats */}
         <div className="grid grid-cols-3 gap-2 text-[10px] sm:text-[11px]">
-          <StatBar label="Bền" val={player.stamina} colorClass="bg-slate-700" />
-          <StatBar label="Công" val={player.attack} colorClass="bg-slate-500" />
+          <StatBar label="Bền" val={player.stamina} colorClass="bg-slate-400" />
+          <StatBar label="Công" val={player.attack} colorClass="bg-slate-400" />
           <StatBar label="Thủ" val={player.defense} colorClass="bg-slate-400" />
         </div>
       </div>
@@ -214,7 +214,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           </span>
           
           {/* Number */}
-          <span className="text-5xl font-black text-slate-800 leading-none mb-2 select-none">
+          <span className="text-5xl font-black text-slate-700 leading-none mb-2 select-none">
             {player.number}
           </span>
           
@@ -251,35 +251,39 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
           
           {/* Stats */}
           <div className="flex flex-col gap-2.5 text-xs w-full mt-auto">
-            <StatBar label="Bền" val={player.stamina} colorClass="bg-slate-700" />
-            <StatBar label="Công" val={player.attack} colorClass="bg-slate-500" />
+            <StatBar label="Bền" val={player.stamina} colorClass="bg-slate-400" />
+            <StatBar label="Công" val={player.attack} colorClass="bg-slate-400" />
             <StatBar label="Thủ" val={player.defense} colorClass="bg-slate-400" />
           </div>
         </div>
 
-        {/* Footer: Actions (Chi Tiết | Xóa) */}
-        {(onEdit || onDelete) && (
-          <div className="flex items-center border-t border-slate-100 mt-auto bg-slate-50/50">
-            {onEdit && (
-              <button
-                onClick={() => onEdit(player)}
-                className={`flex-1 py-3 text-xs font-black text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors uppercase flex items-center justify-center gap-1.5 ${onDelete ? 'border-r border-slate-200' : ''}`}
-                title="Chỉnh sửa cầu thủ"
-              >
-                CHI TIẾT
-              </button>
-            )}
+        {/* Desktop Actions Row (Row 5 cũ) */}
+        <div className="hidden md:flex items-center justify-between border-t border-slate-100 px-4 py-3 mt-0">
+          {/* More options with hover dropdown */}
+          <div className="relative group">
+            <button className="text-slate-400 hover:text-slate-600 rounded transition-colors cursor-pointer flex items-center justify-center">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
             {onDelete && (
-              <button
-                onClick={() => onDelete(player.id)}
-                className="flex-1 py-3 text-xs font-black text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors uppercase flex items-center justify-center gap-1.5"
-                title="Xóa cầu thủ"
-              >
-                XÓA
-              </button>
+              <div className="absolute left-0 bottom-full mb-2 w-28 bg-white border border-slate-200 shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 overflow-hidden origin-bottom-left">
+                <button
+                  onClick={() => onDelete(player.id)}
+                  className="w-full text-left px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Xóa
+                </button>
+              </div>
             )}
           </div>
-        )}
+          
+          <button
+            onClick={() => onEdit?.(player)}
+            className="text-xs font-medium text-slate-500 hover:text-primary transition-colors cursor-pointer"
+          >
+            Xem chi tiết
+          </button>
+        </div>
       </div>
     </div>
   );
