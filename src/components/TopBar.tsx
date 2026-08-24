@@ -125,7 +125,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <button
               type="button"
               onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-              className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-r border-slate-200 rounded-l-lg"
+              className="flex items-center space-x-1.5 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer border-r border-slate-200 rounded-l-lg"
               title="Xuất danh sách (.xlsx / .pdf)"
             >
               <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
@@ -135,7 +135,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <button
               type="button"
               onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-              className="px-2 py-1.5 sm:py-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer rounded-r-lg"
+              className="px-2 py-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer rounded-r-lg"
               title="Tùy chọn xuất file (.xlsx / .pdf)"
             >
               <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -178,7 +178,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* Add Player Primary Button - Design Token matching Lưu đội hình */}
           <button
             onClick={playerControls.onAddPlayer}
-            className="btn-primary shrink-0 !px-3 sm:!px-4"
+            className="btn-primary shrink-0"
             title="Thêm Cầu Thủ"
           >
             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -193,7 +193,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* New Diagram Button - Design Token matching Đặt lại sơ đồ */}
           <button
             onClick={diagramControls.onNewDiagram}
-            className="btn-outline shrink-0 !px-3 sm:!px-4"
+            className="btn-outline shrink-0"
             title="Tạo bản vẽ chiến thuật mới"
           >
             <FilePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
@@ -203,7 +203,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* Save Diagram Primary Button - Design Token matching Lưu đội hình */}
           <button
             onClick={diagramControls.onSaveDiagram}
-            className="btn-primary shrink-0 !px-3 sm:!px-4"
+            className="btn-primary shrink-0"
             title="Lưu bản vẽ"
           >
             <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
