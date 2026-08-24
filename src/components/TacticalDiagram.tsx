@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Player } from "@/types/futsal";
-import { FilePlus, Save } from "lucide-react";
+import { FilePlus, Save, Sparkles, FolderOpen, Trash2 } from "lucide-react";
 
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { useDiagramState } from "@/hooks/useDiagramState";
@@ -29,15 +29,58 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   const state = useDiagramState(initialPlayers, dataRefreshToken, canvasRef);
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto layout-page-container layout-section">
+    <div className="w-full max-w-[1920px] mx-auto layout-page-container pb-6 md:pb-8">
       {/* Desktop Always-Visible Portal */}
       {document.getElementById('topbar-actions-portal') && !isFullscreen && createPortal(
         <div className="hidden md:flex items-center justify-end gap-1.5 sm:gap-2 w-full">
-          <button onClick={state.handleNewDiagram} className="btn-outline" title="Bản vẽ mới">
+          {/* Tên Bản Vẽ - Thu gọn chiều dài */}
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2 h-[38px] rounded-lg text-sm font-medium shadow-sm max-w-[140px] lg:max-w-[180px]">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span className="font-extrabold text-slate-800 truncate" title={state.diagramName}>
+              {state.diagramName}
+            </span>
+            {state.isDirty ? (
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" title="Chưa lưu" />
+            ) : state.currentDiagramId ? (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Đã lưu" />
+            ) : null}
+          </div>
+
+          {/* Chọn Bản Vẽ Đã Lưu - Thu gọn */}
+          <div className="relative flex items-center bg-white border border-slate-300 rounded-lg px-2 h-[38px] text-sm w-[140px] lg:w-[180px] shadow-sm">
+            <FolderOpen className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
+            <select
+              value={state.currentDiagramId || ""}
+              onChange={(e) => state.handleLoadDiagram(e.target.value)}
+              className="bg-transparent font-extrabold focus:outline-none cursor-pointer text-slate-800 text-xs w-full min-w-0 pr-4 appearance-none"
+            >
+              <option value="">-- Bản vẽ đã lưu --</option>
+              {state.savedDiagrams.map((d) => (
+                <option key={d.id} value={d.id} title={d.name}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+            <span className="absolute right-2 pointer-events-none text-slate-400 text-[10px]">▼</span>
+          </div>
+
+          {/* Delete Diagram Button (Icon Only) */}
+          {state.currentDiagramId && (
+            <button
+              onClick={state.handleDeleteCurrentDiagram}
+              className="btn-outline-danger !px-2 md:!px-2.5 h-[38px] bg-white"
+              title="Xóa bản vẽ này"
+            >
+              <Trash2 className="btn-icon" />
+            </button>
+          )}
+
+          {/* Bản vẽ mới (Icon Only) */}
+          <button onClick={state.handleNewDiagram} className="btn-outline !px-2 md:!px-2.5 h-[38px]" title="Bản vẽ mới">
             <FilePlus className="btn-icon text-blue-600" />
-            <span className="btn-label">Bản vẽ mới</span>
           </button>
-          <button onClick={state.handleSaveDiagram} className="btn-primary" title="Lưu bản vẽ">
+
+          <button onClick={state.handleSaveDiagram} className="btn-primary h-[38px]" title="Lưu bản vẽ">
             <Save className="btn-icon" />
             <span className="btn-label">Lưu bản vẽ</span>
           </button>

@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   if (isFullscreen) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 mb-4">
+    <div className="flex md:hidden flex-wrap items-center gap-2 sm:gap-2.5 mb-4">
       {/* Diagram Name Badge & Rename Action */}
       <div className="flex items-center space-x-2 bg-white border border-slate-300 px-3 py-1.5 sm:py-2 rounded-lg text-sm font-medium shadow-sm flex-1 min-w-[200px]">
         <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
