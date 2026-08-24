@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Player } from "@/types/futsal";
 import { FilePlus, Save } from "lucide-react";
 
@@ -27,19 +28,32 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
   const { isFullscreen, toggleFullscreen } = useFullscreen(containerRef);
   const state = useDiagramState(initialPlayers, dataRefreshToken, canvasRef);
 
-  // Removed onRegisterControls useEffect as per UI refactor
-
   return (
     <div className="w-full max-w-[1920px] mx-auto layout-page-container layout-section">
-      {/* Primary Action Row */}
+      {/* Desktop Always-Visible Portal */}
+      {document.getElementById('topbar-actions-portal') && !isFullscreen && createPortal(
+        <div className="hidden md:flex items-center justify-end gap-1.5 sm:gap-2 w-full">
+          <button onClick={state.handleNewDiagram} className="btn-outline" title="Bản vẽ mới">
+            <FilePlus className="btn-icon text-blue-600" />
+            <span className="btn-label">Bản vẽ mới</span>
+          </button>
+          <button onClick={state.handleSaveDiagram} className="btn-primary" title="Lưu bản vẽ">
+            <Save className="btn-icon" />
+            <span className="btn-label">Lưu bản vẽ</span>
+          </button>
+        </div>,
+        document.getElementById('topbar-actions-portal')!
+      )}
+
+      {/* Primary Action Row - Hidden on Desktop, Visible on Mobile */}
       {!isFullscreen && (
-        <div className="flex items-center justify-end gap-3 mb-3">
-          <button onClick={state.handleNewDiagram} className="btn-outline flex-1 sm:flex-none justify-center py-2.5 text-sm">
-            <FilePlus className="w-4 h-4 text-blue-600" />
+        <div className="md:hidden flex items-center justify-end gap-3 mb-3">
+          <button onClick={state.handleNewDiagram} className="btn-outline flex-1 justify-center py-2.5 text-sm">
+            <FilePlus className="w-4 h-4 text-blue-600 mr-1.5" />
             <span>Bản vẽ mới</span>
           </button>
-          <button onClick={state.handleSaveDiagram} className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm">
-            <Save className="w-4 h-4" />
+          <button onClick={state.handleSaveDiagram} className="btn-primary flex-1 justify-center py-2.5 text-sm">
+            <Save className="w-4 h-4 mr-1.5" />
             <span>Lưu bản vẽ</span>
           </button>
         </div>

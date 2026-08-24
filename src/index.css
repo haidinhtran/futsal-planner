@@ -122,15 +122,26 @@ body {
 
   /* Button Design System Tokens */
   .btn-primary {
-    @apply bg-primary hover:bg-primary-hover active:bg-primary-hover text-white font-extrabold rounded-lg border-0 transition-all shadow-sm cursor-pointer inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm;
+    @apply bg-primary hover:bg-primary-hover active:bg-primary-hover text-white font-extrabold rounded-lg border border-transparent transition-all shadow-sm cursor-pointer inline-flex items-center justify-center gap-1.5 p-2 md:px-4 md:py-2 text-sm uppercase;
   }
 
   .btn-outline {
-    @apply bg-surface hover:bg-surface-hover active:bg-surface-hover text-text-secondary font-bold rounded-lg border border-border transition-all shadow-sm cursor-pointer inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm;
+    @apply bg-surface hover:bg-surface-hover active:bg-surface-hover text-text-secondary font-bold rounded-lg border border-border transition-all shadow-sm cursor-pointer inline-flex items-center justify-center gap-1.5 p-2 md:px-4 md:py-2 text-sm uppercase;
   }
 
   .btn-outline-danger {
-    @apply bg-surface hover:bg-danger/10 active:bg-danger/10 text-danger font-bold rounded-lg border border-danger/40 transition-all shadow-sm cursor-pointer inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm;
+    @apply bg-surface hover:bg-danger/10 active:bg-danger/10 text-danger font-bold rounded-lg border border-danger/40 transition-all shadow-sm cursor-pointer inline-flex items-center justify-center gap-1.5 p-2 md:px-4 md:py-2 text-sm uppercase;
+  }
+
+  /* Standardized Label Token for Button Responsiveness (Icon Compact on Mobile, Full on Desktop) */
+  .btn-label {
+    @apply hidden md:inline-block whitespace-nowrap;
+  }
+
+  /* Modifier to force Full button even on mobile if needed */
+  .btn-full .btn-label,
+  .btn-label.is-full {
+    @apply inline-block;
   }
 
   /* Position Role Badges */

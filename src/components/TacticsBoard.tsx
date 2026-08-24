@@ -5,7 +5,7 @@ import type { Player, TacticalSquad, PositionSlot, AttackDirection } from '../ty
 import { getUniquePositionConfigs } from '../types/futsal';
 import { FORMATION_PRESETS, INITIAL_TACTICAL_SQUAD } from '../services/initialData';
 import { FutsalPitch } from './FutsalPitch';
-import { Trash2, ArrowLeftRight, Info, GripVertical, Filter, RefreshCw, Save } from 'lucide-react';
+import { Trash2, ArrowLeftRight, Info, GripVertical, Filter, RefreshCw, Save, Settings, X, Check, ArrowRight, ArrowLeft, MoreVertical } from 'lucide-react';
 import { dialogService } from '../services/dialogService';
 
 interface TacticsBoardProps {
@@ -28,6 +28,9 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   const [notes, setNotes] = useState<string>(squad.notes || '');
   const [attackDirection, setAttackDirection] = useState<AttackDirection>(squad.attackDirection || 'right');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [showSubs, setShowSubs] = useState<boolean>(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState<boolean>(false);
 
   const { isSticky, sentinelRef } = useStickyActions();
 
@@ -362,30 +365,90 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
 
   return (
     <div className="w-full bg-white">
-      {/* Sticky Compact Actions Portal */}
-      {isSticky && document.getElementById('topbar-actions-portal') && createPortal(
-        <>
-          <button onClick={handleResetPreset} className="btn-outline p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm" title="Đặt lại sơ đồ">
-            <RefreshCw className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline text-xs">Đặt lại</span>
+      {/* Sticky Compact Actions Portal (Mobile) & Desktop Always-Visible Portal */}
+      {document.getElementById('topbar-actions-portal') && createPortal(
+        <div className={`items-center justify-end gap-1.5 sm:gap-2 w-full ${isSticky ? 'flex' : 'hidden md:flex'}`}>
+          <button onClick={() => setIsSettingsOpen(true)} className="btn-outline" title="Cấu hình">
+            <Settings className="btn-icon" />
+            <span className="btn-label">Cấu hình</span>
           </button>
-          <button onClick={handleSaveSquadAction} className="btn-primary p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm" title="Lưu đội hình">
-            <Save className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline text-xs">Lưu</span>
+          <button onClick={handleClearAllSlots} className="btn-outline-danger" title="Xóa tất cả">
+            <Trash2 className="btn-icon" />
+            <span className="btn-label">Xóa hết</span>
           </button>
-        </>,
+          <button onClick={handleResetPreset} className="btn-outline" title="Đặt lại sơ đồ">
+            <RefreshCw className="btn-icon" />
+            <span className="btn-label">Đặt lại</span>
+          </button>
+          <button onClick={handleSaveSquadAction} className="btn-primary" title="Lưu đội hình">
+            <Save className="btn-icon" />
+            <span className="btn-label">Lưu</span>
+          </button>
+        </div>,
         document.getElementById('topbar-actions-portal')!
       )}
 
-      {/* Primary Action Row */}
-      <div ref={sentinelRef} className="w-full max-w-[1920px] mx-auto layout-page-container pt-3 pb-1 border-b border-slate-100 mb-2">
-        <div className="flex items-center justify-end gap-3">
-          <button onClick={handleResetPreset} className="btn-outline flex-1 sm:flex-none justify-center py-2.5 text-sm">
-            <RefreshCw className="w-4 h-4" />
-            <span>Đặt lại sơ đồ</span>
-          </button>
-          <button onClick={handleSaveSquadAction} className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm">
-            <Save className="w-4 h-4" />
+      {/* Sentinel for sticky header tracking */}
+      <div ref={sentinelRef} className="w-full h-[1px]"></div>
+
+      {/* Primary Action Row - Hidden on Desktop, Visible on Mobile */}
+      <div className="md:hidden w-full max-w-[1920px] mx-auto layout-page-container pt-1 pb-3 border-b border-slate-200 mb-4">
+        <div className="flex items-center justify-end gap-2 sm:gap-3">
+
+          {/* Mobile More Menu */}
+          <div className="relative sm:hidden">
+            <button 
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} 
+              className="btn-outline px-2 py-2.5 flex items-center justify-center shrink-0 shadow-sm rounded-lg"
+              title="Thêm tùy chọn"
+            >
+              <MoreVertical className="w-5 h-5 text-slate-600" />
+            </button>
+
+            {isMoreMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsMoreMenuOpen(false)}
+                />
+                <div className="absolute left-0 top-full mt-1.5 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      setIsSettingsOpen(true);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5"
+                  >
+                    <Settings className="w-4 h-4 text-slate-500" />
+                    <span>Cấu hình</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      handleResetPreset();
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5 border-t border-slate-100"
+                  >
+                    <RefreshCw className="w-4 h-4 text-slate-500" />
+                    <span>Đặt lại sơ đồ</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      handleClearAllSlots();
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <span>Xóa tất cả</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <button onClick={handleSaveSquadAction} className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm whitespace-nowrap">
+            <Save className="w-4 h-4 mr-1.5" />
             <span>Lưu đội hình</span>
           </button>
         </div>
@@ -537,10 +600,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
             slots={slots}
             playersMap={playersMap}
             selectedSlotId={selectedSlotId}
-            attackDirection={attackDirection}
-            currentFormationId={currentFormationId}
-            onSelectFormation={handleSelectFormation}
-            onToggleAttackDirection={handleToggleAttackDirection}
+            showSubs={showSubs}
             onSelectSlot={(id) => setSelectedSlotId(selectedSlotId === id ? null : id)}
             onAssignPlayerToSlot={handleAssignPlayerToSlot}
             onAssignSubPlayerToSlot={handleAssignSubPlayerToSlot}
@@ -555,23 +615,6 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
             <div className="flex items-center space-x-2 text-slate-600 font-semibold">
               <Info className="w-4 h-4 text-blue-600 shrink-0" />
               <span>Kéo thả cầu thủ từ danh sách vào vị trí trên sân để thay đổi.</span>
-            </div>
-
-            <div className="flex items-center space-x-2 shrink-0">
-              <button
-                onClick={handleQuickSwap}
-                className="btn-outline text-sm px-3.5 py-1.5"
-              >
-                <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span>Hoán đổi nhanh</span>
-              </button>
-              <button
-                onClick={handleClearAllSlots}
-                className="btn-outline-danger text-sm px-3.5 py-1.5"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Xóa tất cả</span>
-              </button>
             </div>
           </div>
         </div>
@@ -666,6 +709,121 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
           </div>
         </div>
       </div>
+
+      {/* Settings Modal Dialog */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-sm w-full p-5 shadow-2xl border border-slate-200/90 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+              <div className="flex items-center space-x-2">
+                <Settings className="w-5 h-5 text-slate-700" />
+                <h3 className="text-h3 text-slate-900">Cấu hình Đội Hình</h3>
+              </div>
+              <button
+                onClick={() => setIsSettingsOpen(false)}
+                className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Đội hình Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Sơ đồ chiến thuật</label>
+                <select
+                  value={currentFormationId}
+                  onChange={(e) => handleSelectFormation(e.target.value)}
+                  className="w-full bg-slate-50 text-emerald-700 font-black text-sm px-3 py-2.5 rounded-lg border border-slate-200 cursor-pointer focus:outline-none focus:border-emerald-500 shadow-sm"
+                >
+                  {FORMATION_PRESETS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name} ({preset.subName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Hướng tấn công */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Hướng tấn công</label>
+                <div className="flex items-center space-x-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <span className={`text-sm font-bold ${attackDirection === 'left' ? 'text-blue-700 font-black' : 'text-slate-500'}`}>
+                    Trái
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={attackDirection === 'right'}
+                    onClick={() => handleToggleAttackDirection()}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      attackDirection === 'right' ? 'bg-blue-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        attackDirection === 'right' ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    >
+                      {attackDirection === 'right' ? (
+                        <ArrowRight className="w-3 h-3 text-blue-600 stroke-[3]" />
+                      ) : (
+                        <ArrowLeft className="w-3 h-3 text-slate-400 stroke-[3]" />
+                      )}
+                    </span>
+                  </button>
+                  <span className={`text-sm font-bold ${attackDirection === 'right' ? 'text-blue-700 font-black' : 'text-slate-500'}`}>
+                    Phải
+                  </span>
+                </div>
+              </div>
+
+              {/* Ẩn / Hiện Dự bị */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Quản lý Dự bị</label>
+                <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200 cursor-pointer" onClick={() => setShowSubs(!showSubs)}>
+                  <span className="text-sm font-bold text-slate-700">Hiển thị khe thẻ dự bị</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={showSubs}
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      showSubs ? 'bg-blue-600' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        showSubs ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    >
+                      {showSubs ? (
+                        <Check className="w-3 h-3 text-blue-600 stroke-[3]" />
+                      ) : (
+                        <X className="w-3 h-3 text-slate-400 stroke-[3]" />
+                      )}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Hoán đổi nhanh */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Tiện ích</label>
+                <button
+                  onClick={() => {
+                    handleQuickSwap();
+                    setIsSettingsOpen(false);
+                  }}
+                  className="w-full btn-outline flex items-center justify-center py-2 text-sm"
+                >
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  <span>Đổi cánh nhanh (Ala Trái ↔ Phải)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

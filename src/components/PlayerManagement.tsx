@@ -16,6 +16,8 @@ import {
   Search,
   Plus,
   Download,
+  MoreVertical,
+  UserPlus,
 } from "lucide-react";
 import { removeVietnameseTones } from "../utils/vietnamese";
 
@@ -230,16 +232,19 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   editRequest,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterPosition, setFilterPosition] = useState<"all" | PositionTag>(
-    "all",
-  );
-  const [sortBy, setSortBy] = useState<
-    "number" | "name" | "total" | "stamina" | "attack" | "defense"
-  >("number");
+  const [filterPosition, setFilterPosition] = useState<"all" | PositionTag>("all");
+  const [sortBy, setSortBy] = useState<"number" | "name" | "total" | "stamina" | "attack" | "defense">("number");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const { isSticky, sentinelRef } = useStickyActions();
+  const [isStickySearchOpen, setIsStickySearchOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isSticky) {
+      setIsStickySearchOpen(false);
+    }
+  }, [isSticky]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -247,6 +252,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   const calculateTotal = (p: Player) => {
     let sum = 0;
@@ -342,7 +348,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
     if (target) {
       handleOpenEditModal(target);
     }
-  }, [editRequest]);
+  }, [editRequest, players]);
 
   const handleSaveModal = (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,79 +394,93 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto layout-page-container layout-section">
-      {/* Action Header Area */}
-      <div ref={sentinelRef} className="flex flex-col gap-3 mb-5 pt-1">
-        {/* Primary Action Row: Add Player & More (Export) */}
-        <div className="flex items-center justify-between gap-3">
-          <button
-            onClick={handleOpenAddModal}
-            className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm"
-          >
-            <span className="w-4 h-4 flex items-center justify-center font-bold text-lg leading-none pb-0.5">+</span>
-            <span>Thêm Cầu Thủ</span>
+    <div className="w-full max-w-[1920px] mx-auto layout-page-container pt-3 pb-6 md:pt-4 md:pb-8">
+      {/* Primary Action Row */}
+      {/* Sticky Compact Actions Portal (Mobile) & Desktop Always-Visible Portal */}
+      {document.getElementById('topbar-actions-portal') && createPortal(
+        <div className={`items-center justify-end gap-1.5 sm:gap-2 w-full ${isSticky ? 'flex' : 'hidden md:flex'}`}>
+          <button onClick={() => setIsFilterModalOpen(true)} className="btn-outline !px-2 md:!px-2.5" title="Lọc">
+            <Filter className="btn-icon" />
+          </button>
+          
+          <button onClick={() => setIsStickySearchOpen(!isStickySearchOpen)} className="btn-outline !px-2 md:!px-2.5" title="Tìm kiếm">
+            <Search className="btn-icon" />
           </button>
 
-          <div className="relative inline-flex items-center rounded-lg shadow-2xs bg-white border border-slate-300">
+          <div className="relative">
             <button
               onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
-              className="flex items-center space-x-1.5 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer rounded-lg"
+              className="btn-outline !px-2 md:!px-2.5"
+              title="Xuất Dữ Liệu"
             >
-              <ArrowUpDown className="w-4 h-4 text-slate-500" />
-              <span>Thêm Thao Tác</span>
+              <MoreVertical className="btn-icon text-slate-500" />
             </button>
             {isExportMenuOpen && (
               <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setIsExportMenuOpen(false)}
-                />
-                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
-                  <button
-                    onClick={() => {
-                      setIsExportMenuOpen(false);
-                      exportPlayersToXLSX(filteredAndSortedPlayers);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm font-bold text-slate-700 hover:bg-green-50 hover:text-green-700"
-                  >
-                    Xuất File XLSX
+                <div className="fixed inset-0 z-40" onClick={() => setIsExportMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
+                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToXLSX(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-green-50 flex items-center space-x-2.5 uppercase">
+                    <Download className="w-4 h-4 text-green-600 shrink-0" />
+                    <span>XUẤT TỆP EXCEL</span>
                   </button>
-                  <button
-                    onClick={() => {
-                      setIsExportMenuOpen(false);
-                      exportPlayersToPDF(filteredAndSortedPlayers);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-red-700"
-                  >
-                    Xuất File PDF
+                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToPDF(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100 uppercase">
+                    <Download className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>XUẤT TỆP PDF</span>
                   </button>
                 </div>
               </>
             )}
           </div>
-        </div>
 
-        {/* Secondary Action Row: Search & Filter Trigger */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Tìm tên hoặc số áo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800 shadow-sm"
-            />
+          <button onClick={handleOpenAddModal} className="btn-primary" title="Thêm Cầu Thủ">
+            <UserPlus className="btn-icon" />
+            <span className="btn-label">Thêm Cầu Thủ</span>
+          </button>
+        </div>,
+        document.getElementById('topbar-actions-portal')!
+      )}
+
+      {/* Sentinel for sticky header tracking */}
+      <div ref={sentinelRef} className="w-full h-[1px]"></div>
+
+      {/* Primary Action Row - Hidden on Desktop, Visible on Mobile */}
+      <div className="md:hidden w-full max-w-[1920px] mx-auto layout-page-container pt-1 pb-3 border-b border-slate-200 mb-4">
+        <div className="flex items-center justify-end gap-2 sm:gap-3">
+
+          {/* Mobile More Menu */}
+          <div className="relative sm:hidden flex-1 flex justify-start">
+            <button 
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} 
+              className="btn-outline px-2 py-2.5 flex items-center justify-center shrink-0 shadow-sm rounded-lg"
+              title="Thêm tùy chọn"
+            >
+              <MoreVertical className="w-5 h-5 text-slate-600" />
+            </button>
+
+            {isMoreMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsMoreMenuOpen(false)} />
+                <div className="absolute left-0 top-full mt-1.5 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
+                  <button onClick={() => { setIsMoreMenuOpen(false); setIsFilterModalOpen(true); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5">
+                    <Filter className="w-4 h-4 text-slate-500" /><span>Lọc</span>
+                  </button>
+                  <button onClick={() => { setIsMoreMenuOpen(false); setIsStickySearchOpen(!isStickySearchOpen); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5 border-t border-slate-100">
+                    <Search className="w-4 h-4 text-slate-500" /><span>Tìm kiếm</span>
+                  </button>
+                  <button onClick={() => { setIsMoreMenuOpen(false); exportPlayersToXLSX(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-green-700 hover:bg-green-50 flex items-center space-x-2.5 border-t border-slate-100">
+                    <Download className="w-4 h-4 text-green-600" /><span>Xuất Excel</span>
+                  </button>
+                  <button onClick={() => { setIsMoreMenuOpen(false); exportPlayersToPDF(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-700 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100">
+                    <Download className="w-4 h-4 text-red-600" /><span>Xuất PDF</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => setIsFilterModalOpen(true)}
-            className={`flex items-center justify-center p-2.5 rounded-lg border shadow-sm transition-colors ${
-              filterPosition !== "all" || sortBy !== "number" || sortOrder !== "asc"
-                ? "bg-blue-50 border-blue-200 text-blue-700"
-                : "bg-slate-50 border-slate-300 text-slate-700"
-            }`}
-          >
-            <Filter className="w-5 h-5" />
+
+          <button onClick={handleOpenAddModal} className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm whitespace-nowrap">
+            <span className="w-4 h-4 flex items-center justify-center font-bold text-lg leading-none pb-0.5 mr-1.5">+</span>
+            <span>Thêm Cầu Thủ</span>
           </button>
         </div>
       </div>
@@ -553,7 +573,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
       {/* Main Content Area */}
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5">
           {filteredAndSortedPlayers.map((player) => (
             <PlayerCard
               key={player.id}
@@ -656,18 +676,59 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       )}
 
       {/* Edit / Add Modal - Minimalist & Monolithic Design */}
+      {/* Sticky Compact Actions Portal */}
       {isSticky && document.getElementById('topbar-actions-portal') && createPortal(
         <>
-          <button onClick={handleOpenAddModal} className="btn-primary p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm" title="Thêm Cầu Thủ">
+          <button onClick={() => setIsFilterModalOpen(true)} className="p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 rounded-lg transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-700" title="Lọc">
+            <Filter className="w-4 h-4" />
+          </button>
+          <button onClick={() => setIsStickySearchOpen(!isStickySearchOpen)} className={`p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 rounded-lg transition-colors ${isStickySearchOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`} title="Tìm kiếm">
+            <Search className="w-4 h-4" />
+          </button>
+          <div className="relative">
+            <button onClick={() => setIsExportMenuOpen(!isExportMenuOpen)} className="p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 rounded-lg transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-700" title="Xuất dữ liệu">
+              <Download className="w-4 h-4" />
+            </button>
+            {isExportMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsExportMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
+                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToXLSX(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-green-50 flex items-center space-x-2.5">
+                    <Download className="w-4 h-4 text-green-600" />
+                    <span>Xuất File XLSX</span>
+                  </button>
+                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToPDF(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100">
+                    <Download className="w-4 h-4 text-red-600" />
+                    <span>Xuất File PDF</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          <button onClick={handleOpenAddModal} className="btn-primary p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm ml-1" title="Thêm Cầu Thủ">
             <Plus className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline text-xs">Thêm</span>
           </button>
-          <button onClick={() => exportPlayersToXLSX(filteredAndSortedPlayers)} className="btn-outline p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm text-green-700 hover:bg-green-50" title="Xuất Excel">
-            <Download className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline text-xs">Excel</span>
-          </button>
         </>,
         document.getElementById('topbar-actions-portal')!
+      )}
+
+      {/* Search Input Portal (Shown when search is active, sticky or not) */}
+      {isStickySearchOpen && document.getElementById('topbar-bottom-portal') && createPortal(
+        <div className="layout-page-container py-2 pb-3 bg-white border-t border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Tìm tên hoặc số áo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800 shadow-sm"
+              autoFocus
+            />
+          </div>
+        </div>,
+        document.getElementById('topbar-bottom-portal')!
       )}
 
       {isModalOpen && editingPlayer && (

@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
-import type { PositionSlot, Player, AttackDirection } from '../types/futsal';
-import { FORMATION_PRESETS } from '../services/initialData';
+import React from 'react';
+import type { PositionSlot, Player } from '../types/futsal';
 import { getUniquePositionConfigs as _getUniquePositionConfigs } from '../types/futsal';
-import { User, X, GripVertical, ChevronUp, Users, Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { User, X, GripVertical, ChevronUp, Users } from 'lucide-react';
 
 interface FutsalPitchProps {
   slots: PositionSlot[];
   playersMap: Record<string, Player>;
   selectedSlotId: string | null;
-  attackDirection?: AttackDirection;
-  currentFormationId?: string;
-  onSelectFormation?: (formationId: string) => void;
-  onToggleAttackDirection?: () => void;
   onSelectSlot: (slotId: string) => void;
   onAssignPlayerToSlot: (slotId: string, playerId: string) => void;
   onAssignSubPlayerToSlot?: (slotId: string, playerId: string) => void;
@@ -19,6 +14,7 @@ interface FutsalPitchProps {
   onClearSubPlayer?: (slotId: string, subPlayerId: string) => void;
   onPromoteSubToMain?: (slotId: string, subPlayerId: string) => void;
   onSwapSlots: (slotIdA: string, slotIdB: string) => void;
+  showSubs?: boolean;
 }
 
 // Helper function to format clean English role titles for pitch card headers
@@ -51,10 +47,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
   slots,
   playersMap,
   selectedSlotId,
-  attackDirection = 'right',
-  currentFormationId,
-  onSelectFormation,
-  onToggleAttackDirection,
+  showSubs = true,
   onSelectSlot,
   onAssignPlayerToSlot,
   onAssignSubPlayerToSlot,
@@ -63,8 +56,6 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
   onPromoteSubToMain,
   onSwapSlots,
 }) => {
-  const [showSubs, setShowSubs] = useState<boolean>(true);
-
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
       case 'GOALKEEPER':
@@ -162,94 +153,11 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
 
   return (
     <div className="futsal-pitch-container w-full">
-      {/* Court Header Bar - Monolithic Single Row without border divider */}
-      <div className="flex flex-wrap items-center justify-between pb-1 mb-2 text-slate-800 text-sm font-bold gap-3">
+      {/* Court Header Bar */}
+      <div className="flex items-center justify-between pb-2 mb-2 text-slate-800 text-sm font-bold gap-3 border-b border-slate-100">
         <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 bg-emerald-500"></span>
+          <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs"></span>
           <span className="text-h3 text-slate-900">SÂN THI ĐẤU FUTSAL</span>
-        </div>
-
-        {/* Inline Controls Group - Modern Segmented Control Toggle Groups */}
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          {/* Formation Preset Dropdown Selector */}
-          {currentFormationId && onSelectFormation && (
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-500 font-bold text-sm shrink-0">Đội hình:</span>
-              <select
-                value={currentFormationId}
-                onChange={(e) => onSelectFormation(e.target.value)}
-                className="bg-slate-100/90 text-emerald-700 font-black text-sm px-3 py-1.5 rounded-lg border border-slate-200/80 cursor-pointer focus:outline-none focus:border-emerald-500 shadow-2xs hover:bg-slate-200/70 transition-colors"
-              >
-                {FORMATION_PRESETS.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.name} ({preset.subName})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Hướng tấn công: Toggle Switch */}
-          <div className="flex items-center space-x-2">
-            <span className="text-slate-500 font-bold text-sm shrink-0">Hướng tấn công:</span>
-            <div className="flex items-center space-x-1.5">
-              <span className={`text-xs font-bold ${attackDirection === 'left' ? 'text-blue-700 font-black' : 'text-slate-400'}`}>
-                Trái
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={attackDirection === 'right'}
-                onClick={() => onToggleAttackDirection && onToggleAttackDirection()}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  attackDirection === 'right' ? 'bg-blue-600' : 'bg-slate-200'
-                }`}
-                title={`Hướng tấn công hiện tại: ${attackDirection === 'left' ? 'Sang Trái (←)' : 'Sang Phải (→)'}`}
-              >
-                <span
-                  className={`pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                    attackDirection === 'right' ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                >
-                  {attackDirection === 'right' ? (
-                    <ArrowRight className="w-3 h-3 text-blue-600 stroke-[3]" />
-                  ) : (
-                    <ArrowLeft className="w-3 h-3 text-slate-400 stroke-[3]" />
-                  )}
-                </span>
-              </button>
-              <span className={`text-xs font-bold ${attackDirection === 'right' ? 'text-blue-700 font-black' : 'text-slate-400'}`}>
-                Phải
-              </span>
-            </div>
-          </div>
-
-          {/* Dự Bị: Toggle Switch */}
-          <div className="flex items-center space-x-2">
-            <span className="text-slate-500 font-bold text-sm shrink-0">Dự bị:</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showSubs}
-              onClick={() => setShowSubs(!showSubs)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                showSubs ? 'bg-blue-600' : 'bg-slate-200'
-              }`}
-              title={showSubs ? 'Đang hiện dàn dự bị (Bấm để ẩn)' : 'Đang ẩn dàn dự bị (Bấm để hiện)'}
-            >
-              <span
-                className={`pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                  showSubs ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              >
-                {showSubs ? (
-                  <Check className="w-3 h-3 text-blue-600 stroke-[3]" />
-                ) : (
-                  <X className="w-3 h-3 text-slate-400 stroke-[3]" />
-                )}
-              </span>
-            </button>
-          </div>
         </div>
       </div>
 
