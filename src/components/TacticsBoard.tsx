@@ -362,7 +362,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
   return (
     <div className="w-full bg-white">
       {/* Monolithic Main Grid: Left Sidebar (4 Cols on lg, 3 Cols on xl) | Right Pitch Panel (8 Cols on lg, 9 Cols on xl) */}
-      <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
+      <div className="w-full max-w-[1920px] mx-auto layout-page-container grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200">
         {/* Left Sidebar: Player List & Filters */}
         <div className="order-2 lg:order-1 lg:col-span-4 xl:col-span-3 py-4 sm:py-5 pr-0 lg:pr-6 bg-white flex flex-col justify-between space-y-4">
           <div className="space-y-3">
@@ -370,7 +370,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
             <div className="flex items-center justify-between pb-2 border-b border-slate-200">
               <div className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs shrink-0"></span>
-                <h3 className="text-sm xl:text-base font-extrabold text-slate-900 uppercase tracking-wide">
+                <h3 className="text-h3 text-slate-900">
                   DANH SÁCH CẦU THỦ
                 </h3>
                 <span className="bg-blue-100 text-blue-800 text-xs font-black px-2 py-0.5 rounded-full border border-blue-200">
@@ -422,10 +422,10 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
                     onDragStart={(e) => handleDragStartPlayer(e, p.id)}
                     onDragEnd={(e) => e.preventDefault()}
                     onClick={() => handleSidebarPlayerClick(p.id)}
-                    className={`group relative p-2.5 rounded-lg border transition-all duration-200 select-none flex flex-col justify-between ${
+                    className={`group relative card-surface transition-all duration-200 select-none flex flex-col justify-between ${
                       isAssigned
                         ? 'bg-slate-50 border-slate-200/80 opacity-60 shadow-none cursor-pointer'
-                        : 'bg-white border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.06)] hover:shadow-md hover:border-blue-400/80 hover:-translate-y-0.5 cursor-grab active:cursor-grabbing'
+                        : 'hover:shadow-md hover:border-blue-400/80 hover:-translate-y-0.5 cursor-grab active:cursor-grabbing'
                     }`}
                   >
                     {/* TOP ROW: Drag handle + #Number + Name + Total score */}
@@ -530,14 +530,14 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
             <div className="flex items-center space-x-2 shrink-0">
               <button
                 onClick={handleQuickSwap}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 font-bold border border-slate-300 rounded-lg transition-colors cursor-pointer shadow-2xs text-sm"
+                className="btn-outline text-sm px-3.5 py-1.5"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
                 <span>Hoán đổi nhanh</span>
               </button>
               <button
                 onClick={handleClearAllSlots}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-white hover:bg-red-50 text-slate-700 hover:text-red-600 font-bold border border-slate-300 hover:border-red-200 rounded-lg transition-colors cursor-pointer shadow-2xs text-sm"
+                className="btn-outline-danger text-sm px-3.5 py-1.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Xóa tất cả</span>
@@ -549,7 +549,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
 
       {/* NEW ROW: Seamless 2-Column Layout for Squad Overview & Tactical Notes (Part of Page Content) */}
       <div className="border-t border-slate-200 pt-5 pb-6">
-        <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="w-full max-w-[1920px] mx-auto layout-page-container grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* COLUMN 1 (6 Cols): Combined Squad Info + Average Team Stats */}
           <div className="lg:col-span-6 space-y-4">
             {/* 1.1 Squad Formation Details */}

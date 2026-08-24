@@ -55,11 +55,91 @@ Sau mỗi thay đổi code, luôn chạy `npm run lint` và đảm bảo `npm ru
 
 - Không thêm plugin/cấu hình Vite mới nếu không có yêu cầu cụ thể; kiểm tra [vite.config.ts](./vite.config.ts) trước khi đổi build config.
 
-### Tailwind CSS
+### Design System & Token-First Architecture (Bắt buộc tuân thủ)
 
-- Ưu tiên utility classes trực tiếp trong JSX.
-- Class dùng lặp lại nhiều nơi (ví dụ nút bấm) định nghĩa qua `@layer components` trong [src/index.css](./src/index.css) (`.btn-primary`, `.btn-outline`...) — tái sử dụng class có sẵn thay vì tạo class trùng chức năng.
-- Token màu/kích thước dùng CSS variable khai báo ở đầu `index.css` (ví dụ `--color-role-gk`) — khi cần thêm màu theo vai trò cầu thủ, bổ sung variable thay vì hard-code mã màu trong component.
+Toàn bộ project áp dụng kiến trúc **Design Token Tập trung (Single Source of Truth)**. Tuyệt đối không hard-code spacing, typography, hay mã màu rải rác trong từng component để đảm bảo tính bảo trì và mở rộng dễ dàng.
+
+---
+
+#### 1. Nguyên tắc cốt lõi (Core Principles)
+- **Token-Driven:** Mọi giá trị về Màu sắc, Spacing, Typography, Radius, Shadow đều phải được ánh xạ từ CSS Variables trong [src/index.css](./src/index.css).
+- **Trừu tượng hóa Component qua `@layer components`:** Các mẫu layout và UI lặp lại (Container, Card, Button, Input, Heading) bắt buộc dùng class ngữ nghĩa định nghĩa sẵn trong `index.css`. Khi cần chỉnh sửa UI toàn hệ thống, chỉ chỉnh sửa tại `index.css`.
+- **Mobile-First & Responsive Token:** Giá trị biến CSS tự động co giãn theo Viewport (Mobile `< 768px`, Tablet `768px - 1023px`, Laptop/PC `>= 1024px`) ngay tại file CSS gốc.
+
+---
+
+#### 2. Hệ thống Semantic Tokens trong `src/index.css` (Quy ước)
+
+Tại `src/index.css`, tất cả tokens được chuẩn hóa như sau:
+
+/* --- Base & Mobile Default (< 768px) --- */
+:root {
+  /* Tactical Position Role Tokens */
+  --color-role-gk: #16a34a;    /* Green */
+  --color-role-fixo: #9333ea;  /* Purple */
+  --color-role-ala: #0284c7;   /* Blue */
+  --color-role-pivot: #ea580c; /* Orange */
+
+  /* Spacing Tokens */
+  --spacing-page-x: 1rem;       /* 16px */
+  --spacing-section-y: 1.5rem;   /* 24px */
+  --spacing-grid-gap: 0.75rem;   /* 12px */
+  --spacing-card-p: 0.75rem;     /* 12px */
+
+  /* Typography Scale */
+  --font-size-h1: 1.5rem;       /* 24px */
+  --font-size-h2: 1.25rem;      /* 20px */
+  --font-size-h3: 1.125rem;     /* 18px */
+  --font-size-body: 0.875rem;   /* 14px */
+}
+
+/* --- Tablet (md: 768px - 1023px) --- */
+@media (min-width: 768px) {
+  :root {
+    --spacing-page-x: 1.5rem;   /* 24px */
+    --spacing-section-y: 2rem;  /* 32px */
+    --spacing-grid-gap: 1rem;   /* 16px */
+    --spacing-card-p: 1rem;     /* 16px */
+
+    --font-size-h1: 1.875rem;   /* 30px */
+    --font-size-h2: 1.5rem;     /* 24px */
+    --font-size-body: 1rem;     /* 16px */
+  }
+}
+
+/* --- Laptop / PC (lg: >= 1024px) --- */
+@media (min-width: 1024px) {
+  :root {
+    --spacing-page-x: 2rem;     /* 32px */
+    --spacing-section-y: 3rem;  /* 48px */
+    --spacing-grid-gap: 1.5rem; /* 24px */
+    --spacing-card-p: 1.5rem;   /* 24px */
+
+    --font-size-h1: 2.25rem;    /* 36px */
+    --font-size-h2: 1.875rem;   /* 30px */
+  }
+}
+
+---
+
+#### 3. Bộ Semantic Classes bắt buộc sử dụng trong JSX (`@layer components`)
+
+Khi viết Component, **bắt buộc** tái sử dụng các class ngữ nghĩa này, **không tự viết chuỗi utility classes lặp lại thủ công**:
+
+- **Page Layout Wrapper:** `.layout-page-container` (Tự động padding theo `--spacing-page-x`).
+- **Section Khối:** `.layout-section` (Tự động margin/padding theo `--spacing-section-y`).
+- **Card / Surface Khung:** `.card-surface` (Tự động padding `--spacing-card-p`, border-radius, background chuẩn).
+- **Typography Classes:** `.text-h1`, `.text-h2`, `.text-h3`, `.text-body` (Tự động co giãn kích thước theo viewport).
+- **Buttons / Badges:** `.btn-primary`, `.btn-outline`, `.badge-*`...
+
+---
+
+#### 4. Quy tắc CẤM & Kiểm soát chất lượng (Strict Negative Constraints)
+
+- ❌ **CẤM Hard-code Arbitrary Values trong JSX:** Tuyệt đối không dùng `px-[...]`, `w-[...]`, `text-[...]`, `bg-[#...]`.
+- ❌ **CẤM Tự ý gắn Spacing tùy tiện:** Không viết các class như `px-10`, `p-7`, `m-11` trong layout component. Mọi khoảng cách layout bắt buộc dùng semantic token hoặc class chuẩn.
+- ❌ **CẤM Chèn trực tiếp mã màu:** Bắt buộc dùng CSS variable hoặc theme color token (`var(--color-role-*)`).
+- ❌ **CẤM Viết đè Responsive cục bộ:** Không tự gán `px-4 md:px-6 lg:px-8` thủ công ở từng page/card; dùng đúng class `.layout-page-container` hoặc `.card-surface` để sau này có thể thay đổi toàn bộ hệ thống tại file CSS gốc duy nhất.
 
 ### Lint
 

@@ -11,6 +11,7 @@ import {
   ArrowUpDown,
   LayoutGrid,
   List,
+  Search,
 } from "lucide-react";
 import { removeVietnameseTones } from "../utils/vietnamese";
 
@@ -334,8 +335,6 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   useEffect(() => {
     if (onRegisterControls) {
       onRegisterControls({
-        searchTerm,
-        onSearchChange: setSearchTerm,
         filterPosition,
         onPositionChange: setFilterPosition,
         sortBy,
@@ -413,49 +412,92 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 lg:px-6 py-6">
-      {/* Filters & View Mode Toolbar Strip (Unframed / Floating) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        {/* Left Side: Filters (Position & Sorting) */}
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+    <div className="w-full max-w-[1920px] mx-auto layout-page-container layout-section">
+      {/* Search & Filters Section */}
+      <div className="flex flex-col gap-3 mb-5">
+        {/* Top Row: Search (Full width on mobile) & View Mode */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Tìm tên hoặc số áo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800 shadow-sm"
+            />
+          </div>
+
+          {/* View Mode Toggle (Grid vs List) */}
+          <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0 shadow-sm">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              title="Hiển thị dạng thẻ (Grid)"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Thẻ</span>
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === "list"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+              title="Hiển thị dạng danh sách (List)"
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Bảng</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Row: Filters (Grid on mobile, flex on desktop) */}
+        <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-2.5 sm:gap-3">
           {/* Position Filter */}
-          <div className="flex items-center space-x-2 bg-slate-50 border border-slate-300 px-3 py-1.5 sm:py-2 rounded-lg text-sm font-semibold text-slate-700">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <span className="hidden sm:inline">Vị trí:</span>
+          <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-50 border border-slate-300 px-2 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 w-full md:w-auto shadow-sm">
+            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
+            <span className="hidden sm:inline shrink-0">Vị trí:</span>
             <select
               value={filterPosition}
               onChange={(e) => setFilterPosition(e.target.value as any)}
-              className="bg-transparent font-extrabold focus:outline-none cursor-pointer text-slate-900 text-sm"
+              className="bg-transparent font-extrabold focus:outline-none cursor-pointer text-slate-900 text-[13px] sm:text-sm w-full min-w-0"
             >
-              <option value="all">Tất cả vị trí</option>
-              <option value="GK">🧤 Thủ Môn (GK)</option>
-              <option value="FI">🟣 Hậu Vệ (Fixo)</option>
-              <option value="AL_L">🔵 Tiền Vệ Cánh Trái (Ala)</option>
-              <option value="AL_R">🟣 Tiền Vệ Cánh Phải (Ala)</option>
-              <option value="PI">🟠 Tiền Đạo (Pivot)</option>
+              <option value="all">Tất cả</option>
+              <option value="GK">🧤 GK</option>
+              <option value="FI">🟣 Fixo</option>
+              <option value="AL_L">🔵 Ala (T)</option>
+              <option value="AL_R">🟣 Ala (P)</option>
+              <option value="PI">🟠 Pivot</option>
             </select>
           </div>
 
           {/* Sort Dropdown */}
-          <div className="flex items-center space-x-2 bg-slate-50 border border-slate-300 px-3 py-1.5 sm:py-2 rounded-lg text-sm font-semibold text-slate-700">
-            <ArrowUpDown className="w-4 h-4 text-slate-400" />
-            <span className="hidden sm:inline">Sắp xếp:</span>
+          <div className="flex items-center space-x-1.5 sm:space-x-2 bg-slate-50 border border-slate-300 px-2 sm:px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 w-full md:w-auto shadow-sm">
+            <ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 shrink-0" />
+            <span className="hidden sm:inline shrink-0">Sắp xếp:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-transparent font-extrabold focus:outline-none cursor-pointer text-slate-900 text-sm"
+              className="bg-transparent font-extrabold focus:outline-none cursor-pointer text-slate-900 text-[13px] sm:text-sm w-full min-w-0"
             >
               <option value="number">Số áo</option>
-              <option value="name">Tên cầu thủ</option>
-              <option value="total">Tổng điểm chỉ số</option>
-              <option value="stamina">Thể lực (TL)</option>
-              <option value="attack">Tấn công (TC)</option>
-              <option value="defense">Phòng thủ (PT)</option>
+              <option value="name">Tên</option>
+              <option value="total">Chỉ số</option>
+              <option value="stamina">TL (Bền)</option>
+              <option value="attack">Tấn công</option>
+              <option value="defense">Phòng thủ</option>
             </select>
 
             <button
               onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-              className="ml-1 p-0.5 hover:bg-slate-200 rounded text-slate-800 font-black cursor-pointer text-xs transition-colors"
+              className="ml-0.5 sm:ml-1 p-1 hover:bg-slate-200 rounded text-slate-800 font-black cursor-pointer text-xs transition-colors shrink-0"
               title={
                 sortOrder === "asc" ? "Thứ tự tăng dần" : "Thứ tự giảm dần"
               }
@@ -463,34 +505,6 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
               {sortOrder === "asc" ? "↑" : "↓"}
             </button>
           </div>
-        </div>
-
-        {/* Right Side: View Mode Toggle (Grid vs List) */}
-        <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
-          <button
-            onClick={() => setViewMode("grid")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              viewMode === "grid"
-                ? "bg-white text-blue-600 shadow-2xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-            title="Hiển thị dạng thẻ (Grid)"
-          >
-            <LayoutGrid className="w-4 h-4" />
-            <span>Thẻ</span>
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              viewMode === "list"
-                ? "bg-white text-blue-600 shadow-2xs"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-            title="Hiển thị dạng danh sách (List)"
-          >
-            <List className="w-4 h-4" />
-            <span>Bảng</span>
-          </button>
         </div>
       </div>
 
@@ -526,6 +540,13 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
               {filteredAndSortedPlayers.map((p) => {
                 const total = calculateTotal(p);
                 const posConfigs = getUniquePositionConfigs(p.positions);
+                const getBadgeClass = (pos: string) => {
+                  if (pos === 'GK') return 'badge-gk';
+                  if (pos === 'FI') return 'badge-fixo';
+                  if (pos.startsWith('AL')) return 'badge-ala';
+                  if (pos === 'PI') return 'badge-pivot';
+                  return '';
+                };
                 return (
                   <tr
                     key={p.id}
@@ -543,7 +564,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                           {posConfigs.map((cfg) => (
                             <span
                               key={cfg.shortLabel}
-                              className={`text-xs font-black px-2 py-0.5 rounded-lg border ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} hover:opacity-90 transition-opacity cursor-help shadow-2xs`}
+                              className={`text-xs font-black px-2 py-0.5 rounded-lg border-0 ${getBadgeClass(cfg.id)} hover:opacity-90 transition-opacity cursor-help shadow-2xs`}
                               title={`Vị trí: ${cfg.fullLabel}`}
                             >
                               {cfg.shortLabel}
@@ -571,13 +592,13 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     <td className="py-3.5 px-5 text-right space-x-2">
                       <button
                         onClick={() => handleOpenEditModal(p)}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-bold px-3 py-1.5 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+                        className="btn-outline px-3 py-1.5 text-xs"
                       >
                         Sửa
                       </button>
                       <button
                         onClick={() => onDeletePlayer(p.id)}
-                        className="text-xs text-slate-600 hover:text-red-600 font-bold px-3 py-1.5 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                        className="btn-outline-danger px-3 py-1.5 text-xs"
                         title="Xóa cầu thủ khỏi danh sách"
                       >
                         <span>Xóa</span>
@@ -599,7 +620,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 bg-amber-500 rounded-xs shrink-0"></span>
-                <h3 className="font-black text-base sm:text-lg text-slate-900 uppercase tracking-wide">
+                <h3 className="text-h3 text-slate-900 tracking-wide">
                   {players.some((p) => p.id === editingPlayer.id)
                     ? "CHỈNH SỬA CẦU THỦ"
                     : "THÊM CẦU THỦ MỚI"}

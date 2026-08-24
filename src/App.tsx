@@ -6,19 +6,23 @@ import { TopBar } from "./components/TopBar";
 import { PlayerManagement } from "./components/PlayerManagement";
 import { TacticsBoard } from "./components/TacticsBoard";
 import { TacticalDiagram } from "./components/TacticalDiagram";
+import { BottomNavbar } from "./components/BottomNavbar";
+import { SettingsPage } from "./components/SettingsPage";
 
-type TabType = "tactics" | "players" | "presentation";
+type TabType = "tactics" | "players" | "presentation" | "settings";
 
 const getTabFromLocation = (): TabType => {
   const path = window.location.pathname.toLowerCase();
   if (path.includes("/players")) return "players";
   if (path.includes("/present")) return "presentation";
+  if (path.includes("/settings")) return "settings";
   return "tactics"; // default ./ or /plan
 };
 
 const getPathFromTab = (tab: TabType): string => {
   if (tab === "players") return "/players";
   if (tab === "presentation") return "/present";
+  if (tab === "settings") return "/settings";
   return "/plan";
 };
 
@@ -132,18 +136,19 @@ export const App = () => {
 
   return (
     <div className="min-h-screen bg-white flex font-sans text-slate-800 antialiased h-screen overflow-hidden">
-      {/* 1. Fixed Left Vertical Sidebar */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        onDataRefresh={refreshData}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
+      {/* 1. Fixed Left Vertical Sidebar (Hidden on Mobile) */}
+      <div className="hidden md:block">
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+      </div>
 
-      {/* 2. Main Right Panel (Dynamic pl-64 or pl-[68px]) */}
+      {/* 2. Main Right Panel (Dynamic pl-64 or pl-[68px] on Desktop, pl-0 on Mobile) */}
       <div
-        className={`flex-1 flex flex-col min-w-0 ${isSidebarCollapsed ? "pl-[68px]" : "pl-64"} h-screen overflow-hidden transition-all duration-200`}
+        className={`flex-1 flex flex-col min-w-0 ${isSidebarCollapsed ? "md:pl-[68px]" : "md:pl-64"} h-screen overflow-hidden transition-all duration-200`}
       >
         {/* 2a. Fixed Dynamic TopBar */}
         <TopBar
@@ -155,7 +160,7 @@ export const App = () => {
         />
 
         {/* 2b. Main Page Content - Only Area Scrollable by User */}
-        <main className="flex-1 overflow-y-auto bg-white">
+        <main className="flex-1 overflow-y-auto bg-white pb-safe md:pb-0">
           {activeTab === "tactics" && (
             <TacticsBoard
               players={players}
@@ -185,7 +190,16 @@ export const App = () => {
               onRegisterControls={setDiagramControls}
             />
           )}
+
+          {activeTab === "settings" && (
+            <SettingsPage onDataRefresh={refreshData} />
+          )}
         </main>
+      </div>
+
+      {/* 3. Fixed Bottom Navbar (Visible only on Mobile) */}
+      <div className="md:hidden">
+        <BottomNavbar activeTab={activeTab} setActiveTab={handleTabChange} />
       </div>
     </div>
   );

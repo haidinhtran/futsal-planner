@@ -68,16 +68,16 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
   const getRoleBadgeClass = (role: string) => {
     switch (role) {
       case 'GOALKEEPER':
-        return 'bg-emerald-600 text-white';
+        return 'badge-gk rounded-t-sm';
       case 'FIXO':
-        return 'bg-purple-600 text-white';
+        return 'badge-fixo rounded-t-sm';
       case 'ALA_LEFT':
       case 'ALA_RIGHT':
-        return 'bg-sky-600 text-white';
+        return 'badge-ala rounded-t-sm';
       case 'PIVOT':
-        return 'bg-orange-600 text-white';
+        return 'badge-pivot rounded-t-sm';
       default:
-        return 'bg-slate-700 text-white';
+        return 'bg-slate-700 text-white rounded-t-sm';
     }
   };
 
@@ -166,7 +166,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
       <div className="flex flex-wrap items-center justify-between pb-1 mb-2 text-slate-800 text-sm font-bold gap-3">
         <div className="flex items-center space-x-2">
           <span className="w-2.5 h-2.5 bg-emerald-500"></span>
-          <span className="text-slate-900 font-extrabold uppercase tracking-wide text-sm sm:text-base">SÂN THI ĐẤU FUTSAL</span>
+          <span className="text-h3 text-slate-900">SÂN THI ĐẤU FUTSAL</span>
         </div>
 
         {/* Inline Controls Group - Modern Segmented Control Toggle Groups */}
@@ -287,7 +287,7 @@ export const FutsalPitch: React.FC<FutsalPitchProps> = ({
               }`}
             >
               {/* Position Container Box */}
-              <div className="bg-white border border-slate-300 w-[145px] sm:w-[155px] xl:w-[175px] 2xl:w-[185px] p-2 xl:p-2.5 flex flex-col relative">
+              <div className="bg-white border border-slate-300 w-36 sm:w-40 xl:w-44 2xl:w-48 p-2 flex flex-col relative">
                 {/* Role Header Badge */}
                 <div
                   className={`text-xs font-black uppercase py-0.5 px-1.5 flex items-center justify-between mb-1.5 leading-tight ${getRoleBadgeClass(

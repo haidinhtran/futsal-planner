@@ -2,19 +2,20 @@ export type PositionTag = 'GK' | 'FI' | 'AL_L' | 'AL_R' | 'PI';
 
 export const POSITION_TAG_CONFIG: Record<
   string,
-  { shortLabel: string; fullLabel: string; bgClass: string; textClass: string; borderClass: string }
+  { id: string; shortLabel: string; fullLabel: string; bgClass: string; textClass: string; borderClass: string }
 > = {
-  GK: { shortLabel: 'GK', fullLabel: 'Thủ Môn (Goalkeeper)', bgClass: 'bg-emerald-100', textClass: 'text-emerald-800', borderClass: 'border-emerald-200' },
-  FI: { shortLabel: 'FI', fullLabel: 'Hậu Vệ (Fixo)', bgClass: 'bg-purple-100', textClass: 'text-purple-800', borderClass: 'border-purple-200' },
-  AL_L: { shortLabel: 'ALA', fullLabel: 'Tiền Vệ Cánh Trái (Ala Left)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
-  AL_R: { shortLabel: 'ALA', fullLabel: 'Tiền Vệ Cánh Phải (Ala Right)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
-  PI: { shortLabel: 'PI', fullLabel: 'Tiền Đạo (Pivot)', bgClass: 'bg-amber-100', textClass: 'text-amber-800', borderClass: 'border-amber-200' },
-  AL: { shortLabel: 'ALA', fullLabel: 'Tiền Vệ Cánh (Ala)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
+  GK: { id: 'GK', shortLabel: 'GK', fullLabel: 'Thủ Môn (Goalkeeper)', bgClass: 'bg-emerald-100', textClass: 'text-emerald-800', borderClass: 'border-emerald-200' },
+  FI: { id: 'FI', shortLabel: 'FI', fullLabel: 'Hậu Vệ (Fixo)', bgClass: 'bg-purple-100', textClass: 'text-purple-800', borderClass: 'border-purple-200' },
+  AL_L: { id: 'AL_L', shortLabel: 'ALA', fullLabel: 'Tiền Vệ Cánh Trái (Ala Left)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
+  AL_R: { id: 'AL_R', shortLabel: 'ALA', fullLabel: 'Tiền Vệ Cánh Phải (Ala Right)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
+  PI: { id: 'PI', shortLabel: 'PI', fullLabel: 'Tiền Đạo (Pivot)', bgClass: 'bg-amber-100', textClass: 'text-amber-800', borderClass: 'border-amber-200' },
+  AL: { id: 'AL', shortLabel: 'ALA', fullLabel: 'Tiền Vệ Cánh (Ala)', bgClass: 'bg-sky-100', textClass: 'text-sky-800', borderClass: 'border-sky-200' },
 };
 
 export const getPositionConfig = (pos: string) => {
   return (
     POSITION_TAG_CONFIG[pos] || {
+      id: pos,
       shortLabel: pos,
       fullLabel: pos,
       bgClass: 'bg-slate-100',
@@ -27,7 +28,7 @@ export const getPositionConfig = (pos: string) => {
 export const getUniquePositionConfigs = (positions?: string[]) => {
   if (!positions || positions.length === 0) return [];
   const seen = new Set<string>();
-  const list: Array<{ shortLabel: string; fullLabel: string; bgClass: string; textClass: string; borderClass: string }> = [];
+  const list: Array<{ id: string; shortLabel: string; fullLabel: string; bgClass: string; textClass: string; borderClass: string }> = [];
 
   for (const pos of positions) {
     const cfg = getPositionConfig(pos);

@@ -1,24 +1,17 @@
 import React, { useState } from "react";
-import type { PositionTag, SavedTacticalDiagram } from "../types/futsal";
+import type { PositionTag } from "../types/futsal";
 import {
   RefreshCw,
   Save,
   Plus,
-  Search,
   Download,
   FileText,
   FileSpreadsheet,
   ChevronDown,
-  Sparkles,
-  Edit3,
-  FolderOpen,
   FilePlus,
-  Trash2,
 } from "lucide-react";
 
 export interface PlayerControlsData {
-  searchTerm: string;
-  onSearchChange: (val: string) => void;
   filterPosition: "all" | PositionTag;
   onPositionChange: (pos: "all" | PositionTag) => void;
   sortBy: "number" | "name" | "total" | "stamina" | "attack" | "defense";
@@ -33,18 +26,13 @@ export interface PlayerControlsData {
 }
 
 export interface DiagramControlsData {
-  diagramName: string;
-  isDirty: boolean;
-  currentDiagramId: string | null;
-  savedDiagrams: SavedTacticalDiagram[];
   onSaveDiagram: () => void;
   onLoadDiagram: (id: string) => void;
   onNewDiagram: () => void;
-  onDeleteDiagram?: () => void;
 }
 
 interface TopBarProps {
-  activeTab: "tactics" | "players" | "presentation";
+  activeTab: "tactics" | "players" | "presentation" | "settings";
   onResetPreset?: () => void;
   onSaveSquad?: () => void;
   playerControls?: PlayerControlsData | null;
@@ -77,18 +65,23 @@ export const TopBar: React.FC<TopBarProps> = ({
           title: "MÔ PHỎNG CHIẾN THUẬT",
           subtitle: "",
         };
+      case "settings":
+        return {
+          title: "CÀI ĐẶT HỆ THỐNG",
+          subtitle: "",
+        };
     }
   };
 
   const meta = getTabMeta();
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 select-none shrink-0 min-h-[61px]">
+    <header className="sticky top-0 z-30 bg-white border-b border-slate-200 layout-page-container py-2.5 flex flex-wrap items-center justify-between gap-3 select-none shrink-0 min-h-[61px]">
       {/* Title & Subtitle */}
       <div className="shrink-0 flex items-center space-x-2.5">
         <span className="w-3 h-3 bg-blue-600 rounded-xs shrink-0"></span>
         <div>
-          <h2 className="font-extrabold text-slate-900 text-base sm:text-lg uppercase tracking-wider leading-tight">
+          <h2 className="text-h2 text-slate-900 leading-tight">
             {meta.title}
           </h2>
           {meta.subtitle ? (
@@ -105,7 +98,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {onResetPreset && (
             <button
               onClick={onResetPreset}
-              className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-all cursor-pointer shadow-2xs"
+              className="btn-outline"
             >
               <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Đặt lại sơ đồ</span>
@@ -115,7 +108,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {onSaveSquad && (
             <button
               onClick={onSaveSquad}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-sm font-black text-white bg-blue-600 hover:bg-blue-700 rounded-lg border-0 transition-all cursor-pointer shadow-xs"
+              className="btn-primary"
             >
               <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Lưu đội hình</span>
@@ -127,18 +120,6 @@ export const TopBar: React.FC<TopBarProps> = ({
       {/* TOP Dynamic Actions for Players Tab */}
       {activeTab === "players" && playerControls && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Search Input */}
-          <div className="relative w-48 sm:w-60 xl:w-72">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Tìm tên hoặc số áo..."
-              value={playerControls.searchTerm}
-              onChange={(e) => playerControls.onSearchChange(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
-            />
-          </div>
-
           {/* Split Export Button Group - Design Token matching Đặt lại sơ đồ */}
           <div className="relative inline-flex items-center rounded-lg shadow-2xs bg-white border border-slate-300">
             <button
@@ -148,7 +129,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               title="Xuất danh sách (.xlsx / .pdf)"
             >
               <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
-              <span>Xuất Danh Sách</span>
+              <span className="">Xuất Danh Sách</span>
             </button>
 
             <button
@@ -197,10 +178,11 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* Add Player Primary Button - Design Token matching Lưu đội hình */}
           <button
             onClick={playerControls.onAddPlayer}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-sm font-black text-white bg-blue-600 hover:bg-blue-700 rounded-lg border-0 transition-all cursor-pointer shadow-xs shrink-0"
+            className="btn-primary shrink-0 !px-3 sm:!px-4"
+            title="Thêm Cầu Thủ"
           >
             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Thêm Cầu Thủ</span>
+            <span className="">Thêm Cầu Thủ</span>
           </button>
         </div>
       )}
@@ -208,87 +190,25 @@ export const TopBar: React.FC<TopBarProps> = ({
       {/* TOP Dynamic Actions for Presentation (Diagram Simulation) Tab */}
       {activeTab === "presentation" && diagramControls && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Diagram Name Badge & Rename Action */}
-          <div className="flex items-center space-x-2 bg-slate-50 border border-slate-300 px-3 py-1.5 sm:py-2 rounded-lg text-sm font-medium">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 shrink-0" />
-            <span
-              className="font-extrabold text-slate-800 max-w-[140px] sm:max-w-[180px] truncate"
-              title={diagramControls.diagramName}
-            >
-              {diagramControls.diagramName}
-            </span>
-            <button
-              onClick={diagramControls.onSaveDiagram}
-              className="text-slate-400 hover:text-blue-600 p-0.5 rounded transition-colors cursor-pointer"
-              title="Đổi tên / Lưu bản vẽ"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-            </button>
-
-            {diagramControls.isDirty ? (
-              <span className="text-[10px] sm:text-xs font-black px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
-                • Chưa lưu
-              </span>
-            ) : diagramControls.currentDiagramId ? (
-              <span className="text-[10px] sm:text-xs font-black px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                ✓ Đã lưu
-              </span>
-            ) : null}
-          </div>
-
-          {/* Saved Diagrams Selector Dropdown */}
-          <div className="relative flex items-center bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 sm:py-2 text-sm min-w-[180px] sm:min-w-[210px]">
-            <FolderOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 mr-1.5 shrink-0" />
-            <select
-              value={diagramControls.currentDiagramId || ""}
-              onChange={(e) => diagramControls.onLoadDiagram(e.target.value)}
-              className="bg-transparent font-extrabold focus:outline-none cursor-pointer text-slate-800 text-sm w-full min-w-0 pr-4 appearance-none"
-            >
-              <option value="">
-                -- Bản vẽ đã lưu ({diagramControls.savedDiagrams.length}) --
-              </option>
-              {diagramControls.savedDiagrams.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({new Date(d.updatedAt).toLocaleDateString("vi-VN")})
-                </option>
-              ))}
-            </select>
-            <span className="absolute right-2.5 pointer-events-none text-slate-400 text-xs">
-              ▼
-            </span>
-          </div>
-
           {/* New Diagram Button - Design Token matching Đặt lại sơ đồ */}
           <button
             onClick={diagramControls.onNewDiagram}
-            className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-all cursor-pointer shadow-2xs shrink-0"
+            className="btn-outline shrink-0 !px-3 sm:!px-4"
             title="Tạo bản vẽ chiến thuật mới"
           >
             <FilePlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
-            <span>Bản vẽ mới</span>
+            <span className="">Bản vẽ mới</span>
           </button>
 
           {/* Save Diagram Primary Button - Design Token matching Lưu đội hình */}
           <button
             onClick={diagramControls.onSaveDiagram}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 sm:px-4.5 sm:py-2 text-sm font-black text-white bg-blue-600 hover:bg-blue-700 rounded-lg border-0 transition-all cursor-pointer shadow-xs shrink-0"
+            className="btn-primary shrink-0 !px-3 sm:!px-4"
             title="Lưu bản vẽ"
           >
             <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span>Lưu Bản Vẽ</span>
+            <span className="">Lưu Bản Vẽ</span>
           </button>
-
-          {/* Delete Saved Diagram Button */}
-          {diagramControls.onDeleteDiagram &&
-            diagramControls.currentDiagramId && (
-              <button
-                onClick={diagramControls.onDeleteDiagram}
-                className="p-1.5 sm:p-2 bg-white hover:bg-red-50 text-slate-600 hover:text-red-600 rounded-lg border border-slate-200 hover:border-red-200 transition-all cursor-pointer shadow-2xs shrink-0 flex items-center justify-center"
-                title="Xóa bản vẽ này"
-              >
-                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
-            )}
         </div>
       )}
     </header>

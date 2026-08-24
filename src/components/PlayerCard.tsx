@@ -39,7 +39,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   const hasNotes = player.notes && player.notes.trim() !== "";
 
   return (
-    <div className="relative bg-white border border-slate-200 rounded-lg p-4 shadow-2xs hover:shadow-md transition-all group overflow-hidden">
+    <div className="relative card-surface hover:shadow-md transition-all group overflow-hidden">
       {/* Individual Player Notes Icon Badge (Top Left Corner) with Hover Tooltip */}
       {hasNotes && (
         <div className="absolute top-3 left-3 group/note z-10">
@@ -175,15 +175,23 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         {/* Minimalist Color-Coded Position Tags */}
         <div className="pt-3 flex flex-wrap items-center justify-end gap-1">
           {positionConfigs.length > 0 ? (
-            positionConfigs.map((cfg) => (
+            positionConfigs.map((cfg) => {
+              const getBadgeClass = (pos: string) => {
+                if (pos === 'GK') return 'badge-gk';
+                if (pos === 'FI') return 'badge-fixo';
+                if (pos.startsWith('AL')) return 'badge-ala';
+                if (pos === 'PI') return 'badge-pivot';
+                return '';
+              };
+              return (
               <span
                 key={cfg.shortLabel}
-                className={`text-[11px] font-extrabold px-2 py-0.5 rounded-lg border opacity-80 ${cfg.bgClass} ${cfg.textClass} ${cfg.borderClass} hover:opacity-90 transition-opacity cursor-help shadow-2xs`}
+                className={`text-[11px] font-extrabold px-2 py-0.5 rounded-lg border-0 opacity-80 ${getBadgeClass(cfg.id)} hover:opacity-90 transition-opacity cursor-help shadow-2xs`}
                 title={`Vị trí: ${cfg.fullLabel}`}
               >
                 {cfg.shortLabel === "ALA" ? "AL" : cfg.shortLabel}
               </span>
-            ))
+            )})
           ) : (
             <span className="text-xs font-semibold text-slate-400">
               Chưa xếp vị trí
