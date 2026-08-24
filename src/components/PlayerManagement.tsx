@@ -10,7 +10,6 @@ import {
   Check,
   AlertCircle,
   Filter,
-  ArrowUpDown,
   LayoutGrid,
   List,
   Search,
@@ -369,20 +368,20 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       avatar: editingPlayer.avatar,
       stamina:
         editingPlayer.stamina !== null &&
-        editingPlayer.stamina !== undefined &&
-        editingPlayer.stamina !== ("" as any)
+          editingPlayer.stamina !== undefined &&
+          editingPlayer.stamina !== ("" as any)
           ? Number(editingPlayer.stamina)
           : null,
       attack:
         editingPlayer.attack !== null &&
-        editingPlayer.attack !== undefined &&
-        editingPlayer.attack !== ("" as any)
+          editingPlayer.attack !== undefined &&
+          editingPlayer.attack !== ("" as any)
           ? Number(editingPlayer.attack)
           : null,
       defense:
         editingPlayer.defense !== null &&
-        editingPlayer.defense !== undefined &&
-        editingPlayer.defense !== ("" as any)
+          editingPlayer.defense !== undefined &&
+          editingPlayer.defense !== ("" as any)
           ? Number(editingPlayer.defense)
           : null,
       positions: editingPlayer.positions || [],
@@ -402,7 +401,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
           <button onClick={() => setIsFilterModalOpen(true)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Lọc">
             <Filter className="btn-icon" />
           </button>
-          
+
           <button onClick={() => setIsStickySearchOpen(!isStickySearchOpen)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Tìm kiếm">
             <Search className="btn-icon" />
           </button>
@@ -449,8 +448,8 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
           {/* Mobile More Menu */}
           <div className="relative sm:hidden flex-1 flex justify-start">
-            <button 
-              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)} 
+            <button
+              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
               className="btn-outline px-2 py-2.5 flex items-center justify-center shrink-0 shadow-sm rounded-lg"
               title="Thêm tùy chọn"
             >
@@ -933,7 +932,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     </span>
                     <span className="font-black text-slate-800">
                       {editingPlayer.stamina !== null &&
-                      editingPlayer.stamina !== undefined
+                        editingPlayer.stamina !== undefined
                         ? `${editingPlayer.stamina} / 10`
                         : "Chưa đánh giá"}
                     </span>
@@ -963,7 +962,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     </span>
                     <span className="font-black text-slate-800">
                       {editingPlayer.attack !== null &&
-                      editingPlayer.attack !== undefined
+                        editingPlayer.attack !== undefined
                         ? `${editingPlayer.attack} / 10`
                         : "Chưa đánh giá"}
                     </span>
@@ -993,7 +992,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     </span>
                     <span className="font-black text-slate-800">
                       {editingPlayer.defense !== null &&
-                      editingPlayer.defense !== undefined
+                        editingPlayer.defense !== undefined
                         ? `${editingPlayer.defense} / 10`
                         : "Chưa đánh giá"}
                     </span>
