@@ -6,15 +6,9 @@ import { getEnglishRoleTitle } from "@/utils/pitchHelpers";
 import { PlayerPickerItem } from "./PlayerPickerItem";
 
 interface Props {
-  isOpen: boolean;
-  slot: PositionSlot | null;
-  mode: "main" | "sub";
-  players: Player[];
-  assignedMainPlayerIds: Set<string>;
-  assignedSubPlayerIds: Set<string>;
-  onClose: () => void;
-  onSelectPlayer: (id: string) => void;
-  onClearSlot: () => void;
+  isOpen: boolean; slot: PositionSlot | null; mode: "main" | "sub"; players: Player[];
+  assignedMainPlayerIds: Set<string>; assignedSubPlayerIds: Set<string>;
+  onClose: () => void; onSelectPlayer: (id: string) => void; onClearSlot: () => void;
 }
 
 export const PlayerPickerModal: React.FC<Props> = ({
@@ -23,27 +17,26 @@ export const PlayerPickerModal: React.FC<Props> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("ALL");
+  const [onlyUnassigned, setOnlyUnassigned] = useState<boolean>(true);
 
   const filteredPlayers = useMemo(() => {
     const query = removeVietnameseTones(searchQuery.trim());
     return players.filter((p) => {
+      if (onlyUnassigned && p.id !== slot?.playerId) {
+        if (assignedMainPlayerIds.has(p.id) || assignedSubPlayerIds.has(p.id)) return false;
+      }
       if (selectedTag !== "ALL") {
-        const hasTag = p.positions?.some((tag) =>
-          selectedTag === "ALA" ? tag === "AL_L" || tag === "AL_R" : tag === selectedTag
-        );
+        const hasTag = p.positions?.some((tag) => (selectedTag === "ALA" ? tag === "AL_L" || tag === "AL_R" : tag === selectedTag));
         if (!hasTag) return false;
       }
       return !query || removeVietnameseTones(p.name).includes(query) || p.number.toString().includes(query);
     });
-  }, [players, searchQuery, selectedTag]);
+  }, [players, searchQuery, selectedTag, onlyUnassigned, slot, assignedMainPlayerIds, assignedSubPlayerIds]);
 
   if (!isOpen || !slot) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
+    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-2.5 min-w-0">
@@ -67,33 +60,54 @@ export const PlayerPickerModal: React.FC<Props> = ({
               className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-blue-500"
             />
           </div>
-          <div className="flex items-center gap-1 overflow-x-auto text-[11px] font-black pb-0.5">
-            {["ALL", "GK", "FI", "ALA", "PI"].map((tag) => (
+
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            <div className="flex items-center gap-1 overflow-x-auto text-[11px] font-black pb-0.5 flex-1 min-w-0">
+              {["ALL", "GK", "FI", "ALA", "PI"].map((tag) => (
+                <button
+                  key={tag} onClick={() => setSelectedTag(tag)}
+                  className={`px-2 py-0.5 rounded-md transition-colors shrink-0 ${selectedTag === tag ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"}`}
+                >
+                  {tag === "ALL" ? "Tất cả" : tag}
+                </button>
+              ))}
+              {slot.playerId && mode === "main" && (
+                <button onClick={() => { onClearSlot(); onClose(); }} className="ml-auto text-red-600 hover:bg-red-50 px-2 py-0.5 rounded-md border border-red-200 flex items-center gap-1 shrink-0">
+                  <Trash2 className="w-3 h-3" /> <span>Gỡ</span>
+                </button>
+              )}
+            </div>
+
+            <div
+              onClick={() => setOnlyUnassigned(!onlyUnassigned)}
+              className="flex items-center space-x-1.5 cursor-pointer select-none text-[11px] font-bold text-slate-600 shrink-0 bg-white px-2 py-0.5 rounded-md border border-slate-200"
+              title="Bật/Tắt chỉ hiện cầu thủ chưa lên sân"
+            >
+              <span className="text-[10px] sm:text-[11px]">Chưa lên sân</span>
               <button
-                key={tag} onClick={() => setSelectedTag(tag)}
-                className={`px-2.5 py-1 rounded-md transition-colors ${selectedTag === tag ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"}`}
+                type="button" role="switch" aria-checked={onlyUnassigned}
+                className={`relative inline-flex h-4 w-7 shrink-0 rounded-full border border-transparent transition-colors duration-200 ${onlyUnassigned ? "bg-blue-600" : "bg-slate-300"}`}
               >
-                {tag === "ALL" ? "Tất cả" : tag}
+                <span className={`pointer-events-none inline-flex h-3 w-3 transform rounded-full bg-white shadow-xs transition duration-200 ${onlyUnassigned ? "translate-x-3.5" : "translate-x-0.5"} mt-0.5`} />
               </button>
-            ))}
-            {slot.playerId && mode === "main" && (
-              <button onClick={() => { onClearSlot(); onClose(); }} className="ml-auto text-red-600 hover:bg-red-50 px-2 py-1 rounded-md border border-red-200 flex items-center gap-1">
-                <Trash2 className="w-3 h-3" /> <span>Gỡ</span>
-              </button>
-            )}
+            </div>
           </div>
         </div>
 
         <div className="p-3 overflow-y-auto space-y-2 flex-1 max-h-[420px]">
-          {filteredPlayers.map((p) => (
-            <PlayerPickerItem
-              key={p.id} player={p}
-              isMainHere={slot.playerId === p.id}
-              isMainOther={slot.playerId !== p.id && assignedMainPlayerIds.has(p.id)}
-              isSub={assignedSubPlayerIds.has(p.id)}
-              onSelect={(id) => { onSelectPlayer(id); onClose(); }}
-            />
-          ))}
+          {filteredPlayers.length > 0 ? (
+            filteredPlayers.map((p) => (
+              <PlayerPickerItem
+                key={p.id} player={p}
+                isMainHere={slot.playerId === p.id}
+                isMainOther={slot.playerId !== p.id && assignedMainPlayerIds.has(p.id)}
+                isSub={assignedSubPlayerIds.has(p.id)}
+                onSelect={(id) => { onSelectPlayer(id); onClose(); }}
+              />
+            ))
+          ) : (
+            <div className="py-8 text-center text-xs text-slate-400 font-semibold italic">Không tìm thấy cầu thủ phù hợp</div>
+          )}
         </div>
       </div>
     </div>
