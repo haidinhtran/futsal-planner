@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 import { Download, Upload, RotateCcw } from 'lucide-react';
-import { storageService } from '../services/storageService';
-import { dialogService } from '../services/dialogService';
+import { storageService } from '@/services/storageService';
+import { dialogService } from '@/services/dialogService';
+import { ProjectInfoCard } from './SettingsPage/ProjectInfoCard';
 
 interface SettingsPageProps {
   onDataRefresh: () => void;
@@ -33,22 +34,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onDataRefresh }) => 
   };
 
   const handleReset = async () => {
-    if (await dialogService.confirm('Bạn có chắc chắn muốn khôi phục dữ liệu 14 cầu thủ & đội hình về mặc định?', "danger")) {
+    if (await dialogService.confirm('Bạn có chắc chắn muốn khôi phục dữ liệu 14 cầu thủ & đội hình về mặc định?', 'danger')) {
       storageService.resetAllData();
       onDataRefresh();
     }
   };
 
   return (
-    <div className="layout-page-container h-full pt-6">
+    <div className="layout-page-container h-full pt-6 pb-8">
       <div className="layout-section mt-0">
-        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="card-surface flex flex-col items-start gap-4">
             <div>
               <h2 className="text-h3 font-bold text-slate-800">Sao lưu dữ liệu</h2>
               <p className="text-body text-slate-500 mt-1">
-                Xuất toàn bộ dữ liệu hiện tại (cầu thủ, đội hình) thành file .json để lưu trữ.
+                Xuất toàn bộ dữ liệu hiện tại (cầu thủ, đội hình, sơ đồ) thành file .json để lưu trữ.
               </p>
             </div>
             <button onClick={handleExport} className="btn-outline w-full md:w-auto mt-auto">
@@ -69,13 +69,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onDataRefresh }) => 
             >
               <Upload className="w-4 h-4" /> Nhập dữ liệu
             </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".json"
-              className="hidden"
-            />
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" className="hidden" />
           </div>
 
           <div className="card-surface flex flex-col items-start gap-4 md:col-span-2 !border-red-200 !bg-red-50/30">
@@ -89,6 +83,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onDataRefresh }) => 
               <RotateCcw className="w-4 h-4" /> Khôi phục mặc định
             </button>
           </div>
+
+          <ProjectInfoCard />
         </div>
       </div>
     </div>

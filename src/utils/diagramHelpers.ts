@@ -1,11 +1,11 @@
-import type { DrawShape, Player } from "../types/futsal";
-import { storageService } from "../services/storageService";
-import { getVietnameseShortName } from "../components/FutsalPitch";
+import type { DrawShape, Player } from "@/types/futsal";
+import { storageService } from "@/services/storageService";
+import { getVietnameseShortName } from "@/utils/pitchHelpers";
 
 export const getRelativeCoords = (
   clientX: number,
   clientY: number,
-  canvasRef: React.RefObject<SVGSVGElement | null>
+  canvasRef: React.RefObject<SVGSVGElement | null>,
 ) => {
   if (!canvasRef.current) return { x: 0, y: 0 };
   const rect = canvasRef.current.getBoundingClientRect();

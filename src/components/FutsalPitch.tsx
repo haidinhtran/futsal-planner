@@ -1,349 +1,97 @@
-import React from 'react';
-import type { PositionSlot, Player } from '../types/futsal';
-import { getUniquePositionConfigs as _getUniquePositionConfigs } from '../types/futsal';
-import { User, X, GripVertical, ChevronUp, Users } from 'lucide-react';
+import React, { useRef } from 'react';
+import type { PositionSlot, Player, AttackDirection } from '@/types/futsal';
+import { PitchSlotCard } from './TacticsBoard/PitchSlotCard';
+import { PitchToolbar } from './TacticsBoard/PitchToolbar';
 
-interface FutsalPitchProps {
-  slots: PositionSlot[];
-  playersMap: Record<string, Player>;
-  selectedSlotId: string | null;
-  onSelectSlot: (slotId: string) => void;
+interface Props {
+  slots: PositionSlot[]; playersMap: Record<string, Player>; selectedSlotId: string | null;
+  showSubs?: boolean; isFullscreen: boolean; currentFormationId: string;
+  attackDirection: AttackDirection; containerRef: React.RefObject<HTMLDivElement | null>;
+  children?: React.ReactNode;
+  onSelectSlot: (id: string) => void; onOpenPicker: (id: string, mode: 'main' | 'sub') => void;
   onAssignPlayerToSlot: (slotId: string, playerId: string) => void;
   onAssignSubPlayerToSlot?: (slotId: string, playerId: string) => void;
-  onClearSlot: (slotId: string) => void;
-  onClearSubPlayer?: (slotId: string, subPlayerId: string) => void;
+  onClearSlot: (slotId: string) => void; onClearSubPlayer?: (slotId: string, subPlayerId: string) => void;
   onPromoteSubToMain?: (slotId: string, subPlayerId: string) => void;
   onSwapSlots: (slotIdA: string, slotIdB: string) => void;
-  showSubs?: boolean;
+  onSelectFormation: (id: string) => void; onToggleAttackDirection: () => void;
+  onQuickSwap: () => void; onToggleShowSubs: () => void; onResetPreset: () => void;
+  onClearAllSlots: () => void; onSaveSquad: () => void; onToggleFullscreen: () => void;
 }
 
-// Helper function to format clean English role titles for pitch card headers
-export const getEnglishRoleTitle = (role: string): string => {
-  switch (role) {
-    case 'GOALKEEPER':
-      return 'Goalkeeper';
-    case 'FIXO':
-      return 'Fixo';
-    case 'ALA_LEFT':
-      return 'Ala Left';
-    case 'ALA_RIGHT':
-      return 'Ala Right';
-    case 'PIVOT':
-      return 'Pivot';
-    default:
-      return role;
-  }
-};
-
-// Smart helper function for Vietnamese short names (e.g. "Nguyễn Cao Tấn" -> "Cao Tấn", "Hồ Đắc Thạnh" -> "Đắc Thạnh")
-export const getVietnameseShortName = (fullName: string): string => {
-  if (!fullName) return '';
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length <= 2) return fullName;
-  return parts.slice(-2).join(' ');
-};
-
-export const FutsalPitch: React.FC<FutsalPitchProps> = ({
-  slots,
-  playersMap,
-  selectedSlotId,
-  showSubs = true,
-  onSelectSlot,
-  onAssignPlayerToSlot,
-  onAssignSubPlayerToSlot,
-  onClearSlot,
-  onClearSubPlayer,
-  onPromoteSubToMain,
-  onSwapSlots,
+export const FutsalPitch: React.FC<Props> = ({
+  slots, playersMap, selectedSlotId, showSubs = true, isFullscreen,
+  currentFormationId, attackDirection, containerRef, children,
+  onSelectSlot, onOpenPicker, onAssignPlayerToSlot, onAssignSubPlayerToSlot,
+  onClearSlot, onClearSubPlayer, onPromoteSubToMain, onSwapSlots,
+  onSelectFormation, onToggleAttackDirection, onQuickSwap, onToggleShowSubs,
+  onResetPreset, onClearAllSlots, onSaveSquad, onToggleFullscreen,
 }) => {
-  const getRoleBadgeClass = (role: string) => {
-    switch (role) {
-      case 'GOALKEEPER':
-        return 'badge-gk rounded-t-sm';
-      case 'FIXO':
-        return 'badge-fixo rounded-t-sm';
-      case 'ALA_LEFT':
-      case 'ALA_RIGHT':
-        return 'badge-ala rounded-t-sm';
-      case 'PIVOT':
-        return 'badge-pivot rounded-t-sm';
-      default:
-        return 'bg-slate-700 text-white rounded-t-sm';
-    }
-  };
-
-  const getRoleBorderLeftClass = (role: string) => {
-    switch (role) {
-      case 'GOALKEEPER':
-        return 'border-l-emerald-500';
-      case 'FIXO':
-        return 'border-l-purple-500';
-      case 'ALA_LEFT':
-      case 'ALA_RIGHT':
-        return 'border-l-sky-500';
-      case 'PIVOT':
-        return 'border-l-amber-500';
-      default:
-        return 'border-l-blue-500';
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
+  const floorRef = useRef<HTMLDivElement>(null);
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
 
   const handleDropMain = (e: React.DragEvent, targetSlotId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     const sourcePlayerId = e.dataTransfer.getData('text/player-id') || e.dataTransfer.getData('text/plain');
     const sourceSlotId = e.dataTransfer.getData('text/slot-id');
-
-    if (sourceSlotId && sourceSlotId !== targetSlotId) {
-      onSwapSlots(sourceSlotId, targetSlotId);
-    } else if (sourcePlayerId) {
-      onAssignPlayerToSlot(targetSlotId, sourcePlayerId);
-    }
+    if (sourceSlotId && sourceSlotId !== targetSlotId) onSwapSlots(sourceSlotId, targetSlotId);
+    else if (sourcePlayerId) onAssignPlayerToSlot(targetSlotId, sourcePlayerId);
   };
 
   const handleDropSub = (e: React.DragEvent, targetSlotId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     const sourcePlayerId = e.dataTransfer.getData('text/player-id') || e.dataTransfer.getData('text/plain');
-    if (sourcePlayerId && onAssignSubPlayerToSlot) {
-      onAssignSubPlayerToSlot(targetSlotId, sourcePlayerId);
-    }
+    if (sourcePlayerId && onAssignSubPlayerToSlot) onAssignSubPlayerToSlot(targetSlotId, sourcePlayerId);
   };
 
   const handleSlotDragStart = (e: React.DragEvent, slotId: string, playerId: string | null) => {
-    e.dataTransfer.setData('text/slot-id', slotId);
-    e.dataTransfer.effectAllowed = 'copyMove';
-    if (playerId) {
-      e.dataTransfer.setData('text/player-id', playerId);
-      e.dataTransfer.setData('text/plain', playerId);
-    }
+    e.dataTransfer.setData('text/slot-id', slotId); e.dataTransfer.effectAllowed = 'copyMove';
+    if (playerId) { e.dataTransfer.setData('text/player-id', playerId); e.dataTransfer.setData('text/plain', playerId); }
   };
 
   const handleSubPlayerDragStart = (e: React.DragEvent, playerId: string) => {
-    e.dataTransfer.setData('text/player-id', playerId);
-    e.dataTransfer.setData('text/plain', playerId);
-    e.dataTransfer.effectAllowed = 'copyMove';
+    e.dataTransfer.setData('text/player-id', playerId); e.dataTransfer.setData('text/plain', playerId); e.dataTransfer.effectAllowed = 'copyMove';
   };
-
-  /* Temporarily commented out popover helpers
-  const getPlayerAverage = (p: Player) => {
-    let sum = 0, count = 0;
-    if (p.stamina !== null) { sum += p.stamina; count++; }
-    if (p.attack !== null) { sum += p.attack; count++; }
-    if (p.defense !== null) { sum += p.defense; count++; }
-    return count > 0 ? (sum / count).toFixed(1) : '-';
-  };
-
-  const getPopoverPositionClass = (x: number, y: number) => {
-    const vertClass = y < 35 ? 'top-[calc(100%+8px)]' : 'bottom-[calc(100%+8px)]';
-    let horizClass = 'left-1/2 -translate-x-1/2';
-    if (x < 25) {
-      horizClass = 'left-0 translate-x-0';
-    } else if (x > 75) {
-      horizClass = 'right-0 left-auto translate-x-0';
-    }
-    return `${vertClass} ${horizClass}`;
-  };
-  */
 
   return (
-    <div className="futsal-pitch-container w-full">
-      {/* Court Header Bar */}
-      <div className="flex items-center justify-between pb-2 mb-2 text-slate-800 text-sm font-bold gap-3 border-b border-slate-100">
-        <div className="flex items-center space-x-2">
-          <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs"></span>
-          <span className="text-h3 text-slate-900">SÂN THI ĐẤU FUTSAL</span>
+    <div className={`futsal-pitch-container w-full relative ${isFullscreen ? 'is-fullscreen' : ''}`} ref={containerRef}>
+      {!isFullscreen && (
+        <div className="flex items-center justify-between pb-2 mb-2 text-slate-800 text-sm font-bold gap-3 border-b border-slate-100">
+          <div className="flex items-center space-x-2">
+            <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs" />
+            <span className="text-h3 text-slate-900">SÂN THI ĐẤU FUTSAL</span>
+          </div>
         </div>
+      )}
+
+      <div className="futsal-pitch-floor relative min-h-[520px]" ref={floorRef}>
+        <PitchToolbar
+          currentFormationId={currentFormationId} attackDirection={attackDirection}
+          showSubs={showSubs} isFullscreen={isFullscreen} containerRef={floorRef}
+          onSelectFormation={onSelectFormation} onToggleAttackDirection={onToggleAttackDirection}
+          onQuickSwap={onQuickSwap} onToggleShowSubs={onToggleShowSubs} onResetPreset={onResetPreset}
+          onClearAllSlots={onClearAllSlots} onSaveSquad={onSaveSquad} onToggleFullscreen={onToggleFullscreen}
+        />
+
+        <div className="pitch-line pitch-center-line" /><div className="pitch-line pitch-center-circle" />
+        <div className="pitch-line pitch-center-spot" /><div className="pitch-line pitch-penalty-left" />
+        <div className="pitch-line pitch-penalty-right" /><div className="pitch-line pitch-penalty-spot-left" />
+        <div className="pitch-line pitch-penalty-spot-right" /><div className="pitch-line pitch-corner-tl" />
+        <div className="pitch-line pitch-corner-tr" /><div className="pitch-line pitch-corner-bl" />
+        <div className="pitch-line pitch-corner-br" /><div className="pitch-goal-left" /><div className="pitch-goal-right" />
+
+        {slots.map((slot) => (
+          <PitchSlotCard
+            key={slot.id} slot={slot} playersMap={playersMap} isSelected={selectedSlotId === slot.id}
+            showSubs={showSubs} isFullscreen={isFullscreen} onSelectSlot={onSelectSlot} onOpenPicker={onOpenPicker}
+            onClearSlot={onClearSlot} onClearSubPlayer={onClearSubPlayer} onPromoteSubToMain={onPromoteSubToMain}
+            onDropMain={handleDropMain} onDropSub={handleDropSub} onSlotDragStart={handleSlotDragStart}
+            onSubDragStart={handleSubPlayerDragStart} onDragOver={handleDragOver}
+          />
+        ))}
       </div>
 
-      {/* Outer Pitch Border & Playing Floor */}
-      <div className="futsal-pitch-floor relative min-h-[520px]">
-        {/* Court markings */}
-        <div className="pitch-line pitch-center-line"></div>
-        <div className="pitch-line pitch-center-circle"></div>
-        <div className="pitch-line pitch-center-spot"></div>
-        <div className="pitch-line pitch-penalty-left"></div>
-        <div className="pitch-line pitch-penalty-right"></div>
-        <div className="pitch-line pitch-penalty-spot-left"></div>
-        <div className="pitch-line pitch-penalty-spot-right"></div>
-        <div className="pitch-line pitch-corner-tl"></div>
-        <div className="pitch-line pitch-corner-tr"></div>
-        <div className="pitch-line pitch-corner-bl"></div>
-        <div className="pitch-line pitch-corner-br"></div>
-        <div className="pitch-goal-left"></div>
-        <div className="pitch-goal-right"></div>
-
-        {/* Render 5 Position Container Boxes on Court */}
-        {slots.map((slot) => {
-          const mainPlayer = slot.playerId ? playersMap[slot.playerId] : null;
-          const subPlayerIds = slot.subPlayerIds || [];
-          const subPlayers = subPlayerIds.map((id) => playersMap[id]).filter(Boolean);
-          const isSelected = selectedSlotId === slot.id;
-
-          return (
-            <div
-              key={slot.id}
-              style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
-              onClick={() => onSelectSlot(slot.id)}
-              className={`pitch-player-card cursor-pointer group ${
-                isSelected ? 'ring-2 ring-yellow-400 z-30' : ''
-              }`}
-            >
-              {/* Position Container Box */}
-              <div className="bg-white border border-slate-300 w-36 sm:w-40 xl:w-44 2xl:w-48 p-2 flex flex-col relative">
-                {/* Role Header Badge */}
-                <div
-                  className={`text-xs font-black uppercase py-0.5 px-1.5 flex items-center justify-between mb-1.5 leading-tight ${getRoleBadgeClass(
-                    slot.role
-                  )}`}
-                >
-                  <span className="whitespace-normal break-words text-left flex-1 tracking-tight" title={slot.label}>
-                    {getEnglishRoleTitle(slot.role)}
-                  </span>
-                  <GripVertical className="w-3 h-3 opacity-80 cursor-move shrink-0 ml-1" />
-                </div>
-
-                {/* 1. Main Starter Slot Container */}
-                <div
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDropMain(e, slot.id)}
-                  draggable={!!mainPlayer}
-                  onDragStart={(e) => handleSlotDragStart(e, slot.id, slot.playerId)}
-                  className="relative p-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200"
-                >
-                  {mainPlayer ? (
-                    /* Main Starter Player Card - Prominently Styled: [ #5 - Cao Tấn ] */
-                    <div className="flex flex-col items-center relative text-center">
-                      {/* Synchronized Main Starter Badge: [ #Number - ShortName ] + Inline Remove Button */}
-                      <div className="w-full bg-blue-50 border border-blue-200 py-1 px-1.5 mb-1 flex items-center justify-between">
-                        <span className="text-xs xl:text-sm font-bold text-slate-900 truncate flex-1 min-w-0 pr-1 text-left" title={mainPlayer.name}>
-                          <span className="font-extrabold text-blue-600">#{mainPlayer.number}</span>
-                          <span className="text-slate-400 mx-0.5">-</span>
-                          <span>{getVietnameseShortName(mainPlayer.name)}</span>
-                        </span>
-                        <button
-                          type="button"
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onClearSlot(slot.id);
-                          }}
-                          className="p-0.5 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 ml-1 cursor-pointer"
-                          title="Bỏ cầu thủ chính khỏi vị trí"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-
-                      {/* Main Player Note (if present) */}
-                      {mainPlayer.notes && mainPlayer.notes.trim() !== '' && (
-                        <div
-                          className="w-full px-1 py-0.5 bg-amber-50 border border-amber-200/90 text-amber-900 rounded text-xs font-semibold leading-tight truncate text-left"
-                          title={mainPlayer.notes}
-                        >
-                          📝 {mainPlayer.notes}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    /* Empty Main Starter Slot Placeholder */
-                    <div className="py-2.5 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center bg-slate-50/90 text-slate-400 hover:border-blue-400 hover:bg-blue-50/50 transition-colors">
-                      <User className="w-4 h-4 text-slate-300 mb-0.5" />
-                      <span className="text-xs font-extrabold text-slate-400">Chọn đá chính</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. Sub Player Slots Area (Dự bị - Max 5) */}
-                {showSubs && (
-                  <div
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDropSub(e, slot.id)}
-                    className="mt-2 pt-1.5 border-t border-slate-200 text-left"
-                  >
-                    <div className="flex items-center justify-between text-xs font-black text-slate-500 uppercase mb-1">
-                      <span className="flex items-center space-x-1">
-                        <Users className="w-3 h-3 text-slate-400" />
-                        <span>Dự bị ({subPlayers.length}/5)</span>
-                      </span>
-                    </div>
-
-                    {/* Sub Player Cards List */}
-                    <div className="space-y-1">
-                      {subPlayers.map((subP) => (
-                        <div
-                          key={subP.id}
-                          draggable
-                          onDragStart={(e) => handleSubPlayerDragStart(e, subP.id)}
-                          className={`relative group/sub flex items-center justify-between bg-slate-50 hover:bg-slate-100/90 rounded border border-slate-200/90 ${getRoleBorderLeftClass(
-                            slot.role
-                          )} border-l-4 py-1 px-1.5 text-xs transition-all shadow-2xs`}
-                        >
-                          {/* Label: [ #Number - Name ] */}
-                          <span
-                            className="font-bold text-slate-800 truncate flex-1 min-w-0 pr-1"
-                            title={`#${subP.number} ${subP.name}`}
-                          >
-                            <span className="font-extrabold text-blue-600">#{subP.number}</span>
-                            <span className="text-slate-400 mx-0.5">-</span>
-                            <span>{getVietnameseShortName(subP.name)}</span>
-                          </span>
-
-                          {/* Quick Action Buttons: Promote ↑ / Remove × */}
-                          <div className="flex items-center space-x-0.5 shrink-0 opacity-80 group-hover/sub:opacity-100">
-                            {onPromoteSubToMain && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onPromoteSubToMain(slot.id, subP.id);
-                                }}
-                                className="p-0.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-                                title="Đôn lên làm đá chính"
-                              >
-                                <ChevronUp className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            {onClearSubPlayer && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onClearSubPlayer(slot.id, subP.id);
-                                }}
-                                className="p-0.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                title="Gỡ khỏi dự bị"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Add Sub Placeholder (if space remains) */}
-                      {subPlayers.length < 5 && (
-                        <div
-                          onDragOver={handleDragOver}
-                          onDrop={(e) => handleDropSub(e, slot.id)}
-                          className="py-1 border border-dashed border-slate-200 rounded text-center text-xs font-semibold text-slate-400 hover:bg-blue-50/60 hover:text-blue-600 hover:border-blue-300 transition-colors"
-                        >
-                          + Kéo dự bị vào đây
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {children}
     </div>
   );
 };
