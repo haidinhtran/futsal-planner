@@ -11,6 +11,7 @@ interface PitchSlotCardProps {
   isSelected: boolean;
   showSubs?: boolean;
   isFullscreen: boolean;
+  isMobile?: boolean;
   onSelectSlot: (slotId: string) => void;
   onOpenPicker: (slotId: string, mode: "main" | "sub") => void;
   onClearSlot: (slotId: string) => void;
@@ -24,9 +25,9 @@ interface PitchSlotCardProps {
 }
 
 export const PitchSlotCard: React.FC<PitchSlotCardProps> = ({
-  slot, playersMap, isSelected, showSubs = true, isFullscreen, onSelectSlot, onOpenPicker,
-  onClearSlot, onClearSubPlayer, onPromoteSubToMain, onDropMain, onDropSub,
-  onSlotDragStart, onSubDragStart, onDragOver,
+  slot, playersMap, isSelected, showSubs = true, isFullscreen, isMobile = false,
+  onSelectSlot, onOpenPicker, onClearSlot, onClearSubPlayer, onPromoteSubToMain,
+  onDropMain, onDropSub, onSlotDragStart, onSubDragStart, onDragOver,
 }) => {
   const mainPlayer = slot.playerId ? playersMap[slot.playerId] : null;
   const subPlayerIds = slot.subPlayerIds || [];
@@ -47,14 +48,14 @@ export const PitchSlotCard: React.FC<PitchSlotCardProps> = ({
         </div>
 
         <PitchStarterCard
-          slotId={slot.id} mainPlayer={mainPlayer} isFullscreen={isFullscreen}
+          slotId={slot.id} mainPlayer={mainPlayer} isFullscreen={isFullscreen} isMobile={isMobile}
           onOpenPicker={onOpenPicker} onClearSlot={onClearSlot}
           onDropMain={onDropMain} onSlotDragStart={onSlotDragStart} onDragOver={onDragOver}
         />
 
         {showSubs && (
           <PitchSubList
-            slotId={slot.id} role={slot.role} subPlayers={subPlayers} isFullscreen={isFullscreen}
+            slotId={slot.id} role={slot.role} subPlayers={subPlayers} isFullscreen={isFullscreen} isMobile={isMobile}
             onPromoteSubToMain={onPromoteSubToMain} onClearSubPlayer={onClearSubPlayer}
             onOpenPicker={(id) => onOpenPicker(id, "sub")} onSubDragStart={onSubDragStart}
             onDropSub={onDropSub} onDragOver={onDragOver}

@@ -5,7 +5,7 @@ import { PitchToolbar } from './TacticsBoard/PitchToolbar';
 
 interface Props {
   slots: PositionSlot[]; playersMap: Record<string, Player>; selectedSlotId: string | null;
-  showSubs?: boolean; isFullscreen: boolean; currentFormationId: string;
+  showSubs?: boolean; isFullscreen: boolean; isMobile?: boolean; currentFormationId: string;
   attackDirection: AttackDirection; containerRef: React.RefObject<HTMLDivElement | null>;
   children?: React.ReactNode;
   onSelectSlot: (id: string) => void; onOpenPicker: (id: string, mode: 'main' | 'sub') => void;
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export const FutsalPitch: React.FC<Props> = ({
-  slots, playersMap, selectedSlotId, showSubs = true, isFullscreen,
+  slots, playersMap, selectedSlotId, showSubs = true, isFullscreen, isMobile = false,
   currentFormationId, attackDirection, containerRef, children,
   onSelectSlot, onOpenPicker, onAssignPlayerToSlot, onAssignSubPlayerToSlot,
   onClearSlot, onClearSubPlayer, onPromoteSubToMain, onSwapSlots,
@@ -83,7 +83,7 @@ export const FutsalPitch: React.FC<Props> = ({
         {slots.map((slot) => (
           <PitchSlotCard
             key={slot.id} slot={slot} playersMap={playersMap} isSelected={selectedSlotId === slot.id}
-            showSubs={showSubs} isFullscreen={isFullscreen} onSelectSlot={onSelectSlot} onOpenPicker={onOpenPicker}
+            showSubs={showSubs} isFullscreen={isFullscreen} isMobile={isMobile} onSelectSlot={onSelectSlot} onOpenPicker={onOpenPicker}
             onClearSlot={onClearSlot} onClearSubPlayer={onClearSubPlayer} onPromoteSubToMain={onPromoteSubToMain}
             onDropMain={handleDropMain} onDropSub={handleDropSub} onSlotDragStart={handleSlotDragStart}
             onSubDragStart={handleSubPlayerDragStart} onDragOver={handleDragOver}

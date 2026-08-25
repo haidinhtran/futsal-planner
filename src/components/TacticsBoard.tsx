@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import type { Player, TacticalSquad } from '@/types/futsal';
 import { useTacticsBoard } from '@/hooks/useTacticsBoard';
 import { useFullscreen } from '@/hooks/useFullscreen';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { FutsalPitch } from './FutsalPitch';
 import { TacticsHeader } from './TacticsBoard/TacticsHeader';
 import { PlayerSidebar } from './TacticsBoard/PlayerSidebar';
@@ -20,6 +21,7 @@ interface TacticsBoardProps {
 export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSaveSquad }) => {
   const pitchContainerRef = useRef<HTMLDivElement>(null);
   const { isFullscreen, toggleFullscreen } = useFullscreen(pitchContainerRef);
+  const isMobile = useIsMobile();
   const state = useTacticsBoard({ players, squad, onSaveSquad });
   const activePickerSlot = state.slots.find((s) => s.id === state.pickerState.slotId) || null;
 
@@ -47,7 +49,7 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
         <div className={`py-4 sm:py-5 bg-white space-y-4 ${isFullscreen ? 'w-full p-0' : 'order-1 lg:order-2 lg:col-span-8 xl:col-span-9 pl-0 lg:pl-6'}`}>
           <FutsalPitch
             slots={state.slots} playersMap={state.playersMap} selectedSlotId={state.selectedSlotId}
-            showSubs={state.showSubs} isFullscreen={isFullscreen} currentFormationId={state.currentFormationId}
+            showSubs={state.showSubs} isFullscreen={isFullscreen} isMobile={isMobile} currentFormationId={state.currentFormationId}
             attackDirection={state.attackDirection} containerRef={pitchContainerRef}
             onSelectSlot={(id) => state.setSelectedSlotId(state.selectedSlotId === id ? null : id)}
             onOpenPicker={state.openPicker} onAssignPlayerToSlot={state.handleAssignPlayerToSlot}

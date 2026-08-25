@@ -36,9 +36,12 @@ export const PlayerPickerModal: React.FC<Props> = ({
   if (!isOpen || !slot) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-xl border border-slate-200 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+    <div
+      className="fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-xs flex flex-col sm:items-center sm:justify-center p-0 sm:p-4 overflow-hidden"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-xl rounded-none shadow-2xl border-0 sm:border sm:border-slate-200 flex flex-col overflow-hidden">
+        <div className="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
           <div className="flex items-center space-x-2.5 min-w-0">
             <div className="bg-blue-50 p-2 rounded-lg text-blue-600 shrink-0"><UserCheck className="w-5 h-5" /></div>
             <div className="min-w-0">
@@ -51,7 +54,7 @@ export const PlayerPickerModal: React.FC<Props> = ({
           <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"><X className="w-5 h-5" /></button>
         </div>
 
-        <div className="p-3 bg-slate-50 border-b border-slate-100 space-y-2">
+        <div className="p-3 bg-slate-50 border-b border-slate-100 space-y-2 shrink-0">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -94,7 +97,7 @@ export const PlayerPickerModal: React.FC<Props> = ({
           </div>
         </div>
 
-        <div className="p-3 overflow-y-auto space-y-2 flex-1 max-h-[420px]">
+        <div className="p-3 overflow-y-auto space-y-2 flex-1 overscroll-contain">
           {filteredPlayers.length > 0 ? (
             filteredPlayers.map((p) => (
               <PlayerPickerItem
