@@ -5,22 +5,22 @@
 /* --- Base & Mobile Default (< 768px) --- */
 :root {
   /* Tactical Position Role Tokens */
-  --color-role-gk: #94a3b8;    /* slate-400 */
-  --color-role-fixo: #94a3b8;  
-  --color-role-ala: #94a3b8;   
-  --color-role-pivot: #94a3b8; 
+  --color-role-gk: #94a3b8; /* slate-400 */
+  --color-role-fixo: #94a3b8;
+  --color-role-ala: #94a3b8;
+  --color-role-pivot: #94a3b8;
 
   /* Spacing Tokens */
-  --spacing-page-x: 1rem;       /* 16px */
-  --spacing-section-y: 1.5rem;   /* 24px */
-  --spacing-grid-gap: 0.75rem;   /* 12px */
-  --spacing-card-p: 0.75rem;     /* 12px */
+  --spacing-page-x: 1rem; /* 16px */
+  --spacing-section-y: 1.5rem; /* 24px */
+  --spacing-grid-gap: 0.75rem; /* 12px */
+  --spacing-card-p: 0.75rem; /* 12px */
 
   /* Typography Scale */
-  --font-size-h1: 1.5rem;       /* 24px */
-  --font-size-h2: 1.25rem;      /* 20px */
-  --font-size-h3: 1.125rem;     /* 18px */
-  --font-size-body: 0.875rem;   /* 14px */
+  --font-size-h1: 1.5rem; /* 24px */
+  --font-size-h2: 1.25rem; /* 20px */
+  --font-size-h3: 1.125rem; /* 18px */
+  --font-size-body: 0.875rem; /* 14px */
 
   /* Stat Category Tokens */
   --color-stat-stamina: #059669;
@@ -41,27 +41,27 @@
 /* --- Tablet (md: 768px - 1023px) --- */
 @media (min-width: 768px) {
   :root {
-    --spacing-page-x: 1.5rem;   /* 24px */
-    --spacing-section-y: 2rem;  /* 32px */
-    --spacing-grid-gap: 1rem;   /* 16px */
-    --spacing-card-p: 1rem;     /* 16px */
+    --spacing-page-x: 1.5rem; /* 24px */
+    --spacing-section-y: 2rem; /* 32px */
+    --spacing-grid-gap: 1rem; /* 16px */
+    --spacing-card-p: 1rem; /* 16px */
 
-    --font-size-h1: 1.875rem;   /* 30px */
-    --font-size-h2: 1.5rem;     /* 24px */
-    --font-size-body: 1rem;     /* 16px */
+    --font-size-h1: 1.875rem; /* 30px */
+    --font-size-h2: 1.5rem; /* 24px */
+    --font-size-body: 1rem; /* 16px */
   }
 }
 
 /* --- Laptop / PC (lg: >= 1024px) --- */
 @media (min-width: 1024px) {
   :root {
-    --spacing-page-x: 2rem;     /* 32px */
-    --spacing-section-y: 3rem;  /* 48px */
+    --spacing-page-x: 2rem; /* 32px */
+    --spacing-section-y: 3rem; /* 48px */
     --spacing-grid-gap: 1.5rem; /* 24px */
-    --spacing-card-p: 1.5rem;   /* 24px */
+    --spacing-card-p: 1.5rem; /* 24px */
 
-    --font-size-h1: 2.25rem;    /* 36px */
-    --font-size-h2: 1.875rem;   /* 30px */
+    --font-size-h1: 2.25rem; /* 36px */
+    --font-size-h2: 1.875rem; /* 30px */
   }
 }
 
@@ -69,7 +69,18 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
 }
 
 body {
@@ -80,7 +91,10 @@ body {
 }
 
 @layer base {
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     @apply uppercase tracking-wide;
   }
 }
@@ -100,9 +114,9 @@ body {
     border-radius: var(--radius-ui);
     background-color: var(--bg-app);
     border: 1px solid var(--border-card);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
-  
+
   /* Typography Classes */
   .text-h1 {
     font-size: var(--font-size-h1);
@@ -146,10 +160,22 @@ body {
   }
 
   /* Position Role Badges */
-  .badge-gk { background-color: var(--color-role-gk); color: white; }
-  .badge-fixo { background-color: var(--color-role-fixo); color: white; }
-  .badge-ala { background-color: var(--color-role-ala); color: white; }
-  .badge-pivot { background-color: var(--color-role-pivot); color: white; }
+  .badge-gk {
+    background-color: var(--color-role-gk);
+    color: white;
+  }
+  .badge-fixo {
+    background-color: var(--color-role-fixo);
+    color: white;
+  }
+  .badge-ala {
+    background-color: var(--color-role-ala);
+    color: white;
+  }
+  .badge-pivot {
+    background-color: var(--color-role-pivot);
+    color: white;
+  }
 }
 
 /* Custom Scrollbars */
@@ -206,17 +232,27 @@ body {
 .futsal-pitch-floor {
   background: 
     /* Layer 1: Vignette & stadium lighting depth */
-    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.12) 0%, rgba(0, 0, 0, 0.32) 100%),
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(0, 0, 0, 0.32) 100%
+    ),
     /* Layer 2: Fine grass blade micro-texture */
-    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.03) 0px, rgba(0, 0, 0, 0.03) 2px, transparent 2px, transparent 4px),
+    repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.03) 0px,
+        rgba(0, 0, 0, 0.03) 2px,
+        transparent 2px,
+        transparent 4px
+      ),
     /* Layer 3: Mown grass vertical lawn stripes */
     repeating-linear-gradient(
-      to right,
-      #1b7a38 0%,
-      #1b7a38 10%,
-      #249646 10%,
-      #249646 20%
-    );
+        to right,
+        #1b7a38 0%,
+        #1b7a38 10%,
+        #249646 10%,
+        #249646 20%
+      );
   position: relative;
   width: 100%;
   aspect-ratio: 1.9 / 1;
@@ -357,7 +393,13 @@ body {
   width: 12px;
   border: 2px solid rgba(255, 255, 255, 0.95);
   border-right: none;
-  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 3px, transparent 3px, transparent 6px);
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.25) 3px,
+    transparent 3px,
+    transparent 6px
+  );
   box-shadow: -2px 0 6px rgba(0, 0, 0, 0.2);
 }
 
@@ -369,7 +411,13 @@ body {
   width: 12px;
   border: 2px solid rgba(255, 255, 255, 0.95);
   border-left: none;
-  background: repeating-linear-gradient(-45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 3px, transparent 3px, transparent 6px);
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.25) 3px,
+    transparent 3px,
+    transparent 6px
+  );
   box-shadow: 2px 0 6px rgba(0, 0, 0, 0.2);
 }
 
@@ -416,7 +464,7 @@ body {
     aspect-ratio: 1.42 / 1;
   }
   .pitch-player-card {
-    transform: translate(-50%, -50%) scale(0.70);
+    transform: translate(-50%, -50%) scale(0.7);
   }
   .pitch-player-card:hover {
     transform: translate(-50%, -50%) scale(0.73);
@@ -425,7 +473,7 @@ body {
 
 /* Safe area padding for Bottom Navigation Bar */
 .pb-safe {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 /* Prevent touchscreen pull-to-refresh / scrolling while drawing */

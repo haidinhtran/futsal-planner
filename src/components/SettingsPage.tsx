@@ -41,7 +41,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onDataRefresh }) => 
   };
 
   return (
-    <div className="layout-page-container h-full pt-6 pb-8">
+    <div className="layout-page-container pt-4 pb-12 md:pt-6 md:pb-8">
       <div className="layout-section mt-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="card-surface flex flex-col items-start gap-4">

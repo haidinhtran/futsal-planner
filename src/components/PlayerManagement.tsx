@@ -1,24 +1,21 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useStickyActions } from "../hooks/useStickyActions";
 import ExcelJS from "exceljs";
-import type { Player, PositionTag } from "../types/futsal";
-import { getPositionConfig, getUniquePositionConfigs } from "../types/futsal";
+import type { Player, PositionTag } from "@/types/futsal";
+import { getPositionConfig, getUniquePositionConfigs } from "@/types/futsal";
 import { PlayerCard } from "./PlayerCard";
+import { PlayerFormModal } from "./PlayerManagement/PlayerFormModal";
 import {
   X,
-  Check,
-  AlertCircle,
   Filter,
   LayoutGrid,
   List,
   Search,
-  Plus,
   Download,
   MoreVertical,
   UserPlus,
 } from "lucide-react";
-import { removeVietnameseTones } from "../utils/vietnamese";
+import { removeVietnameseTones } from "@/utils/vietnamese";
 
 const getFullPositionLabel = (positions?: PositionTag[]): string => {
   if (!positions || positions.length === 0) return "Chưa phân vị trí";
@@ -103,7 +100,9 @@ const exportPlayersToXLSX = async (players: Player[]) => {
   });
 
   players.forEach((player, index) => {
-    const nameToDisplay = player.jerseyName ? `${player.name} (${player.jerseyName})` : player.name;
+    const nameToDisplay = player.jerseyName
+      ? `${player.name} (${player.jerseyName})`
+      : player.name;
     const row = worksheet.addRow({
       number: player.number,
       name: nameToDisplay,
@@ -231,27 +230,25 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   editRequest,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterPosition, setFilterPosition] = useState<"all" | PositionTag>("all");
-  const [sortBy, setSortBy] = useState<"number" | "name" | "total" | "stamina" | "attack" | "defense">("number");
+  const [filterPosition, setFilterPosition] = useState<"all" | PositionTag>(
+    "all",
+  );
+  const [sortBy, setSortBy] = useState<
+    "number" | "name" | "total" | "stamina" | "attack" | "defense"
+  >("number");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const { isSticky, sentinelRef } = useStickyActions();
   const [isStickySearchOpen, setIsStickySearchOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isSticky) {
-      setIsStickySearchOpen(false);
-    }
-  }, [isSticky]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPlayer, setEditingPlayer] = useState<Partial<Player> | null>(null);
+  const [editingPlayer, setEditingPlayer] = useState<Partial<Player> | null>(
+    null,
+  );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
 
   const calculateTotal = (p: Player) => {
     let sum = 0;
@@ -355,7 +352,12 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
     if (!editingPlayer || !editingPlayer.name) return;
 
     const targetNumber = Number(editingPlayer.number);
-    if (editingPlayer.number === undefined || editingPlayer.number === null || isNaN(targetNumber) || targetNumber < 0) {
+    if (
+      editingPlayer.number === undefined ||
+      editingPlayer.number === null ||
+      isNaN(targetNumber) ||
+      targetNumber < 0
+    ) {
       setErrorMsg("Vui lòng nhập số áo hợp lệ (lớn hơn hoặc bằng 0)!");
       return;
     }
@@ -368,20 +370,20 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       avatar: editingPlayer.avatar,
       stamina:
         editingPlayer.stamina !== null &&
-          editingPlayer.stamina !== undefined &&
-          editingPlayer.stamina !== ("" as any)
+        editingPlayer.stamina !== undefined &&
+        editingPlayer.stamina !== ("" as any)
           ? Number(editingPlayer.stamina)
           : null,
       attack:
         editingPlayer.attack !== null &&
-          editingPlayer.attack !== undefined &&
-          editingPlayer.attack !== ("" as any)
+        editingPlayer.attack !== undefined &&
+        editingPlayer.attack !== ("" as any)
           ? Number(editingPlayer.attack)
           : null,
       defense:
         editingPlayer.defense !== null &&
-          editingPlayer.defense !== undefined &&
-          editingPlayer.defense !== ("" as any)
+        editingPlayer.defense !== undefined &&
+        editingPlayer.defense !== ("" as any)
           ? Number(editingPlayer.defense)
           : null,
       positions: editingPlayer.positions || [],
@@ -393,100 +395,82 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[1920px] mx-auto layout-page-container pt-3 pb-6 md:pt-4 md:pb-8">
-      {/* Primary Action Row */}
-      {/* Sticky Compact Actions Portal (Mobile) & Desktop Always-Visible Portal */}
-      {document.getElementById('topbar-actions-portal') && createPortal(
-        <div className="items-center justify-end gap-1.5 sm:gap-2 w-full hidden md:flex">
-          <button onClick={() => setIsFilterModalOpen(true)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Lọc">
-            <Filter className="btn-icon" />
-          </button>
-
-          <button onClick={() => setIsStickySearchOpen(!isStickySearchOpen)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Tìm kiếm">
-            <Search className="btn-icon" />
-          </button>
-
-          <div className="relative">
+    <div className="w-full max-w-[1920px] mx-auto layout-page-container pt-3 pb-12 md:pt-4 md:pb-8">
+      {/* Primary Action Row - Desktop & Mobile Portal */}
+      {document.getElementById("topbar-actions-portal") &&
+        createPortal(
+          <div className="items-center justify-end gap-1.5 sm:gap-2 w-full flex">
             <button
-              onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+              onClick={() => setIsFilterModalOpen(true)}
               className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors"
-              title="Xuất Dữ Liệu"
+              title="Lọc"
             >
-              <MoreVertical className="btn-icon text-slate-500" />
+              <Filter className="btn-icon" />
             </button>
-            {isExportMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setIsExportMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
-                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToXLSX(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-green-50 flex items-center space-x-2.5 uppercase">
-                    <Download className="w-4 h-4 text-green-600 shrink-0" />
-                    <span>XUẤT TỆP EXCEL</span>
-                  </button>
-                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToPDF(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100 uppercase">
-                    <Download className="w-4 h-4 text-red-600 shrink-0" />
-                    <span>XUẤT TỆP PDF</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
 
-          <button onClick={handleOpenAddModal} className="btn-primary" title="Thêm Cầu Thủ">
-            <UserPlus className="btn-icon" />
-            <span className="btn-label">Thêm Cầu Thủ</span>
-          </button>
-        </div>,
-        document.getElementById('topbar-actions-portal')!
-      )}
-
-      {/* Sentinel for sticky header tracking */}
-      <div ref={sentinelRef} className="w-full h-[1px]"></div>
-
-      {/* Primary Action Row - Hidden on Desktop, Visible on Mobile */}
-      <div className="md:hidden w-full max-w-[1920px] mx-auto layout-page-container pt-1 pb-3 border-b border-slate-200 mb-4">
-        <div className="flex items-center justify-end gap-2 sm:gap-3">
-
-          {/* Mobile More Menu */}
-          <div className="relative sm:hidden flex-1 flex justify-start">
             <button
-              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-              className="btn-outline px-2 py-2.5 flex items-center justify-center shrink-0 shadow-sm rounded-lg"
-              title="Thêm tùy chọn"
+              onClick={() => setIsStickySearchOpen(!isStickySearchOpen)}
+              className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors"
+              title="Tìm kiếm"
             >
-              <MoreVertical className="w-5 h-5 text-slate-600" />
+              <Search className="btn-icon" />
             </button>
 
-            {isMoreMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setIsMoreMenuOpen(false)} />
-                <div className="absolute left-0 top-full mt-1.5 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
-                  <button onClick={() => { setIsMoreMenuOpen(false); setIsFilterModalOpen(true); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5">
-                    <Filter className="w-4 h-4 text-slate-500" /><span>Lọc</span>
-                  </button>
-                  <button onClick={() => { setIsMoreMenuOpen(false); setIsStickySearchOpen(!isStickySearchOpen); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center space-x-2.5 border-t border-slate-100">
-                    <Search className="w-4 h-4 text-slate-500" /><span>Tìm kiếm</span>
-                  </button>
-                  <button onClick={() => { setIsMoreMenuOpen(false); exportPlayersToXLSX(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-green-700 hover:bg-green-50 flex items-center space-x-2.5 border-t border-slate-100">
-                    <Download className="w-4 h-4 text-green-600" /><span>Xuất Excel</span>
-                  </button>
-                  <button onClick={() => { setIsMoreMenuOpen(false); exportPlayersToPDF(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-700 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100">
-                    <Download className="w-4 h-4 text-red-600" /><span>Xuất PDF</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+            <div className="relative">
+              <button
+                onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors"
+                title="Xuất Dữ Liệu"
+              >
+                <MoreVertical className="btn-icon text-slate-500" />
+              </button>
+              {isExportMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsExportMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
+                    <button
+                      onClick={() => {
+                        setIsExportMenuOpen(false);
+                        exportPlayersToXLSX(filteredAndSortedPlayers);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-green-50 flex items-center space-x-2.5 uppercase"
+                    >
+                      <Download className="w-4 h-4 text-green-600 shrink-0" />
+                      <span>XUẤT TỆP EXCEL</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsExportMenuOpen(false);
+                        exportPlayersToPDF(filteredAndSortedPlayers);
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100 uppercase"
+                    >
+                      <Download className="w-4 h-4 text-red-600 shrink-0" />
+                      <span>XUẤT TỆP PDF</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
 
-          <button onClick={handleOpenAddModal} className="btn-primary flex-1 sm:flex-none justify-center py-2.5 text-sm whitespace-nowrap">
-            <span className="w-4 h-4 flex items-center justify-center font-bold text-lg leading-none pb-0.5 mr-1.5">+</span>
-            <span>Thêm Cầu Thủ</span>
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={handleOpenAddModal}
+              className="btn-primary"
+              title="Thêm Cầu Thủ"
+            >
+              <UserPlus className="btn-icon" />
+              <span className="btn-label">Thêm Cầu Thủ</span>
+            </button>
+          </div>,
+          document.getElementById("topbar-actions-portal")!,
+        )}
 
       {/* Filter Modal Dialog */}
       {isFilterModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -508,7 +492,9 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             <div className="space-y-4">
               {/* Position Filter */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5">Lọc theo Vị Trí</label>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  Lọc theo Vị Trí
+                </label>
                 <select
                   value={filterPosition}
                   onChange={(e) => setFilterPosition(e.target.value as any)}
@@ -525,7 +511,9 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
               {/* Sort By */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5">Sắp xếp theo</label>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  Sắp xếp theo
+                </label>
                 <div className="flex gap-2">
                   <select
                     value={sortBy}
@@ -540,7 +528,9 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                     <option value="defense">Phòng thủ</option>
                   </select>
                   <button
-                    onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    onClick={() =>
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                    }
                     className="bg-slate-50 border border-slate-200 p-2 rounded-lg font-bold text-slate-800 px-4"
                   >
                     {sortOrder === "asc" ? "Tăng dần ↑" : "Giảm dần ↓"}
@@ -550,7 +540,9 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
               {/* View Mode */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1.5">Chế độ xem</label>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  Chế độ xem
+                </label>
                 <div className="flex bg-slate-100 p-1 rounded-lg">
                   <button
                     onClick={() => setViewMode("grid")}
@@ -569,7 +561,10 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             </div>
 
             <div className="mt-5 pt-3 border-t border-slate-100 flex justify-end">
-              <button onClick={() => setIsFilterModalOpen(false)} className="btn-primary w-full py-2">
+              <button
+                onClick={() => setIsFilterModalOpen(false)}
+                className="btn-primary w-full py-2"
+              >
                 Hoàn tất
               </button>
             </div>
@@ -610,11 +605,11 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
                 const total = calculateTotal(p);
                 const posConfigs = getUniquePositionConfigs(p.positions);
                 const getBadgeClass = (pos: string) => {
-                  if (pos === 'GK') return 'badge-gk';
-                  if (pos === 'FI') return 'badge-fixo';
-                  if (pos.startsWith('AL')) return 'badge-ala';
-                  if (pos === 'PI') return 'badge-pivot';
-                  return '';
+                  if (pos === "GK") return "badge-gk";
+                  if (pos === "FI") return "badge-fixo";
+                  if (pos.startsWith("AL")) return "badge-ala";
+                  if (pos === "PI") return "badge-pivot";
+                  return "";
                 };
                 return (
                   <tr
@@ -681,373 +676,37 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
         </div>
       )}
 
-      {/* Edit / Add Modal - Minimalist & Monolithic Design */}
-      {/* Sticky Compact Actions Portal */}
-      {isSticky && document.getElementById('topbar-actions-portal') && createPortal(
-        <div className="flex items-center justify-end md:hidden w-full gap-1">
-          <button onClick={() => setIsFilterModalOpen(true)} className="p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 rounded-lg transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-700" title="Lọc">
-            <Filter className="w-4 h-4" />
-          </button>
-          <button onClick={() => setIsStickySearchOpen(!isStickySearchOpen)} className={`p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 rounded-lg transition-colors ${isStickySearchOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`} title="Tìm kiếm">
-            <Search className="w-4 h-4" />
-          </button>
-          <div className="relative">
-            <button onClick={() => setIsExportMenuOpen(!isExportMenuOpen)} className="p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 rounded-lg transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-700" title="Xuất dữ liệu">
-              <Download className="w-4 h-4" />
-            </button>
-            {isExportMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setIsExportMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1.5 w-48 bg-white rounded-lg shadow-xl border border-slate-200 py-1.5 z-50">
-                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToXLSX(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-green-50 flex items-center space-x-2.5">
-                    <Download className="w-4 h-4 text-green-600" />
-                    <span>Xuất File XLSX</span>
-                  </button>
-                  <button onClick={() => { setIsExportMenuOpen(false); exportPlayersToPDF(filteredAndSortedPlayers); }} className="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-red-50 flex items-center space-x-2.5 border-t border-slate-100">
-                    <Download className="w-4 h-4 text-red-600" />
-                    <span>Xuất File PDF</span>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-          <button onClick={handleOpenAddModal} className="btn-primary p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 shadow-sm ml-1" title="Thêm Cầu Thủ">
-            <Plus className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline text-xs">Thêm</span>
-          </button>
-        </div>,
-        document.getElementById('topbar-actions-portal')!
-      )}
       {/* Search Input Portal (Shown when search is active, sticky or not) */}
-      {isStickySearchOpen && document.getElementById('topbar-bottom-portal') && createPortal(
-        <div className="layout-page-container py-2 pb-3 bg-white border-t border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Tìm tên hoặc số áo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800 shadow-sm"
-              autoFocus
-            />
-          </div>
-        </div>,
-        document.getElementById('topbar-bottom-portal')!
-      )}
-
-      {isModalOpen && editingPlayer && (
-        <div 
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsModalOpen(false);
-            }
-          }}
-        >
-          <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl border border-slate-200/90 max-h-[90vh] overflow-y-auto space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 bg-amber-500 rounded-xs shrink-0"></span>
-                <h3 className="text-h3 text-slate-900 tracking-wide">
-                  {players.some((p) => p.id === editingPlayer.id)
-                    ? "CHỈNH SỬA CẦU THỦ"
-                    : "THÊM CẦU THỦ MỚI"}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      {isStickySearchOpen &&
+        document.getElementById("topbar-bottom-portal") &&
+        createPortal(
+          <div className="layout-page-container py-2 pb-3 bg-white border-t border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Tìm tên hoặc số áo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800 shadow-sm"
+                autoFocus
+              />
             </div>
+          </div>,
+          document.getElementById("topbar-bottom-portal")!,
+        )}
 
-            {/* Warning / Error alert if duplicate shirt number exists */}
-            {errorMsg && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-bold p-3 rounded-lg flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveModal} className="space-y-4">
-              {/* Basic Info: Shirt Number & Name */}
-              <div className="grid grid-cols-4 gap-3">
-                <div className="col-span-1">
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">
-                    SỐ ÁO (#)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    max={99}
-                    placeholder="10"
-                    value={editingPlayer.number !== undefined && editingPlayer.number !== null ? editingPlayer.number : ""}
-                    onChange={(e) => {
-                      setErrorMsg(null);
-                      setEditingPlayer({
-                        ...editingPlayer,
-                        number: e.target.value === "" ? (undefined as any) : parseInt(e.target.value) || 0,
-                      });
-                    }}
-                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-black text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-900"
-                  />
-                </div>
-                <div className="col-span-3">
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">
-                    TÊN CẦU THỦ
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Nhập họ và tên cầu thủ..."
-                    value={editingPlayer.name || ""}
-                    onChange={(e) => {
-                      setErrorMsg(null);
-                      setEditingPlayer({
-                        ...editingPlayer,
-                        name: e.target.value,
-                      });
-                    }}
-                    className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-900"
-                  />
-                </div>
-              </div>
-
-              {/* Tên In Áo */}
-              <div>
-                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">
-                  TÊN IN ÁO (TÙY CHỌN)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Nhập tên in trên áo (ví dụ: A. NGUYEN)..."
-                  value={editingPlayer.jerseyName || ""}
-                  onChange={(e) =>
-                    setEditingPlayer({
-                      ...editingPlayer,
-                      jerseyName: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-900"
-                />
-              </div>
-
-              {/* Individual Player Notes */}
-              <div>
-                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1">
-                  ĐẶC ĐIỂM CÁ NHÂN & GHI CHÚ
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Ví dụ: Tốc độ cao, sút xa tốt, khả năng tranh chấp mạnh..."
-                  value={editingPlayer.notes || ""}
-                  onChange={(e) =>
-                    setEditingPlayer({
-                      ...editingPlayer,
-                      notes: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-slate-800"
-                />
-              </div>
-
-              {/* Position Tag Selector - Multiple Checkbox Strip */}
-              <div>
-                <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wide mb-1.5">
-                  VỊ TRÍ THI ĐẤU
-                </label>
-                <div className="flex flex-wrap items-center gap-3 sm:gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  {[
-                    {
-                      pos: "GK" as PositionTag,
-                      label: "Goalkeeper",
-                      tooltip: "Thủ Môn",
-                    },
-                    {
-                      pos: "FI" as PositionTag,
-                      label: "Fixo",
-                      tooltip: "Hậu Vệ Thòng",
-                    },
-                    {
-                      pos: "AL_L" as PositionTag,
-                      label: "Ala (Trái)",
-                      tooltip: "Tiền Vệ Cánh Trái",
-                    },
-                    {
-                      pos: "AL_R" as PositionTag,
-                      label: "Ala (Phải)",
-                      tooltip: "Tiền Vệ Cánh Phải",
-                    },
-                    {
-                      pos: "PI" as PositionTag,
-                      label: "Pivot",
-                      tooltip: "Tiền Đạo Cắm",
-                    },
-                  ].map((item) => {
-                    const isSelected = editingPlayer.positions?.includes(
-                      item.pos,
-                    );
-                    return (
-                      <label
-                        key={item.pos}
-                        title={`Vị trí tiếng Việt: ${item.tooltip}`}
-                        className="flex items-center space-x-1.5 text-xs font-bold text-slate-700 cursor-pointer select-none hover:text-blue-600 transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => {
-                            const currentPos = editingPlayer.positions || [];
-                            const updated = isSelected
-                              ? currentPos.filter((p) => p !== item.pos)
-                              : [...currentPos, item.pos];
-                            setEditingPlayer({
-                              ...editingPlayer,
-                              positions: updated,
-                            });
-                          }}
-                          className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500/20 cursor-pointer"
-                        />
-                        <span>{item.label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Monolithic Stats Panel */}
-              <div className="bg-slate-50/80 p-3.5 rounded-lg border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
-                  <span className="text-xs font-black text-slate-700 uppercase tracking-wide">
-                    CHỈ SỐ KỸ NĂNG (0 - 10)
-                  </span>
-                  <span className="text-xs font-bold text-slate-500">
-                    Tổng điểm:{" "}
-                    <strong className="text-blue-700 font-black">
-                      {calculateTotal(editingPlayer as Player) !== -1
-                        ? `${calculateTotal(editingPlayer as Player)}đ`
-                        : "-"}
-                    </strong>
-                  </span>
-                </div>
-
-                {/* Bền (Thể Lực) */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-emerald-700 flex items-center space-x-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-                      <span>Thể Lực (Bền)</span>
-                    </span>
-                    <span className="font-black text-slate-800">
-                      {editingPlayer.stamina !== null &&
-                        editingPlayer.stamina !== undefined
-                        ? `${editingPlayer.stamina} / 10`
-                        : "Chưa đánh giá"}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    value={editingPlayer.stamina ?? 0}
-                    onChange={(e) =>
-                      setEditingPlayer({
-                        ...editingPlayer,
-                        stamina: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full accent-emerald-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
-                  />
-                </div>
-
-                {/* Công (Tấn Công) */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-amber-700 flex items-center space-x-1.5">
-                      <span className="w-2 h-2 rounded-full bg-amber-600"></span>
-                      <span>Tấn Công (Công)</span>
-                    </span>
-                    <span className="font-black text-slate-800">
-                      {editingPlayer.attack !== null &&
-                        editingPlayer.attack !== undefined
-                        ? `${editingPlayer.attack} / 10`
-                        : "Chưa đánh giá"}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    value={editingPlayer.attack ?? 0}
-                    onChange={(e) =>
-                      setEditingPlayer({
-                        ...editingPlayer,
-                        attack: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full accent-amber-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
-                  />
-                </div>
-
-                {/* Thủ (Phòng Thủ) */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-blue-700 flex items-center space-x-1.5">
-                      <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                      <span>Phòng Thủ (Thủ)</span>
-                    </span>
-                    <span className="font-black text-slate-800">
-                      {editingPlayer.defense !== null &&
-                        editingPlayer.defense !== undefined
-                        ? `${editingPlayer.defense} / 10`
-                        : "Chưa đánh giá"}
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
-                    step={0.5}
-                    value={editingPlayer.defense ?? 0}
-                    onChange={(e) =>
-                      setEditingPlayer({
-                        ...editingPlayer,
-                        defense: parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full accent-blue-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons with Design Tokens */}
-              <div className="flex items-center justify-end space-x-2.5 pt-3.5 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg cursor-pointer transition-colors shadow-2xs"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-black px-5 py-2.5 rounded-lg border-0 shadow-xs transition-all cursor-pointer"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Lưu Cầu Thủ</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <PlayerFormModal
+        isOpen={isModalOpen}
+        editingPlayer={editingPlayer}
+        isExisting={players.some((p) => p.id === editingPlayer?.id)}
+        errorMsg={errorMsg}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveModal}
+        onChangePlayer={(updated) => setEditingPlayer(updated)}
+        onClearError={() => setErrorMsg(null)}
+        calculateTotal={calculateTotal}
+      />
     </div>
   );
 };
