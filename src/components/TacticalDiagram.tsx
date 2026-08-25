@@ -34,7 +34,7 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
       {document.getElementById('topbar-actions-portal') && !isFullscreen && createPortal(
         <div className="hidden md:flex items-center justify-end gap-1.5 sm:gap-2 w-full">
           {/* Tên Bản Vẽ - Thu gọn chiều dài */}
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 px-2 h-[38px] rounded-lg text-sm font-medium shadow-sm max-w-[140px] lg:max-w-[180px]">
+          <div className="flex items-center space-x-1.5 px-2 h-[38px] text-sm font-medium max-w-[140px] lg:max-w-[180px]">
             <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span className="font-extrabold text-slate-800 truncate" title={state.diagramName}>
               {state.diagramName}
@@ -64,23 +64,23 @@ export const TacticalDiagram: React.FC<TacticalDiagramProps> = ({
             <span className="absolute right-2 pointer-events-none text-slate-400 text-[10px]">▼</span>
           </div>
 
+          {/* Bản vẽ mới (Icon Only) */}
+          <button onClick={state.handleNewDiagram} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Bản vẽ mới">
+            <FilePlus className="btn-icon" />
+          </button>
+
           {/* Delete Diagram Button (Icon Only) */}
           {state.currentDiagramId && (
             <button
               onClick={state.handleDeleteCurrentDiagram}
-              className="btn-outline-danger !px-2 md:!px-2.5 h-[38px] bg-white"
+              className="p-1.5 md:p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               title="Xóa bản vẽ này"
             >
               <Trash2 className="btn-icon" />
             </button>
           )}
 
-          {/* Bản vẽ mới (Icon Only) */}
-          <button onClick={state.handleNewDiagram} className="btn-outline !px-2 md:!px-2.5 h-[38px]" title="Bản vẽ mới">
-            <FilePlus className="btn-icon text-blue-600" />
-          </button>
-
-          <button onClick={state.handleSaveDiagram} className="btn-primary h-[38px]" title="Lưu bản vẽ">
+          <button onClick={state.handleSaveDiagram} className="btn-primary" title="Lưu bản vẽ">
             <Save className="btn-icon" />
             <span className="btn-label">Lưu bản vẽ</span>
           </button>

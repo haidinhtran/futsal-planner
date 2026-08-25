@@ -368,21 +368,18 @@ export const TacticsBoard: React.FC<TacticsBoardProps> = ({ players, squad, onSa
       {/* Sticky Compact Actions Portal (Mobile) & Desktop Always-Visible Portal */}
       {document.getElementById('topbar-actions-portal') && createPortal(
         <div className={`items-center justify-end gap-1.5 sm:gap-2 w-full ${isSticky ? 'flex' : 'hidden md:flex'}`}>
-          <button onClick={() => setIsSettingsOpen(true)} className="btn-outline" title="Cấu hình">
-            <Settings className="btn-icon" />
-            <span className="btn-label">Cấu hình</span>
-          </button>
-          <button onClick={handleClearAllSlots} className="btn-outline-danger" title="Xóa tất cả">
-            <Trash2 className="btn-icon" />
-            <span className="btn-label">Xóa hết</span>
-          </button>
-          <button onClick={handleResetPreset} className="btn-outline" title="Đặt lại sơ đồ">
+          <button onClick={handleResetPreset} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Đặt lại sơ đồ">
             <RefreshCw className="btn-icon" />
-            <span className="btn-label">Đặt lại</span>
+          </button>
+          <button onClick={handleClearAllSlots} className="p-1.5 md:p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Xóa tất cả">
+            <Trash2 className="btn-icon" />
+          </button>
+          <button onClick={() => setIsSettingsOpen(true)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Cấu hình">
+            <Settings className="btn-icon" />
           </button>
           <button onClick={handleSaveSquadAction} className="btn-primary" title="Lưu đội hình">
             <Save className="btn-icon" />
-            <span className="btn-label">Lưu</span>
+            <span className="btn-label">Lưu đội hình</span>
           </button>
         </div>,
         document.getElementById('topbar-actions-portal')!

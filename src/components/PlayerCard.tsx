@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import type { Player } from "../types/futsal";
 import { getUniquePositionConfigs } from "../types/futsal";
 import { Edit2, Trash2, Star, FileText, MoreHorizontal } from "lucide-react";
@@ -14,6 +14,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const formatStat = (val: number | null) => (val !== null ? val : "-");
 
   const getBarWidth = (val: number | null) => {
@@ -259,21 +261,40 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
         {/* Desktop Actions Row (Row 5 cũ) */}
         <div className="hidden md:flex items-center justify-between border-t border-slate-100 px-4 py-3 mt-0">
-          {/* More options with hover dropdown */}
-          <div className="relative group">
-            <button className="text-slate-400 hover:text-slate-600 rounded transition-colors cursor-pointer flex items-center justify-center">
+          {/* More options with click dropdown */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMenuOpen(!isMenuOpen);
+              }}
+              className="text-slate-400 hover:text-slate-600 rounded transition-colors cursor-pointer flex items-center justify-center p-1"
+            >
               <MoreHorizontal className="w-4 h-4" />
             </button>
-            {onDelete && (
-              <div className="absolute left-0 bottom-full mb-2 w-28 bg-white border border-slate-200 shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10 overflow-hidden origin-bottom-left">
-                <button
-                  onClick={() => onDelete(player.id)}
-                  className="w-full text-left px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Xóa
-                </button>
-              </div>
+            {isMenuOpen && onDelete && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setIsMenuOpen(false); 
+                  }} 
+                />
+                <div className="absolute left-0 bottom-full mb-2 w-28 bg-white border border-slate-200 shadow-lg rounded-lg transition-all duration-200 z-20 overflow-hidden origin-bottom-left">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMenuOpen(false);
+                      onDelete(player.id);
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Xóa
+                  </button>
+                </div>
+              </>
             )}
           </div>
           
