@@ -33,7 +33,7 @@ export const TopBar: React.FC<TopBarProps> = ({ activeTab }) => {
   const meta = getTabMeta();
 
   return (
-    <header className="sticky top-0 z-30 bg-transparent select-none shrink-0 min-h-[61px] flex flex-col">
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-slate-200 select-none shrink-0 min-h-[61px] flex flex-col">
       <div className="layout-page-container py-2.5 flex items-center w-full">
         {/* Title & Subtitle */}
         <div className="flex items-center space-x-2.5">

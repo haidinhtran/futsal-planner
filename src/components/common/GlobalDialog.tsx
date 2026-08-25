@@ -48,7 +48,12 @@ export const GlobalDialog = () => {
   return (
     <dialog
       ref={dialogRef}
-      className="p-0 bg-transparent backdrop:bg-black/50 backdrop:backdrop-blur-sm focus:outline-none w-[90%] max-w-md m-auto rounded-xl shadow-2xl"
+      className="p-0 bg-transparent backdrop:bg-black/60 backdrop:backdrop-blur-sm focus:outline-none w-[90%] max-w-md m-auto rounded-xl shadow-2xl"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleCancel();
+        }
+      }}
       onCancel={(e) => {
         e.preventDefault();
         handleCancel();

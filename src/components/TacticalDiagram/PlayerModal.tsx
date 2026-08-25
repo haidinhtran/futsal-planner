@@ -21,7 +21,14 @@ export const PlayerModal: React.FC<PlayerModalProps> = ({
   if (!showPlayerModal) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div className="bg-white rounded-lg border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
         <div className="bg-white p-5 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center space-x-3">

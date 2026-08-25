@@ -397,7 +397,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       {/* Primary Action Row */}
       {/* Sticky Compact Actions Portal (Mobile) & Desktop Always-Visible Portal */}
       {document.getElementById('topbar-actions-portal') && createPortal(
-        <div className={`items-center justify-end gap-1.5 sm:gap-2 w-full ${isSticky ? 'flex' : 'hidden md:flex'}`}>
+        <div className="items-center justify-end gap-1.5 sm:gap-2 w-full hidden md:flex">
           <button onClick={() => setIsFilterModalOpen(true)} className="p-1.5 md:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/50 rounded-lg transition-colors" title="Lọc">
             <Filter className="btn-icon" />
           </button>
@@ -486,7 +486,14 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
 
       {/* Filter Modal Dialog */}
       {isFilterModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsFilterModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-white rounded-lg max-w-sm w-full p-5 shadow-2xl border border-slate-200/90">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-h3 text-slate-900">Lọc & Sắp xếp</h3>
@@ -677,7 +684,7 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       {/* Edit / Add Modal - Minimalist & Monolithic Design */}
       {/* Sticky Compact Actions Portal */}
       {isSticky && document.getElementById('topbar-actions-portal') && createPortal(
-        <>
+        <div className="flex items-center justify-end md:hidden w-full gap-1">
           <button onClick={() => setIsFilterModalOpen(true)} className="p-2 sm:px-3 sm:py-2 flex items-center justify-center shrink-0 rounded-lg transition-colors text-slate-500 hover:bg-slate-50 hover:text-slate-700" title="Lọc">
             <Filter className="w-4 h-4" />
           </button>
@@ -708,10 +715,9 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
             <Plus className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline text-xs">Thêm</span>
           </button>
-        </>,
+        </div>,
         document.getElementById('topbar-actions-portal')!
       )}
-
       {/* Search Input Portal (Shown when search is active, sticky or not) */}
       {isStickySearchOpen && document.getElementById('topbar-bottom-portal') && createPortal(
         <div className="layout-page-container py-2 pb-3 bg-white border-t border-slate-100 shadow-sm animate-in fade-in slide-in-from-top-2">
@@ -731,7 +737,14 @@ export const PlayerManagement: React.FC<PlayerManagementProps> = ({
       )}
 
       {isModalOpen && editingPlayer && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
           <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl border border-slate-200/90 max-h-[90vh] overflow-y-auto space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">

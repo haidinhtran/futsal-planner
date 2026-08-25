@@ -133,7 +133,7 @@ export const App = () => {
 
       {/* 2. Main Right Panel (Dynamic pl-64 or pl-[68px] on Desktop, pl-0 on Mobile) */}
       <div
-        className={`flex-1 flex flex-col min-w-0 ${isSidebarCollapsed ? "md:pl-[68px]" : "md:pl-64"} h-screen overflow-hidden transition-all duration-200`}
+        className={`flex-1 flex flex-col min-w-0 ${isSidebarCollapsed ? "md:pl-16" : "md:pl-64"} h-screen overflow-hidden transition-all duration-200`}
       >
         {/* 2a. Fixed Dynamic TopBar */}
         <TopBar
